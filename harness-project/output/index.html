@@ -23,6 +23,7 @@
 <link rel="apple-touch-startup-image" media="(device-width:834px) and (device-height:1194px) and (-webkit-device-pixel-ratio:2)" href="icons/splash-ipad-pro-11.png">
 <link rel="apple-touch-startup-image" media="(device-width:810px) and (device-height:1080px) and (-webkit-device-pixel-ratio:2)" href="icons/splash-ipad-10.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
 /* ═══════════════════════════════════════ */
 /* RESET & BASE                           */
@@ -746,6 +747,28 @@ button:focus-visible{outline:3px solid var(--green-base);outline-offset:2px}
 }
 
 /* ═══════════════════════════════════════ */
+/* VIEW: MONITORING                       */
+/* ═══════════════════════════════════════ */
+.monitor-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px}
+.monitor-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.monitor-card-header{display:flex;align-items:center;gap:8px;padding:14px 18px;font-size:.88rem;font-weight:700;border-bottom:1px solid var(--border);background:var(--bg)}
+.monitor-icon{font-size:1.1rem}
+.monitor-card-body{padding:14px 18px}
+.monitor-metric{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f5f4f2;font-size:.82rem}
+.monitor-metric:last-child{border-bottom:none}
+.monitor-metric span{color:var(--text-sub)}
+.monitor-metric strong{color:var(--text);font-family:var(--font-mono);font-size:.8rem}
+.monitor-log-section{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px}
+.monitor-log{max-height:280px;overflow-y:auto;font-family:var(--font-mono);font-size:.75rem;line-height:1.7;background:#1a1a1a;color:#d4d4d4;padding:14px;border-radius:var(--radius);white-space:pre-wrap;word-break:break-all}
+.monitor-log .log-entry{padding:2px 0}
+.monitor-log .log-info{color:#6ec6ff}
+.monitor-log .log-warn{color:#ffd54f}
+.monitor-log .log-error{color:#ef5350}
+.monitor-log .log-ok{color:#66bb6a}
+.mon-online{color:#4caf50}
+.mon-offline{color:#ef5350}
+
+/* ═══════════════════════════════════════ */
 /* RESPONSIVE                             */
 /* ═══════════════════════════════════════ */
 @media(max-width:900px){
@@ -755,6 +778,7 @@ button:focus-visible{outline:3px solid var(--green-base);outline-offset:2px}
   .hex-row:nth-child(even){margin-left:39px}
   .stat-row{grid-template-columns:repeat(2,1fr)}
   .gantt-grid{min-width:800px}
+  .monitor-grid{grid-template-columns:1fr}
 }
 /* ═══════════════════════════════════════ */
 /* PARTICIPANT MODE VISUAL DIFFERENTIATION */
@@ -857,23 +881,25 @@ body.participant-mode .profile-avatar-large{
   <header class="top-bar" role="banner">
     <div class="logo" aria-label="꿈-드림 페스티벌 미래기술존">
       <span class="dot" aria-hidden="true"></span>
-      꿈-드림 페스티벌 · 미래기술존
+      <span data-i18n="app.title">꿈-드림 페스티벌 · 미래기술존</span>
     </div>
     <div class="mode-toggle" id="modeToggle" role="group" aria-label="모드 전환">
-      <button class="active" data-mode="admin" aria-pressed="true">관리자</button>
-      <button data-mode="participant" aria-pressed="false">참가자</button>
+      <button class="active" data-mode="admin" aria-pressed="true" data-i18n="mode.admin">관리자</button>
+      <button data-mode="participant" aria-pressed="false" data-i18n="mode.participant">참가자</button>
     </div>
+    <button id="langToggle" onclick="switchLang()" style="padding:4px 10px;font-size:.72rem;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-family:var(--font-mono);font-weight:600;margin-right:8px" aria-label="Switch language">EN</button>
     <div class="clock" id="clock" role="timer" aria-live="off" aria-label="현재 시각">--:--:--</div>
   </header>
 
   <!-- ADMIN NAV -->
   <nav class="nav-strip" id="navAdmin" aria-label="관리자 메뉴">
-    <button class="active" data-view="floormap">관제 맵</button>
-    <button data-view="timetable">타임테이블</button>
-    <button data-view="staff">스태프 배치</button>
-    <button data-view="stats">통계 분석</button>
-    <button data-view="content">콘텐츠 관리</button>
-    <button data-view="notif-admin">공지 발송</button>
+    <button class="active" data-view="floormap" data-i18n="nav.floormap">관제 맵</button>
+    <button data-view="timetable" data-i18n="nav.timetable">타임테이블</button>
+    <button data-view="staff" data-i18n="nav.staff">스태프 배치</button>
+    <button data-view="stats" data-i18n="nav.stats">통계 분석</button>
+    <button data-view="content" data-i18n="nav.content">콘텐츠 관리</button>
+    <button data-view="notif-admin" data-i18n="nav.notif">공지 발송</button>
+    <button data-view="monitor" data-i18n="nav.monitor">모니터링</button>
     <a href="qr-checkin.html" style="display:inline-flex;align-items:center;gap:4px;padding:8px 14px;font-size:.82rem;font-weight:600;color:var(--green-base);text-decoration:none;border:1px solid var(--green-base);border-radius:var(--radius);transition:var(--trans);white-space:nowrap" onmouseover="this.style.background='var(--green-base)';this.style.color='#fff'" onmouseout="this.style.background='';this.style.color='var(--green-base)'">📱 QR 체크인</a>
     <a href="certificates.html" style="display:inline-flex;align-items:center;gap:4px;padding:8px 14px;font-size:.82rem;font-weight:600;color:var(--green-base);text-decoration:none;border:1px solid var(--green-base);border-radius:var(--radius);transition:var(--trans);white-space:nowrap" onmouseover="this.style.background='var(--green-base)';this.style.color='#fff'" onmouseout="this.style.background='';this.style.color='var(--green-base)'">📜 인증서 발급</a>
     <a href="manual.html" style="display:inline-flex;align-items:center;gap:4px;padding:8px 14px;font-size:.82rem;font-weight:600;color:var(--green-base);text-decoration:none;border:1px solid var(--green-base);border-radius:var(--radius);transition:var(--trans);white-space:nowrap" onmouseover="this.style.background='var(--green-base)';this.style.color='#fff'" onmouseout="this.style.background='';this.style.color='var(--green-base)'">📖 운영 매뉴얼</a>
@@ -881,13 +907,13 @@ body.participant-mode .profile-avatar-large{
 
   <!-- PARTICIPANT NAV -->
   <nav class="nav-strip" id="navParticipant" style="display:none" aria-label="참가자 메뉴">
-    <button class="active" data-view="stamp">스탬프 보드</button>
-    <button data-view="qr">QR 체크인</button>
-    <button data-view="leaderboard">랭킹</button>
-    <button data-view="congestion">혼잡도 맵</button>
-    <button data-view="profile">마이페이지</button>
-    <button data-view="route">AI 동선 추천</button>
-    <button data-view="notif-user">알림</button>
+    <button class="active" data-view="stamp" data-i18n="nav.stamp">스탬프 보드</button>
+    <button data-view="qr" data-i18n="nav.qr">QR 체크인</button>
+    <button data-view="leaderboard" data-i18n="nav.leaderboard">랭킹</button>
+    <button data-view="congestion" data-i18n="nav.congestion">혼잡도 맵</button>
+    <button data-view="profile" data-i18n="nav.profile">마이페이지</button>
+    <button data-view="route" data-i18n="nav.route">AI 동선 추천</button>
+    <button data-view="notif-user" data-i18n="nav.notifUser">알림</button>
   </nav>
 
   <!-- MAIN CONTENT -->
@@ -897,7 +923,7 @@ body.participant-mode .profile-avatar-large{
 
     <!-- V1: FLOORMAP -->
     <div class="view active" id="view-floormap">
-      <h2 class="section-title">존 플로어맵 관제 <span class="badge">LIVE</span></h2>
+      <h2 class="section-title"><span data-i18n="title.floormap">존 플로어맵 관제</span> <span class="badge">LIVE</span></h2>
       <div class="stat-row" id="adminStats" aria-live="polite" aria-atomic="true"></div>
       <div class="floormap-container">
         <svg class="floormap-svg" viewBox="0 0 900 520" id="floormapSvg" role="img" aria-label="미래기술존 5개 존 플로어맵 — A존 AI 모션, B존 객체인식, C존 창작, D존 시뮬레이션, E존 진로상담"></svg>
@@ -906,13 +932,13 @@ body.participant-mode .profile-avatar-large{
 
     <!-- V2: TIMETABLE -->
     <div class="view" id="view-timetable">
-      <h2 class="section-title">프로그램 타임테이블</h2>
+      <h2 class="section-title" data-i18n="title.timetable">프로그램 타임테이블</h2>
       <div class="gantt-container" id="ganttContainer"></div>
     </div>
 
     <!-- V3: STAFF -->
     <div class="view" id="view-staff">
-      <h2 class="section-title">스태프 배치 관리</h2>
+      <h2 class="section-title" data-i18n="title.staff">스태프 배치 관리</h2>
       <div class="staff-layout">
         <div class="staff-pool" id="staffPool">
           <h4>미배정 스태프</h4>
@@ -924,19 +950,19 @@ body.participant-mode .profile-avatar-large{
 
     <!-- V4: STATS -->
     <div class="view" id="view-stats">
-      <h2 class="section-title">참가자 통계 & 분석
-        <span class="badge" id="autoRefreshBadge">자동 갱신</span>
+      <h2 class="section-title"><span data-i18n="title.stats">참가자 통계 & 분석</span>
+        <span class="badge" id="autoRefreshBadge" data-i18n="stats.autoRefresh">자동 갱신</span>
         <div class="toggle-switch on" id="autoRefreshToggle" onclick="toggleAutoRefresh()" style="margin-left:8px" role="switch" aria-checked="true" aria-label="자동 갱신 토글" tabindex="0" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleAutoRefresh()}"></div>
         <div style="position:relative;display:inline-block;margin-left:auto">
-          <button onclick="toggleExportMenu()" id="exportBtn" style="padding:6px 14px;font-size:.8rem;font-weight:600;background:var(--green-base);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">📥 데이터 내보내기 ▾</button>
+          <button onclick="toggleExportMenu()" id="exportBtn" style="padding:6px 14px;font-size:.8rem;font-weight:600;background:var(--green-base);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px"><span data-i18n="export.btn">📥 데이터 내보내기</span> ▾</button>
           <div id="exportMenu" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);min-width:220px;z-index:200;overflow:hidden">
-            <button onclick="exportData('participants')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''">👥 참가자 목록 (CSV)</button>
-            <button onclick="exportData('checkins')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''">📋 체크인 기록 (CSV)</button>
-            <button onclick="exportData('checkins-today')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''">📋 오늘 체크인만 (CSV)</button>
-            <button onclick="exportData('stamps')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''">🏅 스탬프 현황 (CSV)</button>
-            <button onclick="exportData('leaderboard')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''">🏆 리더보드 (CSV)</button>
-            <button onclick="exportData('mentoring')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''">👨‍💼 멘토링 예약 (CSV)</button>
-            <button onclick="exportData('all')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;font-weight:600;color:var(--green-base)" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''">💾 전체 데이터 백업 (JSON)</button>
+            <button onclick="exportData('participants')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.participants">👥 참가자 목록 (CSV)</span></button>
+            <button onclick="exportData('checkins')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.checkins">📋 체크인 기록 (CSV)</span></button>
+            <button onclick="exportData('checkins-today')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.checkinsToday">📋 오늘 체크인만 (CSV)</span></button>
+            <button onclick="exportData('stamps')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.stamps">🏅 스탬프 현황 (CSV)</span></button>
+            <button onclick="exportData('leaderboard')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.leaderboard">🏆 리더보드 (CSV)</span></button>
+            <button onclick="exportData('mentoring')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.mentoring">👨‍💼 멘토링 예약 (CSV)</span></button>
+            <button onclick="exportData('all')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;font-weight:600;color:var(--green-base)" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.all">💾 전체 데이터 백업 (JSON)</span></button>
           </div>
         </div>
       </h2>
@@ -946,60 +972,127 @@ body.participant-mode .profile-avatar-large{
 
     <!-- V5: CONTENT -->
     <div class="view" id="view-content">
-      <h2 class="section-title">콘텐츠 등록 & 관리</h2>
+      <h2 class="section-title" data-i18n="title.content">콘텐츠 등록 & 관리</h2>
       <div class="content-toolbar" id="contentToolbar"></div>
       <div class="content-list" id="contentList"></div>
     </div>
 
     <!-- V6: NOTIFICATIONS (Admin) -->
     <div class="view" id="view-notif-admin">
-      <h2 class="section-title">공지 발송 관리</h2>
+      <h2 class="section-title" data-i18n="title.notif">공지 발송 관리</h2>
       <div class="notif-compose" id="notifCompose"></div>
-      <h4 style="font-size:.85rem;margin-bottom:12px;color:var(--text-sub)">발송 이력</h4>
+      <h4 style="font-size:.85rem;margin-bottom:12px;color:var(--text-sub)" data-i18n="notif.history">발송 이력</h4>
       <div class="notif-list" id="notifAdminList"></div>
+    </div>
+
+    <!-- V7: MONITORING -->
+    <div class="view" id="view-monitor">
+      <h2 class="section-title" data-i18n="title.monitor">시스템 모니터링</h2>
+      <div class="monitor-grid">
+        <!-- Server Status -->
+        <div class="monitor-card">
+          <div class="monitor-card-header">
+            <span class="monitor-icon" id="monServerIcon">●</span>
+            <span data-i18n="monitor.server">서버 상태</span>
+          </div>
+          <div class="monitor-card-body">
+            <div class="monitor-metric"><span data-i18n="monitor.status">상태</span><strong id="monServerStatus">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.responseTime">응답 시간</span><strong id="monResponseTime">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.uptime">가동 시간</span><strong id="monUptime">-</strong></div>
+            <div class="monitor-metric"><span>API URL</span><strong id="monApiUrl" style="font-size:.72rem;word-break:break-all">-</strong></div>
+          </div>
+        </div>
+        <!-- WebSocket -->
+        <div class="monitor-card">
+          <div class="monitor-card-header">
+            <span class="monitor-icon" id="monWsIcon">●</span>
+            <span data-i18n="monitor.websocket">WebSocket 연결</span>
+          </div>
+          <div class="monitor-card-body">
+            <div class="monitor-metric"><span data-i18n="monitor.wsStatus">연결 상태</span><strong id="monWsStatus">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.clients">접속 클라이언트</span><strong id="monWsClients">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.lastSync">마지막 동기화</span><strong id="monLastSync">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.msgCount">메시지 수신</span><strong id="monMsgCount">0</strong></div>
+          </div>
+        </div>
+        <!-- Data Stats -->
+        <div class="monitor-card">
+          <div class="monitor-card-header">
+            <span class="monitor-icon" style="color:var(--zone-c)">●</span>
+            <span data-i18n="monitor.data">데이터 현황</span>
+          </div>
+          <div class="monitor-card-body">
+            <div class="monitor-metric"><span data-i18n="monitor.participants">등록 참가자</span><strong id="monParticipants">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.checkins">체크인 기록</span><strong id="monCheckins">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.stamps">스탬프 발급</span><strong id="monStamps">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.lbEntries">리더보드 엔트리</span><strong id="monLeaderboard">-</strong></div>
+          </div>
+        </div>
+        <!-- Cache / PWA -->
+        <div class="monitor-card">
+          <div class="monitor-card-header">
+            <span class="monitor-icon" style="color:var(--zone-d)">●</span>
+            <span data-i18n="monitor.pwa">PWA / 캐시</span>
+          </div>
+          <div class="monitor-card-body">
+            <div class="monitor-metric"><span data-i18n="monitor.swStatus">Service Worker</span><strong id="monSwStatus">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.cacheCount">캐시 항목</span><strong id="monCacheCount">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.storage">로컬 저장소</span><strong id="monStorage">-</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.lang">현재 언어</span><strong id="monLang">-</strong></div>
+          </div>
+        </div>
+      </div>
+      <!-- Error Log -->
+      <div class="monitor-log-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <h3 style="font-size:.92rem;font-weight:700" data-i18n="monitor.errorLog">이벤트 로그</h3>
+          <button onclick="clearMonitorLog()" style="padding:4px 12px;font-size:.75rem;font-weight:600;background:var(--border);color:var(--text-sub);border:none;border-radius:var(--radius);cursor:pointer" data-i18n="monitor.clearLog">로그 초기화</button>
+        </div>
+        <div class="monitor-log" id="monitorLog" role="log" aria-live="polite"></div>
+      </div>
     </div>
 
     <!-- ════════════════ PARTICIPANT VIEWS ════════════════ -->
 
     <!-- V6: STAMP BOARD -->
     <div class="view" id="view-stamp">
-      <h2 class="section-title">스탬프 투어 보드</h2>
+      <h2 class="section-title" data-i18n="title.stamp">스탬프 투어 보드</h2>
       <div class="stamp-board-wrap" id="stampBoard"></div>
     </div>
 
     <!-- V7: QR -->
     <div class="view" id="view-qr">
-      <h2 class="section-title">QR 체크인</h2>
+      <h2 class="section-title" data-i18n="title.qr">QR 체크인</h2>
       <div class="qr-section" id="qrSection"></div>
     </div>
 
     <!-- V8: LEADERBOARD -->
     <div class="view" id="view-leaderboard">
-      <h2 class="section-title">체험 랭킹</h2>
+      <h2 class="section-title" data-i18n="title.leaderboard">체험 랭킹</h2>
       <div id="leaderboardArea"></div>
     </div>
 
     <!-- V9: CONGESTION -->
     <div class="view" id="view-congestion">
-      <h2 class="section-title">실시간 부스 혼잡도</h2>
+      <h2 class="section-title" data-i18n="title.congestion">실시간 부스 혼잡도</h2>
       <div class="congestion-wrap" id="congestionArea"></div>
     </div>
 
     <!-- V10: PROFILE -->
     <div class="view" id="view-profile">
-      <h2 class="section-title">마이페이지</h2>
+      <h2 class="section-title" data-i18n="title.profile">마이페이지</h2>
       <div class="profile-wrap" id="profileArea"></div>
     </div>
 
     <!-- V11: AI ROUTE -->
     <div class="view" id="view-route">
-      <h2 class="section-title">AI 스마트 동선 추천</h2>
+      <h2 class="section-title" data-i18n="title.route">AI 스마트 동선 추천</h2>
       <div class="route-wrap" id="routeArea"></div>
     </div>
 
     <!-- V12: NOTIFICATIONS (User) -->
     <div class="view" id="view-notif-user">
-      <h2 class="section-title">알림 <span class="badge" id="notifCount">0</span></h2>
+      <h2 class="section-title"><span data-i18n="title.notifUser">알림</span> <span class="badge" id="notifCount">0</span></h2>
       <div class="notif-list" id="notifUserList"></div>
     </div>
   </main>
@@ -1261,6 +1354,8 @@ function switchView(view){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   const el = document.getElementById('view-'+view);
   if(el) el.classList.add('active');
+  if(view==='monitor' && typeof startMonitor==='function') startMonitor();
+  else if(typeof stopMonitor==='function') stopMonitor();
 }
 
 document.getElementById('modeToggle').addEventListener('click',e=>{
@@ -1710,117 +1805,172 @@ function toggleAutoRefresh(){
   badge.textContent = autoRefreshEnabled ? '자동 갱신' : '수동 갱신';
   showToast(autoRefreshEnabled ? '자동 갱신 활성화' : '자동 갱신 비활성화', autoRefreshEnabled ? '🔄' : '⏸️');
 }
+var _chartInstances={};
+function destroyCharts(){
+  Object.keys(_chartInstances).forEach(function(k){
+    if(_chartInstances[k]){_chartInstances[k].destroy();delete _chartInstances[k];}
+  });
+}
 function renderStats(){
+  destroyCharts();
   const chartsGrid = document.getElementById('chartsGrid');
 
-  // Donut chart (Zone participation) - fixed offsets per zone for stable data
-  const zoneBaseOffsets = [42, 35, 28, 38, 31]; // deterministic per zone
+  // Prepare data
+  const zoneBaseOffsets = [42, 35, 28, 38, 31];
   const zoneData = ZONES.map((z,i)=>{
     const progs = getZonePrograms(z.id);
     return {zone:z, total:progs.reduce((s,p)=>s+p.current,0)+zoneBaseOffsets[i]};
   });
-  const donutTotal = zoneData.reduce((s,d)=>s+d.total,0);
 
-  let donutSvg = `<svg viewBox="0 0 180 180" style="width:180px;height:180px;display:block;margin:0 auto">`;
-  let cumAngle = -90;
-  zoneData.forEach(d=>{
-    const angle = (d.total/donutTotal)*360;
-    const startRad = (cumAngle)*Math.PI/180;
-    const endRad = (cumAngle+angle)*Math.PI/180;
-    const x1 = 90+65*Math.cos(startRad);
-    const y1 = 90+65*Math.sin(startRad);
-    const x2 = 90+65*Math.cos(endRad);
-    const y2 = 90+65*Math.sin(endRad);
-    const largeArc = angle>180?1:0;
-    donutSvg += `<path d="M90,90 L${x1},${y1} A65,65 0 ${largeArc},1 ${x2},${y2} Z" fill="${d.zone.colorHex}" opacity="0.85"/>`;
-    cumAngle += angle;
-  });
-  donutSvg += `<circle cx="90" cy="90" r="40" fill="var(--card-bg)"/>`;
-  donutSvg += `<text x="90" y="85" text-anchor="middle" font-family="var(--font-display)" font-size="22" font-weight="700">${donutTotal}</text>`;
-  donutSvg += `<text x="90" y="102" text-anchor="middle" font-size="9" fill="var(--text-sub)">총 참가</text>`;
-  donutSvg += `</svg>`;
-  const donutLegend = zoneData.map(d=>`<div style="display:flex;align-items:center;gap:6px;font-size:.72rem"><span class="zone-dot" style="background:${d.zone.colorHex}"></span>${d.zone.name}: ${d.total}명</div>`).join('');
-
-  // Time series area chart
-  const timeLabels = ['9시','10시','11시','12시','13시','14시','15시','16시','17시'];
-  const timeData = [12,45,78,32,65,92,88,70,40];
-  const maxTime = Math.max(...timeData);
-  const chartH = 160;
-  const chartW = 400;
-  const points = timeData.map((v,i)=>`${(i/(timeData.length-1))*chartW},${chartH-(v/maxTime)*chartH}`).join(' ');
-  const areaPoints = `0,${chartH} ${points} ${chartW},${chartH}`;
-
-  let areaSvg = `<svg viewBox="0 0 ${chartW} ${chartH+30}" style="width:100%;height:auto">`;
-  // Grid lines
-  for(let i=0;i<=4;i++){
-    const y = (i/4)*chartH;
-    areaSvg += `<line x1="0" y1="${y}" x2="${chartW}" y2="${y}" stroke="var(--border)" stroke-width="0.5"/>`;
-  }
-  areaSvg += `<polygon points="${areaPoints}" fill="var(--green-light)" opacity="0.6"/>`;
-  areaSvg += `<polyline points="${points}" fill="none" stroke="var(--green-base)" stroke-width="2"/>`;
-  timeData.forEach((v,i)=>{
-    const x=(i/(timeData.length-1))*chartW;
-    const y=chartH-(v/maxTime)*chartH;
-    areaSvg += `<circle cx="${x}" cy="${y}" r="3" fill="var(--green-base)"/>`;
-    areaSvg += `<text x="${x}" y="${chartH+15}" text-anchor="middle" font-size="8" fill="var(--text-light)">${timeLabels[i]}</text>`;
-  });
-  areaSvg += `</svg>`;
-
-  // Horizontal bar chart - deterministic completion counts based on program data
   const PROG_COMPLETION = {1:38,2:29,3:15,4:45,5:42,6:18,7:33,8:37,9:26,10:31,11:22,12:12,13:28,14:34,15:19};
   const sortedProgs = [...PROGRAMS].sort((a,b)=>(PROG_COMPLETION[b.id]||0)-(PROG_COMPLETION[a.id]||0));
-  const progBars = sortedProgs.slice(0,10).map(p=>{
-    const zone = getZone(p.zone);
-    const val = PROG_COMPLETION[p.id] || (p.current + 10);
-    return `<div class="bar-h">
-      <div class="bar-label">${p.icon} ${p.name.substring(0,8)}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(val/50)*100}%;background:${zone.colorHex}"></div></div>
-      <div class="bar-val">${val}</div>
-    </div>`;
-  }).join('');
-
-  // Stamp histogram
-  const stampDist = [5,12,28,42,55,48,38,30,22,18,14,10,7,5,3,23];
-  const maxStamp = Math.max(...stampDist);
-  let histSvg = `<svg viewBox="0 0 320 ${chartH+30}" style="width:100%;height:auto">`;
-  stampDist.forEach((v,i)=>{
-    const x = i * 20;
-    const h = (v/maxStamp)*chartH;
-    const color = i===15?'var(--green-base)':'var(--green-light)';
-    const stroke = i===15?'var(--green-dark)':'var(--green-base)';
-    histSvg += `<rect x="${x}" y="${chartH-h}" width="16" height="${h}" fill="${color}" stroke="${stroke}" stroke-width="0.5" rx="2"/>`;
-    histSvg += `<text x="${x+8}" y="${chartH+12}" text-anchor="middle" font-size="7" fill="var(--text-light)">${i}</text>`;
-  });
-  histSvg += `<text x="160" y="${chartH+26}" text-anchor="middle" font-size="8" fill="var(--text-sub)">완료 스탬프 수</text>`;
-  histSvg += `</svg>`;
 
   chartsGrid.innerHTML = `
     <div class="chart-panel">
-      <h4>존별 참가자 분포</h4>
-      ${donutSvg}
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;justify-content:center">${donutLegend}</div>
+      <h4 data-i18n="chart.zoneDist">존별 참가자 분포</h4>
+      <div style="position:relative;height:240px"><canvas id="chartDonut"></canvas></div>
     </div>
     <div class="chart-panel">
-      <h4>시간대별 참여 추이</h4>
-      ${areaSvg}
+      <h4 data-i18n="chart.timeSeries">시간대별 참여 추이</h4>
+      <div style="position:relative;height:240px"><canvas id="chartTime"></canvas></div>
     </div>
     <div class="chart-panel">
-      <h4>프로그램별 체험 완료 수</h4>
-      ${progBars}
+      <h4 data-i18n="chart.progCompletion">프로그램별 체험 완료 수</h4>
+      <div style="position:relative;height:300px"><canvas id="chartProg"></canvas></div>
     </div>
     <div class="chart-panel">
-      <h4>스탬프 투어 진행률 분포</h4>
-      ${histSvg}
+      <h4 data-i18n="chart.stampDist">스탬프 투어 진행률 분포</h4>
+      <div style="position:relative;height:240px"><canvas id="chartStamp"></canvas></div>
     </div>
   `;
 
+  var lang=(typeof _currentLang!=='undefined')?_currentLang:(localStorage.getItem('dreamfest_lang')||'ko');
+  var chartFont={family:"'Noto Sans KR','Space Grotesk',sans-serif"};
+  Chart.defaults.font.family=chartFont.family;
+  Chart.defaults.font.size=11;
+  Chart.defaults.color='#6B6B6B';
+
+  // 1) Doughnut — 존별 참가자 분포
+  _chartInstances.donut=new Chart(document.getElementById('chartDonut'),{
+    type:'doughnut',
+    data:{
+      labels:zoneData.map(function(d){return d.zone.name}),
+      datasets:[{
+        data:zoneData.map(function(d){return d.total}),
+        backgroundColor:zoneData.map(function(d){return d.zone.colorHex}),
+        borderWidth:2,
+        borderColor:'#fff',
+        hoverOffset:8
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      cutout:'55%',
+      plugins:{
+        legend:{position:'bottom',labels:{padding:12,usePointStyle:true,pointStyle:'circle',font:{size:11}}},
+        tooltip:{callbacks:{label:function(ctx){return ctx.label+': '+ctx.parsed+'명 ('+Math.round(ctx.parsed/zoneData.reduce(function(s,d){return s+d.total},0)*100)+'%)'}}}
+      }
+    }
+  });
+
+  // 2) Line (area) — 시간대별 참여 추이
+  var timeLabels=['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+  var timeData=[12,45,78,32,65,92,88,70,40];
+  _chartInstances.time=new Chart(document.getElementById('chartTime'),{
+    type:'line',
+    data:{
+      labels:timeLabels,
+      datasets:[{
+        label:lang==='en'?'Participants':'참여 인원',
+        data:timeData,
+        fill:true,
+        backgroundColor:'rgba(45,122,79,0.15)',
+        borderColor:'#2D7A4F',
+        borderWidth:2.5,
+        pointBackgroundColor:'#2D7A4F',
+        pointRadius:4,
+        pointHoverRadius:6,
+        tension:0.35
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false}},
+      scales:{
+        x:{grid:{display:false}},
+        y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{stepSize:20}}
+      },
+      interaction:{mode:'nearest',axis:'x',intersect:false}
+    }
+  });
+
+  // 3) Horizontal bar — 프로그램별 체험 완료
+  var top10=sortedProgs.slice(0,10);
+  _chartInstances.prog=new Chart(document.getElementById('chartProg'),{
+    type:'bar',
+    data:{
+      labels:top10.map(function(p){return p.icon+' '+p.name.substring(0,8)}),
+      datasets:[{
+        label:lang==='en'?'Completions':'완료 수',
+        data:top10.map(function(p){return PROG_COMPLETION[p.id]||0}),
+        backgroundColor:top10.map(function(p){return getZone(p.zone).colorHex+'cc'}),
+        borderColor:top10.map(function(p){return getZone(p.zone).colorHex}),
+        borderWidth:1,
+        borderRadius:4,
+        barPercentage:0.7
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.x+'명 완료'}}}},
+      scales:{
+        x:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{stepSize:10}},
+        y:{grid:{display:false},ticks:{font:{size:10}}}
+      }
+    }
+  });
+
+  // 4) Bar — 스탬프 분포
+  var stampDist=[5,12,28,42,55,48,38,30,22,18,14,10,7,5,3,23];
+  var stampColors=stampDist.map(function(v,i){return i===15?'#2D7A4F':'rgba(45,122,79,0.35)'});
+  _chartInstances.stamp=new Chart(document.getElementById('chartStamp'),{
+    type:'bar',
+    data:{
+      labels:stampDist.map(function(v,i){return i===15?'15(완료)':String(i)}),
+      datasets:[{
+        label:lang==='en'?'Visitors':'참가자 수',
+        data:stampDist,
+        backgroundColor:stampColors,
+        borderColor:stampDist.map(function(v,i){return i===15?'#1B5E3A':'#2D7A4F'}),
+        borderWidth:1,
+        borderRadius:3
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.parsed.y+'명'}}}},
+      scales:{
+        x:{grid:{display:false},title:{display:true,text:lang==='en'?'Stamps Collected':'완료 스탬프 수',font:{size:11}}},
+        y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'}}
+      }
+    }
+  });
+
+  // Apply i18n if currently in English
+  if(lang!=='ko' && typeof applyLang==='function') applyLang(lang);
+
   // Insight panel
   document.getElementById('insightPanel').innerHTML = `
-    <h4>AI 인사이트</h4>
-    <div class="insight-item">📈 14시대 C존 혼잡 예상 — 프롬프트 랩 체험 수요 급증 예측</div>
-    <div class="insight-item">⚠️ B존 AI 웹툰 부스 점검 장기화 — 대체 코스 안내 권장</div>
-    <div class="insight-item">🎯 D존 드론 코딩 대기열 증가 추세 — 추가 세션 고려</div>
-    <div class="insight-item">💡 A존 + E존 연계 코스 참가율 높음 — 동선 안내 강화 추천</div>
+    <h4 data-i18n="chart.insights">AI 인사이트</h4>
+    <div class="insight-item" data-i18n="insight.1">📈 14시대 C존 혼잡 예상 — 프롬프트 랩 체험 수요 급증 예측</div>
+    <div class="insight-item" data-i18n="insight.2">⚠️ B존 AI 안전 감시관 부스 대기열 증가 — 추가 세션 권장</div>
+    <div class="insight-item" data-i18n="insight.3">🎯 D존 자율주행 시뮬레이터 만석 — 대기 안내 강화 필요</div>
+    <div class="insight-item" data-i18n="insight.4">💡 A존 + E존 연계 코스 참가율 높음 — 동선 안내 강화 추천</div>
   `;
 }
 
@@ -2850,6 +3000,312 @@ function updateAdminUI(loggedIn){
     existing.remove();
   }
 }
+
+/* ═══════════════════════════════════════ */
+/* MONITORING DASHBOARD                    */
+/* ═══════════════════════════════════════ */
+var _monLogs=[];
+var _monMsgCount=0;
+var _monInterval=null;
+var _monStartTime=Date.now();
+
+function addMonitorLog(level,msg){
+  var now=new Date();
+  var ts=now.toLocaleTimeString('ko-KR',{hour12:false});
+  _monLogs.push({ts:ts,level:level,msg:msg});
+  if(_monLogs.length>200) _monLogs.shift();
+  renderMonitorLog();
+}
+function renderMonitorLog(){
+  var el=document.getElementById('monitorLog');
+  if(!el) return;
+  el.innerHTML=_monLogs.map(function(l){
+    var cls=l.level==='error'?'log-error':l.level==='warn'?'log-warn':l.level==='ok'?'log-ok':'log-info';
+    return '<div class="log-entry '+cls+'"><span style="color:#888">'+l.ts+'</span> ['+l.level.toUpperCase()+'] '+l.msg+'</div>';
+  }).join('');
+  el.scrollTop=el.scrollHeight;
+}
+function clearMonitorLog(){
+  _monLogs=[];
+  renderMonitorLog();
+  addMonitorLog('info','Log cleared');
+}
+
+function updateMonitorPanel(){
+  var apiBase=window._syncBaseUrl||'http://localhost:3000';
+  document.getElementById('monApiUrl').textContent=apiBase;
+
+  // Server ping
+  var t0=Date.now();
+  fetch(apiBase+'/api/stats').then(function(r){
+    var ms=Date.now()-t0;
+    if(r.ok) return r.json().then(function(data){
+      document.getElementById('monServerIcon').className='monitor-icon mon-online';
+      document.getElementById('monServerStatus').innerHTML='<span class="mon-online">Online</span>';
+      document.getElementById('monResponseTime').textContent=ms+'ms';
+      // Data stats
+      document.getElementById('monParticipants').textContent=data.totalParticipants||'0';
+      document.getElementById('monCheckins').textContent=data.totalCheckins||'0';
+      document.getElementById('monStamps').textContent=data.stampCompleted||'0';
+      var lbCount=data.leaderboardCounts;
+      document.getElementById('monLeaderboard').textContent=lbCount?((lbCount.dance||0)+(lbCount.classify||0)+(lbCount.prompt||0)):'0';
+    });
+    throw new Error(r.status);
+  }).catch(function(e){
+    document.getElementById('monServerIcon').className='monitor-icon mon-offline';
+    document.getElementById('monServerStatus').innerHTML='<span class="mon-offline">Offline</span>';
+    document.getElementById('monResponseTime').textContent='-';
+    document.getElementById('monParticipants').textContent='-';
+    document.getElementById('monCheckins').textContent='-';
+    document.getElementById('monStamps').textContent='-';
+    document.getElementById('monLeaderboard').textContent='-';
+    addMonitorLog('error','Server unreachable');
+  });
+
+  // Uptime
+  var sec=Math.floor((Date.now()-_monStartTime)/1000);
+  var h=Math.floor(sec/3600);
+  var m=Math.floor((sec%3600)/60);
+  var s=sec%60;
+  document.getElementById('monUptime').textContent=(h>0?h+'h ':'')+(m>0?m+'m ':'')+s+'s';
+
+  // WebSocket status
+  var wsEl=document.getElementById('monWsIcon');
+  var wsStatusEl=document.getElementById('monWsStatus');
+  var ds=window.DreamSync;
+  if(ds && ds.ws && ds.ws.readyState===1){
+    wsEl.className='monitor-icon mon-online';
+    wsStatusEl.innerHTML='<span class="mon-online">Connected</span>';
+  } else {
+    wsEl.className='monitor-icon mon-offline';
+    wsStatusEl.innerHTML='<span class="mon-offline">Disconnected</span>';
+  }
+  document.getElementById('monWsClients').textContent=(ds&&ds.connected)?'1+':'-';
+  document.getElementById('monMsgCount').textContent=_monMsgCount;
+
+  document.getElementById('monLastSync').textContent=window._monLastSync?new Date(window._monLastSync).toLocaleTimeString('ko-KR',{hour12:false}):'-';
+
+  // Service Worker
+  if('serviceWorker' in navigator && navigator.serviceWorker.controller){
+    document.getElementById('monSwStatus').innerHTML='<span class="mon-online">Active</span>';
+  } else {
+    document.getElementById('monSwStatus').textContent='Inactive';
+  }
+
+  // Cache count
+  if('caches' in window){
+    caches.open('dreamfest-v3').then(function(c){return c.keys()}).then(function(k){
+      document.getElementById('monCacheCount').textContent=k.length;
+    }).catch(function(){document.getElementById('monCacheCount').textContent='-'});
+  }
+
+  // localStorage size estimate
+  var totalSize=0;
+  for(var i=0;i<localStorage.length;i++){
+    var key=localStorage.key(i);
+    totalSize+=key.length+localStorage.getItem(key).length;
+  }
+  document.getElementById('monStorage').textContent=(totalSize/1024).toFixed(1)+' KB';
+  document.getElementById('monLang').textContent=(_currentLang||'ko').toUpperCase();
+}
+
+function startMonitor(){
+  if(_monInterval) return;
+  addMonitorLog('info','Monitoring started');
+  updateMonitorPanel();
+  _monInterval=setInterval(updateMonitorPanel,5000);
+}
+function stopMonitor(){
+  if(_monInterval){clearInterval(_monInterval);_monInterval=null;}
+}
+
+// Track WebSocket messages for monitor
+(function(){
+  if(window.DreamSync && DreamSync.on){
+    var origHandle=DreamSync.handleMessage;
+    DreamSync.handleMessage=function(msg){
+      _monMsgCount++;
+      window._monLastSync=Date.now();
+      return origHandle.call(DreamSync,msg);
+    };
+  }
+})()
+
+// Log initial events
+addMonitorLog('ok','Dashboard loaded');
+if(navigator.serviceWorker&&navigator.serviceWorker.controller) addMonitorLog('ok','Service Worker active');
+
+/* ═══════════════════════════════════════ */
+/* i18n — 다국어 전환 (한/영)              */
+/* ═══════════════════════════════════════ */
+var I18N={
+  ko:{
+    'app.title':'꿈-드림 페스티벌 · 미래기술존',
+    'mode.admin':'관리자',
+    'mode.participant':'참가자',
+    'nav.floormap':'관제 맵',
+    'nav.timetable':'타임테이블',
+    'nav.staff':'스태프 배치',
+    'nav.stats':'통계 분석',
+    'nav.content':'콘텐츠 관리',
+    'nav.notif':'공지 발송',
+    'nav.stamp':'스탬프 보드',
+    'nav.qr':'QR 체크인',
+    'nav.leaderboard':'랭킹',
+    'nav.congestion':'혼잡도 맵',
+    'nav.profile':'마이페이지',
+    'nav.route':'AI 동선 추천',
+    'nav.notifUser':'알림',
+    'title.floormap':'존 플로어맵 관제',
+    'title.timetable':'프로그램 타임테이블',
+    'title.staff':'스태프 배치 관리',
+    'title.stats':'참가자 통계 & 분석',
+    'title.content':'콘텐츠 등록 & 관리',
+    'title.notif':'공지 발송 관리',
+    'title.stamp':'스탬프 투어 보드',
+    'title.qr':'QR 체크인',
+    'title.leaderboard':'체험 랭킹',
+    'title.congestion':'실시간 부스 혼잡도',
+    'title.profile':'마이페이지',
+    'title.route':'AI 스마트 동선 추천',
+    'title.notifUser':'알림',
+    'stats.autoRefresh':'자동 갱신',
+    'export.btn':'📥 데이터 내보내기',
+    'export.participants':'👥 참가자 목록 (CSV)',
+    'export.checkins':'📋 체크인 기록 (CSV)',
+    'export.checkinsToday':'📋 오늘 체크인만 (CSV)',
+    'export.stamps':'🏅 스탬프 현황 (CSV)',
+    'export.leaderboard':'🏆 리더보드 (CSV)',
+    'export.mentoring':'👨‍💼 멘토링 예약 (CSV)',
+    'export.all':'💾 전체 데이터 백업 (JSON)',
+    'notif.history':'발송 이력',
+    'nav.monitor':'모니터링',
+    'title.monitor':'시스템 모니터링',
+    'monitor.server':'서버 상태',
+    'monitor.status':'상태',
+    'monitor.responseTime':'응답 시간',
+    'monitor.uptime':'가동 시간',
+    'monitor.websocket':'WebSocket 연결',
+    'monitor.wsStatus':'연결 상태',
+    'monitor.clients':'접속 클라이언트',
+    'monitor.lastSync':'마지막 동기화',
+    'monitor.msgCount':'메시지 수신',
+    'monitor.data':'데이터 현황',
+    'monitor.participants':'등록 참가자',
+    'monitor.checkins':'체크인 기록',
+    'monitor.stamps':'스탬프 발급',
+    'monitor.lbEntries':'리더보드 엔트리',
+    'monitor.pwa':'PWA / 캐시',
+    'monitor.swStatus':'Service Worker',
+    'monitor.cacheCount':'캐시 항목',
+    'monitor.storage':'로컬 저장소',
+    'monitor.lang':'현재 언어',
+    'monitor.errorLog':'이벤트 로그',
+    'monitor.clearLog':'로그 초기화',
+    'chart.zoneDist':'존별 참가자 분포',
+    'chart.timeSeries':'시간대별 참여 추이',
+    'chart.progCompletion':'프로그램별 체험 완료 수',
+    'chart.stampDist':'스탬프 투어 진행률 분포',
+    'chart.insights':'AI 인사이트',
+    'insight.1':'📈 14시대 C존 혼잡 예상 — 프롬프트 랩 체험 수요 급증 예측',
+    'insight.2':'⚠️ B존 AI 안전 감시관 부스 대기열 증가 — 추가 세션 권장',
+    'insight.3':'🎯 D존 자율주행 시뮬레이터 만석 — 대기 안내 강화 필요',
+    'insight.4':'💡 A존 + E존 연계 코스 참가율 높음 — 동선 안내 강화 추천'
+  },
+  en:{
+    'app.title':'Dream Festival · Future Tech Zone',
+    'mode.admin':'Admin',
+    'mode.participant':'Visitor',
+    'nav.floormap':'Floor Map',
+    'nav.timetable':'Timetable',
+    'nav.staff':'Staff',
+    'nav.stats':'Analytics',
+    'nav.content':'Content',
+    'nav.notif':'Notices',
+    'nav.stamp':'Stamp Board',
+    'nav.qr':'QR Check-in',
+    'nav.leaderboard':'Rankings',
+    'nav.congestion':'Congestion',
+    'nav.profile':'My Page',
+    'nav.route':'AI Route',
+    'nav.notifUser':'Alerts',
+    'title.floormap':'Zone Floor Map Control',
+    'title.timetable':'Program Timetable',
+    'title.staff':'Staff Management',
+    'title.stats':'Visitor Analytics & Insights',
+    'title.content':'Content Management',
+    'title.notif':'Notice Management',
+    'title.stamp':'Stamp Tour Board',
+    'title.qr':'QR Check-in',
+    'title.leaderboard':'Experience Rankings',
+    'title.congestion':'Real-time Booth Congestion',
+    'title.profile':'My Page',
+    'title.route':'AI Smart Route Guide',
+    'title.notifUser':'Alerts',
+    'stats.autoRefresh':'Auto Refresh',
+    'export.btn':'📥 Export Data',
+    'export.participants':'👥 Participants (CSV)',
+    'export.checkins':'📋 Check-in Log (CSV)',
+    'export.checkinsToday':'📋 Today Check-ins (CSV)',
+    'export.stamps':'🏅 Stamp Status (CSV)',
+    'export.leaderboard':'🏆 Leaderboard (CSV)',
+    'export.mentoring':'👨‍💼 Mentoring Bookings (CSV)',
+    'export.all':'💾 Full Backup (JSON)',
+    'notif.history':'Send History',
+    'nav.monitor':'Monitor',
+    'title.monitor':'System Monitor',
+    'monitor.server':'Server Status',
+    'monitor.status':'Status',
+    'monitor.responseTime':'Response Time',
+    'monitor.uptime':'Uptime',
+    'monitor.websocket':'WebSocket',
+    'monitor.wsStatus':'Connection',
+    'monitor.clients':'Connected Clients',
+    'monitor.lastSync':'Last Sync',
+    'monitor.msgCount':'Messages Received',
+    'monitor.data':'Data Overview',
+    'monitor.participants':'Registered Visitors',
+    'monitor.checkins':'Check-in Records',
+    'monitor.stamps':'Stamps Issued',
+    'monitor.lbEntries':'Leaderboard Entries',
+    'monitor.pwa':'PWA / Cache',
+    'monitor.swStatus':'Service Worker',
+    'monitor.cacheCount':'Cached Items',
+    'monitor.storage':'Local Storage',
+    'monitor.lang':'Current Language',
+    'monitor.errorLog':'Event Log',
+    'monitor.clearLog':'Clear Log',
+    'chart.zoneDist':'Zone Visitor Distribution',
+    'chart.timeSeries':'Hourly Participation Trend',
+    'chart.progCompletion':'Program Completion Count',
+    'chart.stampDist':'Stamp Tour Progress Distribution',
+    'chart.insights':'AI Insights',
+    'insight.1':'📈 Zone C congestion expected at 14:00 — Prompt Lab demand surge predicted',
+    'insight.2':'⚠️ Zone B AI Safety booth queue growing — additional session recommended',
+    'insight.3':'🎯 Zone D Self-driving Simulator full — waiting guidance needed',
+    'insight.4':'💡 Zone A + E combined course popular — route guidance enhancement recommended'
+  }
+};
+var _currentLang=localStorage.getItem('dreamfest_lang')||'ko';
+
+function applyLang(lang){
+  var dict=I18N[lang];
+  if(!dict) return;
+  _currentLang=lang;
+  localStorage.setItem('dreamfest_lang',lang);
+  document.documentElement.lang=lang;
+  var btn=document.getElementById('langToggle');
+  if(btn) btn.textContent=lang==='ko'?'EN':'KO';
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var key=el.getAttribute('data-i18n');
+    if(dict[key]) el.textContent=dict[key];
+  });
+}
+function switchLang(){
+  applyLang(_currentLang==='ko'?'en':'ko');
+}
+// Apply saved language on load
+if(_currentLang!=='ko') applyLang(_currentLang);
 </script>
 </body>
 </html>
