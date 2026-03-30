@@ -19,12 +19,32 @@
     reconnectCount: 0,
     listeners: {},
     adminToken: null,
+    _syncing: false,
 
     // ── 초기화 ──────────────────────────────────
     init: function() {
       var self = this;
       // 세션 복원
       this.restoreSession();
+      // 온라인/오프라인 이벤트 감지
+      window.addEventListener('online', function() {
+        console.log('[Sync] Browser online');
+        self.checkServer(function(available) {
+          self.serverAvailable = available;
+          if (available) {
+            self.connectWs();
+            self.updateStatusIndicator(true);
+            self.flushOfflineQueue();
+          }
+        });
+      });
+      window.addEventListener('offline', function() {
+        console.log('[Sync] Browser offline');
+        self.serverAvailable = false;
+        self.connected = false;
+        self.updateStatusIndicator(false);
+        self.emit('offline');
+      });
       // 서버 가용성 확인
       this.checkServer(function(available) {
         self.serverAvailable = available;
@@ -32,6 +52,8 @@
           console.log('[Sync] Server available, connecting WebSocket...');
           self.connectWs();
           self.updateStatusIndicator(true);
+          // Flush any queued offline actions
+          self.flushOfflineQueue();
         } else {
           console.log('[Sync] Server not available, using localStorage only');
           self.updateStatusIndicator(false);
@@ -70,9 +92,12 @@
       self.ws.onopen = function() {
         console.log('[Sync] WebSocket connected');
         self.connected = true;
+        self.serverAvailable = true;
         self.reconnectCount = 0;
         self.updateStatusIndicator(true);
         self.emit('connected');
+        // Flush any queued offline actions
+        self.flushOfflineQueue();
       };
 
       self.ws.onmessage = function(event) {
@@ -153,14 +178,78 @@
       }
     },
 
-    // ── REST API 호출 ───────────────────────────
+    // ── 오프라인 큐 ──────────────────────────────
 
-    api: function(method, path, data, callback) {
-      if (!this.serverAvailable) {
-        if (callback) callback(null, 'Server not available');
-        return;
+    getOfflineQueue: function() {
+      return this.getLocal('dreamfest_offline_queue') || [];
+    },
+
+    saveOfflineQueue: function(queue) {
+      this.saveLocal('dreamfest_offline_queue', queue);
+    },
+
+    enqueueOffline: function(method, path, data) {
+      var queue = this.getOfflineQueue();
+      queue.push({
+        id: Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+        method: method,
+        path: path,
+        data: data,
+        timestamp: new Date().toISOString(),
+        retries: 0
+      });
+      this.saveOfflineQueue(queue);
+      console.log('[Sync] Queued offline action:', method, path, '(queue size:', queue.length, ')');
+      this.emit('queue:updated', { size: queue.length });
+    },
+
+    flushOfflineQueue: function() {
+      var self = this;
+      if (self._syncing) return;
+      var queue = self.getOfflineQueue();
+      if (queue.length === 0) return;
+
+      self._syncing = true;
+      console.log('[Sync] Flushing offline queue:', queue.length, 'items');
+      self.emit('queue:flushing', { size: queue.length });
+
+      var processed = 0;
+      var failed = [];
+
+      function processNext() {
+        if (processed >= queue.length) {
+          // Save any failed items back
+          self.saveOfflineQueue(failed);
+          self._syncing = false;
+          var successCount = queue.length - failed.length;
+          console.log('[Sync] Queue flush complete:', successCount, 'synced,', failed.length, 'remaining');
+          self.emit('queue:flushed', { synced: successCount, remaining: failed.length });
+          return;
+        }
+
+        var item = queue[processed];
+        processed++;
+
+        self._apiDirect(item.method, item.path, item.data, function(result, error) {
+          if (error) {
+            item.retries++;
+            if (item.retries < 5) {
+              failed.push(item);
+            } else {
+              console.warn('[Sync] Dropping queued item after 5 retries:', item.path);
+            }
+          }
+          // Small delay between requests to avoid flooding
+          setTimeout(processNext, 100);
+        });
       }
 
+      processNext();
+    },
+
+    // ── REST API 호출 ───────────────────────────
+
+    _apiDirect: function(method, path, data, callback) {
       var self = this;
       var xhr = new XMLHttpRequest();
       xhr.open(method, '/api' + path, true);
@@ -186,6 +275,28 @@
       xhr.onerror = function() { if (callback) callback(null, 'Network error'); };
       xhr.ontimeout = function() { if (callback) callback(null, 'Timeout'); };
       xhr.send(data ? JSON.stringify(data) : null);
+    },
+
+    api: function(method, path, data, callback) {
+      var self = this;
+      if (!this.serverAvailable) {
+        // Queue POST/PUT requests for later sync
+        if (method === 'POST' || method === 'PUT') {
+          this.enqueueOffline(method, path, data);
+        }
+        if (callback) callback(null, 'Server not available (queued)');
+        return;
+      }
+
+      this._apiDirect(method, path, data, function(result, error) {
+        if (error && (error === 'Network error' || error === 'Timeout') && (method === 'POST' || method === 'PUT')) {
+          // Network failed — queue for retry
+          self.enqueueOffline(method, path, data);
+          self.serverAvailable = false;
+          self.updateStatusIndicator(false);
+        }
+        if (callback) callback(result, error);
+      });
     },
 
     // ── 참가자 ──────────────────────────────────
@@ -439,7 +550,8 @@
 
     clearLocalData: function() {
       ['dreamfest_participant', 'dreamfest_stamps', 'dreamfest_results',
-       'dreamfest_checkins', 'dreamfest_leaderboard', 'dreamfest_all_participants'
+       'dreamfest_checkins', 'dreamfest_leaderboard', 'dreamfest_all_participants',
+       'dreamfest_offline_queue'
       ].forEach(function(key) {
         localStorage.removeItem(key);
       });
@@ -480,14 +592,21 @@
         document.body.appendChild(el);
       }
 
+      var queueSize = this.getOfflineQueue().length;
       if (online) {
         el.style.background = '#2D7A4F';
         el.style.color = '#fff';
         el.textContent = '\u25CF Server Connected';
+        if (queueSize > 0) {
+          el.textContent += ' (syncing ' + queueSize + ')';
+        }
       } else {
         el.style.background = '#f5f5f5';
         el.style.color = '#999';
         el.textContent = '\u25CB Offline Mode';
+        if (queueSize > 0) {
+          el.textContent += ' (' + queueSize + ' queued)';
+        }
       }
     },
 

@@ -1031,6 +1031,7 @@ body.participant-mode .profile-avatar-large{
             <div class="monitor-metric"><span data-i18n="monitor.clients">접속 클라이언트</span><strong id="monWsClients">-</strong></div>
             <div class="monitor-metric"><span data-i18n="monitor.lastSync">마지막 동기화</span><strong id="monLastSync">-</strong></div>
             <div class="monitor-metric"><span data-i18n="monitor.msgCount">메시지 수신</span><strong id="monMsgCount">0</strong></div>
+            <div class="monitor-metric"><span data-i18n="monitor.offlineQueue">오프라인 큐</span><strong id="monOfflineQueue">0</strong></div>
           </div>
         </div>
         <!-- Data Stats -->
@@ -3175,6 +3176,8 @@ function updateMonitorPanel(){
   document.getElementById('monMsgCount').textContent=_monMsgCount;
 
   document.getElementById('monLastSync').textContent=window._monLastSync?new Date(window._monLastSync).toLocaleTimeString('ko-KR',{hour12:false}):'-';
+  var queueEl=document.getElementById('monOfflineQueue');
+  if(queueEl && ds && ds.getOfflineQueue) queueEl.textContent=ds.getOfflineQueue().length;
 
   // Service Worker
   if('serviceWorker' in navigator && navigator.serviceWorker.controller){
@@ -3225,6 +3228,16 @@ function stopMonitor(){
 // Log initial events
 addMonitorLog('ok','Dashboard loaded');
 if(navigator.serviceWorker&&navigator.serviceWorker.controller) addMonitorLog('ok','Service Worker active');
+// Listen for offline queue events
+if(window.DreamSync){
+  DreamSync.on('queue:updated',function(d){addMonitorLog('warn','Offline queue: '+d.size+' pending')});
+  DreamSync.on('queue:flushing',function(d){addMonitorLog('info','Syncing '+d.size+' queued items...')});
+  DreamSync.on('queue:flushed',function(d){addMonitorLog('ok','Queue synced: '+d.synced+' done, '+d.remaining+' remaining')});
+  DreamSync.on('offline',function(){addMonitorLog('warn','Connection lost — offline mode')});
+  DreamSync.on('connected',function(){addMonitorLog('ok','WebSocket reconnected')});
+  var initQueue=DreamSync.getOfflineQueue();
+  if(initQueue.length>0) addMonitorLog('warn','Pending offline queue: '+initQueue.length+' items');
+}
 
 /* ═══════════════════════════════════════ */
 /* i18n — 다국어 전환 (한/영)              */
@@ -3281,6 +3294,7 @@ var I18N={
     'monitor.clients':'접속 클라이언트',
     'monitor.lastSync':'마지막 동기화',
     'monitor.msgCount':'메시지 수신',
+    'monitor.offlineQueue':'오프라인 큐',
     'monitor.data':'데이터 현황',
     'monitor.participants':'등록 참가자',
     'monitor.checkins':'체크인 기록',
@@ -3357,6 +3371,7 @@ var I18N={
     'monitor.clients':'Connected Clients',
     'monitor.lastSync':'Last Sync',
     'monitor.msgCount':'Messages Received',
+    'monitor.offlineQueue':'Offline Queue',
     'monitor.data':'Data Overview',
     'monitor.participants':'Registered Visitors',
     'monitor.checkins':'Check-in Records',
