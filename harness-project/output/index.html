@@ -76,6 +76,44 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green-ba
 *:focus-visible{outline:3px solid var(--green-base);outline-offset:2px;border-radius:3px}
 button:focus-visible{outline:3px solid var(--green-base);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important;scroll-behavior:auto !important}}
+/* High contrast mode */
+.high-contrast{
+  --bg:#FFFFFF;--bg-dot:rgba(0,0,0,.08);
+  --text:#000000;--text-sub:#333333;--text-light:#555555;
+  --border:#000000;
+  --zone-a:#C0392B;--zone-a-bg:#FDECEA;
+  --zone-b:#B7770A;--zone-b-bg:#FFF3CD;
+  --zone-c:#1A7A85;--zone-c-bg:#D1F2F5;
+  --zone-d:#3A7D10;--zone-d-bg:#E6F5D6;
+  --zone-e:#6A3FA0;--zone-e-bg:#EDE3F7;
+  --green-base:#1B6B3A;--green-light:#D0F0DC;--green-dark:#0D4522;
+  --card-bg:#FFFFFF;
+  --shadow:0 2px 8px rgba(0,0,0,.15);
+  --shadow-lg:0 4px 16px rgba(0,0,0,.2);
+}
+.high-contrast *:focus-visible{outline:4px solid #000;outline-offset:3px}
+.high-contrast button:focus-visible{outline:4px solid #000;outline-offset:3px}
+.high-contrast .nav-strip button{border:2px solid transparent}
+.high-contrast .nav-strip button.active{border:2px solid #000;font-weight:800}
+.high-contrast .top-bar{background:#000}
+.high-contrast .stat-card,.high-contrast .panel,.high-contrast .chart-panel,.high-contrast .cong-booth,.high-contrast .cong-zone-panel,.high-contrast .monitor-card{border:2px solid #000}
+.high-contrast .badge{border:1px solid currentColor}
+.high-contrast .toast{border:2px solid #000}
+.high-contrast a{text-decoration:underline}
+.high-contrast .floormap-svg text,.high-contrast .cong-map-svg text{font-weight:700}
+@media(prefers-contrast:more){
+  :root{--bg:#FFFFFF;--text:#000000;--text-sub:#333333;--text-light:#555555;--border:#000000;--card-bg:#FFFFFF;--shadow:0 2px 8px rgba(0,0,0,.15)}
+  *:focus-visible{outline:4px solid #000;outline-offset:3px}
+  .nav-strip button.active{border:2px solid #000;font-weight:800}
+  .top-bar{background:#000}
+  .stat-card,.panel,.chart-panel,.cong-booth,.cong-zone-panel,.monitor-card{border:2px solid #000}
+}
+/* Accessibility toolbar */
+.a11y-toolbar{display:flex;align-items:center;gap:4px;margin-right:6px}
+.a11y-btn{padding:4px 8px;font-size:.7rem;background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border:1px solid rgba(255,255,255,.25);border-radius:12px;cursor:pointer;font-family:var(--font-mono);font-weight:600;transition:var(--trans);line-height:1}
+.a11y-btn:hover,.a11y-btn.active{background:rgba(255,255,255,.3);color:#fff}
+.a11y-btn.active{border-color:#fff}
+.high-contrast .a11y-btn{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.5)}
 
 /* ═══════════════════════════════════════ */
 /* LAYOUT SHELL                           */
@@ -938,6 +976,11 @@ body.participant-mode .profile-avatar-large{
       <button class="active" data-mode="admin" aria-pressed="true" data-i18n="mode.admin">관리자</button>
       <button data-mode="participant" aria-pressed="false" data-i18n="mode.participant">참가자</button>
     </div>
+    <div class="a11y-toolbar" role="toolbar" aria-label="접근성 도구">
+      <button class="a11y-btn" id="hcToggle" onclick="toggleHighContrast()" aria-label="고대비 모드 전환" aria-pressed="false" data-i18n-aria="a11y.hc">HC</button>
+      <button class="a11y-btn" id="fontUpBtn" onclick="adjustFontSize(1)" aria-label="글자 크게">A+</button>
+      <button class="a11y-btn" id="fontDownBtn" onclick="adjustFontSize(-1)" aria-label="글자 작게">A-</button>
+    </div>
     <button id="langToggle" onclick="switchLang()" style="padding:4px 10px;font-size:.72rem;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-family:var(--font-mono);font-weight:600;margin-right:8px" aria-label="Switch language">EN</button>
     <div class="clock" id="clock" role="timer" aria-live="off" aria-label="현재 시각">--:--:--</div>
   </header>
@@ -1416,9 +1459,12 @@ function switchMode(mode){
 
 function switchView(view){
   currentView = view;
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');v.setAttribute('role','tabpanel');v.setAttribute('aria-hidden','true');});
   const el = document.getElementById('view-'+view);
-  if(el) el.classList.add('active');
+  if(el){el.classList.add('active');el.setAttribute('aria-hidden','false');}
+  // Update aria-selected on nav tabs
+  var activeNav=document.querySelector('.nav-strip:not([style*="display: none"]),.nav-strip:not([style*="display:none"])');
+  if(activeNav) activeNav.querySelectorAll('button[data-view]').forEach(function(b){b.setAttribute('aria-selected',b.dataset.view===view?'true':'false');b.setAttribute('tabindex',b.dataset.view===view?'0':'-1');});
   if(view==='monitor' && typeof startMonitor==='function') startMonitor();
   else if(typeof stopMonitor==='function') stopMonitor();
   if(view==='congestion' && typeof startCongRefresh==='function') startCongRefresh();
@@ -1445,6 +1491,66 @@ document.getElementById('modeToggle').addEventListener('click',e=>{
       switchView(e.target.dataset.view);
     }
   });
+  // Arrow key navigation for nav tabs
+  nav.setAttribute('role','tablist');
+  nav.querySelectorAll('button[data-view]').forEach(function(btn){btn.setAttribute('role','tab');});
+  nav.addEventListener('keydown',function(e){
+    if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft'&&e.key!=='Home'&&e.key!=='End') return;
+    var btns=Array.from(nav.querySelectorAll('button[data-view]'));
+    if(!btns.length) return;
+    var idx=btns.indexOf(document.activeElement);
+    if(idx<0) return;
+    e.preventDefault();
+    if(e.key==='ArrowRight') idx=(idx+1)%btns.length;
+    else if(e.key==='ArrowLeft') idx=(idx-1+btns.length)%btns.length;
+    else if(e.key==='Home') idx=0;
+    else if(e.key==='End') idx=btns.length-1;
+    btns[idx].focus();
+    btns[idx].click();
+  });
+});
+
+// ═══════════════════════════════════════
+// ACCESSIBILITY
+// ═══════════════════════════════════════
+var _fontSizeStep=0;
+function toggleHighContrast(){
+  var on=document.body.classList.toggle('high-contrast');
+  document.getElementById('hcToggle').classList.toggle('active',on);
+  document.getElementById('hcToggle').setAttribute('aria-pressed',on?'true':'false');
+  localStorage.setItem('dreamfest_hc',on?'1':'0');
+  showToast(on?'고대비 모드 활성화':'고대비 모드 비활성화',on?'🔲':'🔳',{type:'info',duration:2000});
+}
+function adjustFontSize(dir){
+  _fontSizeStep=Math.max(-2,Math.min(4,_fontSizeStep+dir));
+  document.documentElement.style.fontSize=(15+_fontSizeStep*2)+'px';
+  localStorage.setItem('dreamfest_fontsize',String(_fontSizeStep));
+}
+// Restore saved accessibility preferences
+(function(){
+  if(localStorage.getItem('dreamfest_hc')==='1'){
+    document.body.classList.add('high-contrast');
+    var btn=document.getElementById('hcToggle');
+    if(btn){btn.classList.add('active');btn.setAttribute('aria-pressed','true');}
+  }
+  var fs=parseInt(localStorage.getItem('dreamfest_fontsize')||'0',10);
+  if(fs){_fontSizeStep=fs;document.documentElement.style.fontSize=(15+fs*2)+'px';}
+})();
+
+// Global keyboard shortcuts
+document.addEventListener('keydown',function(e){
+  // Escape closes modals and detail panel
+  if(e.key==='Escape'){
+    var modals=document.querySelectorAll('.modal-overlay');
+    modals.forEach(function(m){if(m.style.display==='flex'){closeModal(m.id);e.preventDefault();}});
+    var dp=document.getElementById('detailPanel');
+    if(dp&&dp.classList.contains('open')){closeDetailPanel();e.preventDefault();}
+  }
+  // Alt+H toggles high contrast
+  if(e.altKey&&e.key==='h'){e.preventDefault();toggleHighContrast();}
+  // Alt+Plus/Minus font size
+  if(e.altKey&&(e.key==='='||e.key==='+')){e.preventDefault();adjustFontSize(1);}
+  if(e.altKey&&e.key==='-'){e.preventDefault();adjustFontSize(-1);}
 });
 
 // ═══════════════════════════════════════
@@ -1496,25 +1602,27 @@ function dismissToast(el){
 
 var _prevFocus=null;
 function closeModal(id){
-  document.getElementById(id).classList.remove('open');
+  var el=document.getElementById(id);
+  if(el){el.classList.remove('open');el.removeEventListener('keydown',_trapFocus);}
   if(_prevFocus){_prevFocus.focus();_prevFocus=null;}
+}
+function _trapFocus(e){
+  if(e.key!=='Tab') return;
+  var modal=e.currentTarget;
+  var focusable=modal.querySelectorAll('button,input,select,textarea,[tabindex]:not([tabindex="-1"])');
+  if(!focusable.length) return;
+  var first=focusable[0],last=focusable[focusable.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
 }
 function openModal(id){
   _prevFocus=document.activeElement;
   var modal=document.getElementById(id);
   modal.classList.add('open');
+  modal.addEventListener('keydown',_trapFocus);
   var first=modal.querySelector('button,input,[tabindex]');
   if(first) setTimeout(function(){first.focus()},50);
 }
-// ESC 키로 모달 닫기
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){
-    ['adminLoginModal','contentModal','progDetailModal'].forEach(function(id){
-      var el=document.getElementById(id);
-      if(el&&el.classList.contains('open')) closeModal(id);
-    });
-  }
-});
 
 function closeDetailPanel(){document.getElementById('detailPanel').classList.remove('open')}
 
