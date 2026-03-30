@@ -67,6 +67,13 @@ a{color:inherit;text-decoration:none}
 button{cursor:pointer;font-family:inherit;border:none;background:none}
 input,select,textarea{font-family:inherit;font-size:inherit;border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;background:#fff;color:var(--text)}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green-base);box-shadow:0 0 0 3px rgba(45,122,79,.12)}
+/* Accessibility */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link{position:absolute;top:-100%;left:50%;transform:translateX(-50%);padding:12px 24px;background:var(--green-dark);color:#fff;font-weight:700;border-radius:0 0 8px 8px;z-index:9999;transition:top .2s}
+.skip-link:focus{top:0}
+*:focus-visible{outline:3px solid var(--green-base);outline-offset:2px;border-radius:3px}
+button:focus-visible{outline:3px solid var(--green-base);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important;scroll-behavior:auto !important}}
 
 /* ═══════════════════════════════════════ */
 /* LAYOUT SHELL                           */
@@ -844,22 +851,23 @@ body.participant-mode .profile-avatar-large{
 </style>
 </head>
 <body>
-<div class="app-shell">
+<a href="#mainArea" class="skip-link">본문으로 건너뛰기</a>
+<div class="app-shell" role="application" aria-label="꿈-드림 페스티벌 미래기술존 운영 시스템">
   <!-- TOP BAR -->
-  <header class="top-bar">
-    <div class="logo">
-      <span class="dot"></span>
+  <header class="top-bar" role="banner">
+    <div class="logo" aria-label="꿈-드림 페스티벌 미래기술존">
+      <span class="dot" aria-hidden="true"></span>
       꿈-드림 페스티벌 · 미래기술존
     </div>
-    <div class="mode-toggle" id="modeToggle">
-      <button class="active" data-mode="admin">관리자</button>
-      <button data-mode="participant">참가자</button>
+    <div class="mode-toggle" id="modeToggle" role="group" aria-label="모드 전환">
+      <button class="active" data-mode="admin" aria-pressed="true">관리자</button>
+      <button data-mode="participant" aria-pressed="false">참가자</button>
     </div>
-    <div class="clock" id="clock">--:--:--</div>
+    <div class="clock" id="clock" role="timer" aria-live="off" aria-label="현재 시각">--:--:--</div>
   </header>
 
   <!-- ADMIN NAV -->
-  <nav class="nav-strip" id="navAdmin">
+  <nav class="nav-strip" id="navAdmin" aria-label="관리자 메뉴">
     <button class="active" data-view="floormap">관제 맵</button>
     <button data-view="timetable">타임테이블</button>
     <button data-view="staff">스태프 배치</button>
@@ -872,7 +880,7 @@ body.participant-mode .profile-avatar-large{
   </nav>
 
   <!-- PARTICIPANT NAV -->
-  <nav class="nav-strip" id="navParticipant" style="display:none">
+  <nav class="nav-strip" id="navParticipant" style="display:none" aria-label="참가자 메뉴">
     <button class="active" data-view="stamp">스탬프 보드</button>
     <button data-view="qr">QR 체크인</button>
     <button data-view="leaderboard">랭킹</button>
@@ -883,16 +891,16 @@ body.participant-mode .profile-avatar-large{
   </nav>
 
   <!-- MAIN CONTENT -->
-  <main class="main-area" id="mainArea">
+  <main class="main-area" id="mainArea" role="main" aria-label="메인 콘텐츠">
 
     <!-- ════════════════ ADMIN VIEWS ════════════════ -->
 
     <!-- V1: FLOORMAP -->
     <div class="view active" id="view-floormap">
       <h2 class="section-title">존 플로어맵 관제 <span class="badge">LIVE</span></h2>
-      <div class="stat-row" id="adminStats"></div>
+      <div class="stat-row" id="adminStats" aria-live="polite" aria-atomic="true"></div>
       <div class="floormap-container">
-        <svg class="floormap-svg" viewBox="0 0 900 520" id="floormapSvg"></svg>
+        <svg class="floormap-svg" viewBox="0 0 900 520" id="floormapSvg" role="img" aria-label="미래기술존 5개 존 플로어맵 — A존 AI 모션, B존 객체인식, C존 창작, D존 시뮬레이션, E존 진로상담"></svg>
       </div>
     </div>
 
@@ -918,7 +926,7 @@ body.participant-mode .profile-avatar-large{
     <div class="view" id="view-stats">
       <h2 class="section-title">참가자 통계 & 분석
         <span class="badge" id="autoRefreshBadge">자동 갱신</span>
-        <div class="toggle-switch on" id="autoRefreshToggle" onclick="toggleAutoRefresh()" style="margin-left:8px"></div>
+        <div class="toggle-switch on" id="autoRefreshToggle" onclick="toggleAutoRefresh()" style="margin-left:8px" role="switch" aria-checked="true" aria-label="자동 갱신 토글" tabindex="0" onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();toggleAutoRefresh()}"></div>
         <div style="position:relative;display:inline-block;margin-left:auto">
           <button onclick="toggleExportMenu()" id="exportBtn" style="padding:6px 14px;font-size:.8rem;font-weight:600;background:var(--green-base);color:#fff;border:none;border-radius:var(--radius);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">📥 데이터 내보내기 ▾</button>
           <div id="exportMenu" style="display:none;position:absolute;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);min-width:220px;z-index:200;overflow:hidden">
@@ -999,7 +1007,7 @@ body.participant-mode .profile-avatar-large{
 
 <!-- Detail Panel (Floormap) -->
 <div class="detail-panel" id="detailPanel">
-  <button class="close-btn" onclick="closeDetailPanel()">&times;</button>
+  <button class="close-btn" onclick="closeDetailPanel()" aria-label="상세 패널 닫기">&times;</button>
   <div id="detailContent"></div>
 </div>
 
@@ -1014,33 +1022,33 @@ body.participant-mode .profile-avatar-large{
 </div>
 
 <!-- Content Edit Modal -->
-<div class="modal-overlay" id="contentModal">
+<div class="modal-overlay" id="contentModal" role="dialog" aria-modal="true" aria-label="콘텐츠 상세">
   <div class="modal">
     <div class="modal-head">
       <h3 id="contentModalTitle">프로그램 편집</h3>
-      <button class="modal-close" onclick="closeModal('contentModal')">&times;</button>
+      <button class="modal-close" onclick="closeModal('contentModal')" aria-label="닫기">&times;</button>
     </div>
     <div id="contentModalBody"></div>
   </div>
 </div>
 
 <!-- Program Detail Modal (Participant) -->
-<div class="modal-overlay" id="progDetailModal">
+<div class="modal-overlay" id="progDetailModal" role="dialog" aria-modal="true" aria-label="프로그램 상세">
   <div class="modal">
     <div class="modal-head">
       <h3 id="progDetailTitle">프로그램 상세</h3>
-      <button class="modal-close" onclick="closeModal('progDetailModal')">&times;</button>
+      <button class="modal-close" onclick="closeModal('progDetailModal')" aria-label="닫기">&times;</button>
     </div>
     <div id="progDetailBody"></div>
   </div>
 </div>
 
 <!-- Admin Login Modal -->
-<div class="modal-overlay" id="adminLoginModal">
+<div class="modal-overlay" id="adminLoginModal" role="dialog" aria-modal="true" aria-label="관리자 로그인">
   <div class="modal" style="max-width:360px">
     <div class="modal-head">
       <h3>🔐 관리자 로그인</h3>
-      <button class="modal-close" onclick="closeModal('adminLoginModal')">&times;</button>
+      <button class="modal-close" onclick="closeModal('adminLoginModal')" aria-label="닫기">&times;</button>
     </div>
     <div style="padding:20px">
       <p style="font-size:.85rem;color:#666;margin-bottom:16px">관리자 모드에 접근하려면 비밀번호를 입력하세요.</p>
@@ -1233,6 +1241,7 @@ function switchMode(mode){
   currentMode = mode;
   document.querySelectorAll('#modeToggle button').forEach(b=>{
     b.classList.toggle('active',b.dataset.mode===mode);
+    b.setAttribute('aria-pressed',b.dataset.mode===mode?'true':'false');
   });
   document.getElementById('navAdmin').style.display = mode==='admin'?'flex':'none';
   document.getElementById('navParticipant').style.display = mode==='participant'?'flex':'none';
@@ -1301,8 +1310,27 @@ function showToast(msg,icon='📢'){
   setTimeout(()=>t.remove(),4000);
 }
 
-function closeModal(id){document.getElementById(id).classList.remove('open')}
-function openModal(id){document.getElementById(id).classList.add('open')}
+var _prevFocus=null;
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  if(_prevFocus){_prevFocus.focus();_prevFocus=null;}
+}
+function openModal(id){
+  _prevFocus=document.activeElement;
+  var modal=document.getElementById(id);
+  modal.classList.add('open');
+  var first=modal.querySelector('button,input,[tabindex]');
+  if(first) setTimeout(function(){first.focus()},50);
+}
+// ESC 키로 모달 닫기
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    ['adminLoginModal','contentModal','progDetailModal'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el&&el.classList.contains('open')) closeModal(id);
+    });
+  }
+});
 
 function closeDetailPanel(){document.getElementById('detailPanel').classList.remove('open')}
 
@@ -1678,6 +1706,7 @@ function toggleAutoRefresh(){
   const toggle = document.getElementById('autoRefreshToggle');
   const badge = document.getElementById('autoRefreshBadge');
   toggle.classList.toggle('on', autoRefreshEnabled);
+  toggle.setAttribute('aria-checked', autoRefreshEnabled ? 'true' : 'false');
   badge.textContent = autoRefreshEnabled ? '자동 갱신' : '수동 갱신';
   showToast(autoRefreshEnabled ? '자동 갱신 활성화' : '자동 갱신 비활성화', autoRefreshEnabled ? '🔄' : '⏸️');
 }
