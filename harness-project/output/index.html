@@ -641,7 +641,14 @@ button:focus-visible{outline:3px solid var(--green-base);outline-offset:2px}
 /* ═══════════════════════════════════════ */
 /* VIEW 9: CONGESTION MAP                 */
 /* ═══════════════════════════════════════ */
-.congestion-wrap{max-width:800px;margin:0 auto}
+.congestion-wrap{max-width:860px;margin:0 auto}
+.cong-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.cong-stat{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;text-align:center}
+.cong-stat .val{font-family:var(--font-display);font-size:1.3rem;font-weight:700}
+.cong-stat .lbl{font-size:.72rem;color:var(--text-sub);margin-top:2px}
+.cong-stat .trend{font-size:.7rem;font-weight:600;margin-top:3px}
+.cong-stat .trend.up{color:#F44336}.cong-stat .trend.down{color:#4CAF50}.cong-stat .trend.flat{color:var(--text-light)}
+@media(max-width:600px){.cong-stats{grid-template-columns:repeat(2,1fr)}}
 .ai-recommend{
   background:linear-gradient(135deg,#E6F7F9,#F0F8E6);
   border:1px solid rgba(43,165,179,.2);
@@ -660,6 +667,28 @@ button:focus-visible{outline:3px solid var(--green-base);outline-offset:2px}
 .status-green{background:#4CAF50}
 .status-yellow{background:#FFC107}
 .status-red{background:#F44336}
+.cong-zone-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:14px;overflow:hidden}
+.cong-zone-header{padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
+.cong-zone-header:hover{background:rgba(0,0,0,.02)}
+.cong-zone-name{font-family:var(--font-display);font-size:.9rem;font-weight:700;flex:1}
+.cong-zone-bar-wrap{flex:0 0 140px;height:8px;background:#eee;border-radius:4px;overflow:hidden}
+.cong-zone-bar{height:100%;border-radius:4px;transition:width .6s ease}
+.cong-zone-pct{font-family:var(--font-mono);font-size:.75rem;font-weight:600;min-width:38px;text-align:right}
+.cong-zone-badge{font-size:.68rem;padding:2px 8px;border-radius:10px;font-weight:600}
+.cong-booths{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;padding:0 16px 16px}
+.cong-booth{border:1px solid var(--border);border-radius:var(--radius);padding:12px;cursor:pointer;transition:var(--trans);position:relative;overflow:hidden}
+.cong-booth:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.cong-booth .heat-bg{position:absolute;top:0;left:0;right:0;bottom:0;opacity:.08;pointer-events:none;transition:background .4s}
+.cong-booth-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;position:relative}
+.cong-booth-icon{font-size:1.2rem}
+.cong-booth-name{font-size:.82rem;font-weight:600;flex:1}
+.cong-booth-status{font-size:.68rem;padding:2px 8px;border-radius:10px;font-weight:600}
+.cong-meter{height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-bottom:6px;position:relative}
+.cong-meter-fill{height:100%;border-radius:3px;transition:width .6s ease,background .4s}
+.cong-booth-info{display:flex;justify-content:space-between;font-size:.72rem;color:var(--text-sub);position:relative}
+.cong-booth-info .wait{font-weight:600}
+@keyframes congPulse{0%,100%{box-shadow:none}50%{box-shadow:inset 0 0 0 2px rgba(244,67,54,.3)}}
+.cong-booth.is-crowded{animation:congPulse 2s ease infinite}
 .cong-map-svg{width:100%;max-width:760px;margin:0 auto;display:block}
 .cong-zone-block{cursor:pointer;transition:all .2s ease}
 .cong-zone-block:hover{filter:brightness(1.04)}
@@ -677,6 +706,9 @@ button:focus-visible{outline:3px solid var(--green-base);outline-offset:2px}
   pointer-events:none;
   animation:modalIn .15s ease;
 }
+.cong-view-toggle{display:flex;gap:6px;margin-bottom:16px}
+.cong-view-btn{padding:6px 14px;font-size:.78rem;font-weight:600;border-radius:var(--radius);border:1px solid var(--border);background:#fff;cursor:pointer;transition:var(--trans)}
+.cong-view-btn.active{background:var(--green-base);color:#fff;border-color:var(--green-base)}
 
 /* ═══════════════════════════════════════ */
 /* VIEW 10: PROFILE                       */
@@ -1095,8 +1127,17 @@ body.participant-mode .profile-avatar-large{
 
     <!-- V9: CONGESTION -->
     <div class="view" id="view-congestion">
-      <h2 class="section-title" data-i18n="title.congestion">실시간 부스 혼잡도</h2>
-      <div class="congestion-wrap" id="congestionArea"></div>
+      <h2 class="section-title"><span data-i18n="title.congestion">실시간 부스 혼잡도</span>
+        <span class="badge" id="congLiveBadge" style="background:#ef5350;color:#fff;font-size:.65rem;animation:pulse 2s infinite">LIVE</span>
+      </h2>
+      <div class="congestion-wrap">
+        <div class="cong-stats" id="congStats"></div>
+        <div class="cong-view-toggle">
+          <button class="cong-view-btn active" onclick="setCongView('card')" id="congViewCard" data-i18n="cong.cardView">카드 뷰</button>
+          <button class="cong-view-btn" onclick="setCongView('map')" id="congViewMap" data-i18n="cong.mapView">맵 뷰</button>
+        </div>
+        <div id="congestionArea"></div>
+      </div>
     </div>
 
     <!-- V10: PROFILE -->
@@ -1380,6 +1421,8 @@ function switchView(view){
   if(el) el.classList.add('active');
   if(view==='monitor' && typeof startMonitor==='function') startMonitor();
   else if(typeof stopMonitor==='function') stopMonitor();
+  if(view==='congestion' && typeof startCongRefresh==='function') startCongRefresh();
+  else if(typeof stopCongRefresh==='function') stopCongRefresh();
 }
 
 document.getElementById('modeToggle').addEventListener('click',e=>{
@@ -2343,94 +2386,197 @@ function renderLeaderboard(){
 }
 
 // ═══════════════════════════════════════
-// V9: CONGESTION MAP
+// V9: CONGESTION HEATMAP
 // ═══════════════════════════════════════
+var _congView='card';
+var _congRefreshTimer=null;
+
+function setCongView(v){
+  _congView=v;
+  document.getElementById('congViewCard').classList.toggle('active',v==='card');
+  document.getElementById('congViewMap').classList.toggle('active',v==='map');
+  renderCongestion();
+}
+
+function startCongRefresh(){
+  if(_congRefreshTimer) return;
+  _congRefreshTimer=setInterval(function(){renderCongestion();},8000);
+}
+function stopCongRefresh(){
+  if(_congRefreshTimer){clearInterval(_congRefreshTimer);_congRefreshTimer=null;}
+}
+
+function congestionPct(prog){
+  if(!prog.capacity) return 0;
+  return Math.round((prog.current+prog.queue)/prog.capacity*100);
+}
+function congHeatColor(pct){
+  if(pct<40) return '#4CAF50';
+  if(pct<65) return '#8BC34A';
+  if(pct<80) return '#FFC107';
+  if(pct<95) return '#FF9800';
+  return '#F44336';
+}
+function waitEstimate(prog){
+  if(prog.queue<=0) return 0;
+  return Math.ceil(prog.queue*(prog.duration/prog.capacity));
+}
+
 function renderCongestion(){
-  // AI recommendation
-  const lowCongestion = PROGRAMS.filter(p=>p.status==='운영중'&&congestionLevel(p)===0).slice(0,3);
-
-  let html = `
-    <div class="ai-recommend">
-      <h4>지금 가기 좋은 부스 추천</h4>
-      <div class="rec-list">
-        ${lowCongestion.map(p=>`
-          <div class="rec-chip">
-            <span class="status-dot status-green"></span>
-            ${p.icon} ${p.name}
-            <span style="color:var(--text-light);font-size:.7rem">대기 ${p.queue>0?p.queue+'명':'없음'}</span>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-
-  // SVG-based simplified floor map (participant version)
-  const zoneBlocks = [
-    {id:'A', x:30, y:30, w:210, h:160, label:'A존 · 모션캡처'},
-    {id:'B', x:280, y:20, w:210, h:160, label:'B존 · AI아트'},
-    {id:'C', x:530, y:50, w:190, h:170, label:'C존 · 프롬프트랩'},
-    {id:'D', x:60, y:240, w:230, h:160, label:'D존 · 로보틱스'},
-    {id:'E', x:340, y:230, w:230, h:170, label:'E존 · XR체험'},
+  // Stats summary
+  var totalCur=0,totalQ=0,totalCap=0,crowded=0;
+  PROGRAMS.forEach(function(p){
+    if(p.status==='운영중'){totalCur+=p.current;totalQ+=p.queue;totalCap+=p.capacity;if(congestionLevel(p)===2)crowded++;}
+  });
+  var avgUtil=totalCap?Math.round((totalCur+totalQ)/totalCap*100):0;
+  var avgWait=totalQ>0?Math.round(PROGRAMS.filter(function(p){return p.queue>0;}).reduce(function(s,p){return s+waitEstimate(p);},0)/Math.max(PROGRAMS.filter(function(p){return p.queue>0;}).length,1)):0;
+  // Simulated trends
+  var trends=[
+    {arrow:'▲',cls:'up'},{arrow:'—',cls:'flat'},{arrow:'▼',cls:'down'},{arrow:'▲',cls:'up'}
   ];
 
-  let svg = `<svg class="cong-map-svg" viewBox="0 0 760 440">`;
-  // Background
-  svg += `<rect x="0" y="0" width="760" height="440" fill="#FAFAF7" rx="12"/>`;
-  // Connection paths
-  svg += `<path d="M240,110 Q260,80 280,90" stroke="var(--border)" stroke-width="1.5" fill="none" stroke-dasharray="5,4"/>`;
-  svg += `<path d="M490,100 Q510,90 530,120" stroke="var(--border)" stroke-width="1.5" fill="none" stroke-dasharray="5,4"/>`;
-  svg += `<path d="M135,190 Q140,215 150,240" stroke="var(--border)" stroke-width="1.5" fill="none" stroke-dasharray="5,4"/>`;
-  svg += `<path d="M385,180 Q400,210 420,230" stroke="var(--border)" stroke-width="1.5" fill="none" stroke-dasharray="5,4"/>`;
-  svg += `<path d="M290,320 Q310,310 340,310" stroke="var(--border)" stroke-width="1.5" fill="none" stroke-dasharray="5,4"/>`;
+  document.getElementById('congStats').innerHTML=
+    '<div class="cong-stat"><div class="val">'+totalCur+'</div><div class="lbl">현재 체험 중</div><div class="trend '+trends[0].cls+'">'+trends[0].arrow+' 증가</div></div>'+
+    '<div class="cong-stat"><div class="val">'+totalQ+'</div><div class="lbl">대기 인원</div><div class="trend '+trends[1].cls+'">'+trends[1].arrow+' 유지</div></div>'+
+    '<div class="cong-stat"><div class="val" style="color:'+congHeatColor(avgUtil)+'">'+avgUtil+'%</div><div class="lbl">평균 가동률</div><div class="trend '+trends[2].cls+'">'+trends[2].arrow+' 감소</div></div>'+
+    '<div class="cong-stat"><div class="val" style="color:'+(crowded>2?'#F44336':'#FF9800')+'">'+crowded+'</div><div class="lbl">혼잡 부스</div><div class="trend '+trends[3].cls+'">'+trends[3].arrow+' 주의</div></div>';
 
-  zoneBlocks.forEach(zb=>{
-    const zone = getZone(zb.id);
-    const progs = getZonePrograms(zb.id);
-    // Zone overall congestion
-    const avgCong = progs.filter(p=>p.status==='운영중').reduce((s,p)=>s+congestionLevel(p),0) / Math.max(progs.filter(p=>p.status==='운영중').length,1);
-    const zoneColor = avgCong < 0.5 ? '#4CAF50' : avgCong < 1.5 ? '#FFC107' : '#F44336';
+  if(_congView==='card') renderCongestionCards();
+  else renderCongestionMap();
+}
 
-    // Zone block
-    svg += `<rect x="${zb.x}" y="${zb.y}" width="${zb.w}" height="${zb.h}" rx="14" fill="${zone.bg}" stroke="${zone.colorHex}" stroke-width="2" opacity="0.7"/>`;
-    // Zone label
-    svg += `<text x="${zb.x+zb.w/2}" y="${zb.y+22}" text-anchor="middle" font-family="var(--font-display)" font-size="13" font-weight="700" fill="${zone.colorHex}">${zb.label}</text>`;
-    // Zone congestion indicator
-    svg += `<circle cx="${zb.x+zb.w-16}" cy="${zb.y+16}" r="6" fill="${zoneColor}"/>`;
+function renderCongestionCards(){
+  // AI recommendation
+  var lowCong=PROGRAMS.filter(function(p){return p.status==='운영중'&&congestionLevel(p)===0;}).slice(0,3);
 
-    // Booth nodes inside zone
-    const boothW = Math.floor((zb.w - 30) / 3);
-    progs.forEach((prog,pi)=>{
-      const bx = zb.x + 15 + pi * boothW + boothW/2;
-      const by = zb.y + 55;
-      const cl = congestionLevel(prog);
-      const cc = congestionColor(cl);
-      const isOp = prog.status==='운영중';
-      const nodeR = isOp ? 20 : 14;
-      const waitMin = prog.queue > 0 ? Math.ceil(prog.queue * (prog.duration/prog.capacity)) : 0;
+  var html='<div class="ai-recommend"><h4>지금 가기 좋은 부스 추천</h4><div class="rec-list">'+
+    lowCong.map(function(p){return '<div class="rec-chip"><span class="status-dot status-green"></span>'+p.icon+' '+p.name+'<span style="color:var(--text-light);font-size:.7rem">대기 '+(p.queue>0?p.queue+'명':'없음')+'</span></div>';}).join('')+
+    '</div></div>';
 
-      svg += `<g class="cong-booth-node" onclick="handleHexClick(${prog.id},event)" style="opacity:${isOp?1:0.4}">`;
-      svg += `<circle cx="${bx}" cy="${by}" r="${nodeR}" fill="${cc}" opacity="0.9"/>`;
-      if(cl === 2 && isOp) svg += `<circle cx="${bx}" cy="${by}" r="${nodeR}" fill="none" stroke="${cc}" stroke-width="2" opacity="0.4"><animate attributeName="r" from="${nodeR}" to="${nodeR+8}" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="1.5s" repeatCount="indefinite"/></circle>`;
-      svg += `<text x="${bx}" y="${by+3}" text-anchor="middle" font-size="12" fill="#fff" pointer-events="none">${prog.icon}</text>`;
-      svg += `<text x="${bx}" y="${by+nodeR+14}" text-anchor="middle" font-size="9" font-weight="600" fill="var(--text-sub)" pointer-events="none">${prog.name.substring(0,6)}</text>`;
-      if(isOp){
-        svg += `<text x="${bx}" y="${by+nodeR+25}" text-anchor="middle" font-size="8" fill="var(--text-light)" pointer-events="none">${waitMin>0?'대기 '+waitMin+'분':'여유'}</text>`;
-      }
-      svg += `</g>`;
+  // Zone panels with booth cards
+  ZONES.forEach(function(z){
+    var progs=getZonePrograms(z.id);
+    var opProgs=progs.filter(function(p){return p.status==='운영중';});
+    var zoneCur=progs.reduce(function(s,p){return s+p.current;},0);
+    var zoneQ=progs.reduce(function(s,p){return s+p.queue;},0);
+    var zoneCap=progs.reduce(function(s,p){return s+p.capacity;},0);
+    var zonePct=zoneCap?Math.round((zoneCur+zoneQ)/zoneCap*100):0;
+    var zoneHC=congHeatColor(zonePct);
+    var avgCong=opProgs.length?opProgs.reduce(function(s,p){return s+congestionLevel(p);},0)/opProgs.length:0;
+    var badgeText=avgCong<0.5?'여유':avgCong<1.5?'보통':'혼잡';
+    var badgeColor=avgCong<0.5?'#4CAF50':avgCong<1.5?'#FFC107':'#F44336';
+
+    html+='<div class="cong-zone-panel">'+
+      '<div class="cong-zone-header">'+
+        '<div style="width:6px;height:32px;border-radius:3px;background:'+z.colorHex+'"></div>'+
+        '<div class="cong-zone-name" style="color:'+z.colorHex+'">'+z.name+'</div>'+
+        '<span class="cong-zone-badge" style="background:'+badgeColor+'22;color:'+badgeColor+'">'+badgeText+'</span>'+
+        '<div class="cong-zone-bar-wrap"><div class="cong-zone-bar" style="width:'+zonePct+'%;background:'+zoneHC+'"></div></div>'+
+        '<div class="cong-zone-pct" style="color:'+zoneHC+'">'+zonePct+'%</div>'+
+      '</div>'+
+      '<div class="cong-booths">';
+
+    progs.forEach(function(prog){
+      var pct=congestionPct(prog);
+      var hc=congHeatColor(pct);
+      var cl=congestionLevel(prog);
+      var isOp=prog.status==='운영중';
+      var wt=waitEstimate(prog);
+      var crowdedCls=cl===2&&isOp?' is-crowded':'';
+      var statusText=isOp?(cl===0?'여유':cl===1?'보통':'혼잡'):'비운영';
+      var statusBg=isOp?(cl===0?'#E8F5E9':cl===1?'#FFF8E1':'#FFEBEE'):'#f5f5f5';
+      var statusFg=isOp?hc:'#999';
+
+      html+='<div class="cong-booth'+crowdedCls+'" onclick="handleHexClick('+prog.id+',event)" style="opacity:'+(isOp?1:0.5)+'">'+
+        '<div class="heat-bg" style="background:'+hc+'"></div>'+
+        '<div class="cong-booth-top">'+
+          '<span class="cong-booth-icon">'+prog.icon+'</span>'+
+          '<span class="cong-booth-name">'+prog.name+'</span>'+
+          '<span class="cong-booth-status" style="background:'+statusBg+';color:'+statusFg+'">'+statusText+'</span>'+
+        '</div>'+
+        '<div class="cong-meter"><div class="cong-meter-fill" style="width:'+Math.min(pct,100)+'%;background:'+hc+'"></div></div>'+
+        '<div class="cong-booth-info">'+
+          '<span>'+prog.current+'/'+prog.capacity+'명</span>'+
+          '<span class="wait" style="color:'+hc+'">'+(isOp?(wt>0?'대기 약 '+wt+'분':'대기 없음'):'—')+'</span>'+
+        '</div>'+
+      '</div>';
+    });
+
+    html+='</div></div>';
+  });
+
+  document.getElementById('congestionArea').innerHTML=html;
+}
+
+function renderCongestionMap(){
+  var lowCong=PROGRAMS.filter(function(p){return p.status==='운영중'&&congestionLevel(p)===0;}).slice(0,3);
+  var html='<div class="ai-recommend"><h4>지금 가기 좋은 부스 추천</h4><div class="rec-list">'+
+    lowCong.map(function(p){return '<div class="rec-chip"><span class="status-dot status-green"></span>'+p.icon+' '+p.name+'<span style="color:var(--text-light);font-size:.7rem">대기 '+(p.queue>0?p.queue+'명':'없음')+'</span></div>';}).join('')+
+    '</div></div>';
+
+  var zoneBlocks=[
+    {id:'A',x:30,y:30,w:210,h:160,label:'A존 · AI 모션 분석'},
+    {id:'B',x:280,y:20,w:210,h:160,label:'B존 · YOLO 객체인식'},
+    {id:'C',x:530,y:50,w:190,h:170,label:'C존 · AI 창작 스튜디오'},
+    {id:'D',x:60,y:240,w:230,h:160,label:'D존 · 미래직업 시뮬레이션'},
+    {id:'E',x:340,y:230,w:230,h:170,label:'E존 · 미래기술 진로상담'}
+  ];
+
+  var svg='<svg class="cong-map-svg" viewBox="0 0 760 440">';
+  svg+='<defs><linearGradient id="heatG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4CAF50" stop-opacity=".15"/><stop offset="50%" stop-color="#FFC107" stop-opacity=".15"/><stop offset="100%" stop-color="#F44336" stop-opacity=".15"/></linearGradient></defs>';
+  svg+='<rect x="0" y="0" width="760" height="440" fill="#FAFAF7" rx="12"/>';
+  svg+='<path d="M240,110 Q260,80 280,90" stroke="var(--border)" stroke-width="1.5" fill="none" stroke-dasharray="5,4"/>';
+  svg+='<path d="M490,100 Q510,90 530,120" stroke="var(--border)" stroke-width="1.5" fill="none" stroke-dasharray="5,4"/>';
+  svg+='<path d="M135,190 Q140,215 150,240" stroke="var(--border)" stroke-width="1.5" fill="none" stroke-dasharray="5,4"/>';
+  svg+='<path d="M385,180 Q400,210 420,230" stroke="var(--border)" stroke-width="1.5" fill="none" stroke-dasharray="5,4"/>';
+  svg+='<path d="M290,320 Q310,310 340,310" stroke="var(--border)" stroke-width="1.5" fill="none" stroke-dasharray="5,4"/>';
+
+  zoneBlocks.forEach(function(zb){
+    var zone=getZone(zb.id);
+    var progs=getZonePrograms(zb.id);
+    var opProgs=progs.filter(function(p){return p.status==='운영중';});
+    var avgCong=opProgs.length?opProgs.reduce(function(s,p){return s+congestionLevel(p);},0)/opProgs.length:0;
+    var zonePct=progs.reduce(function(s,p){return s+p.capacity;},0);
+    zonePct=zonePct?Math.round((progs.reduce(function(s,p){return s+p.current+p.queue;},0))/zonePct*100):0;
+    var zoneHC=congHeatColor(zonePct);
+
+    svg+='<rect x="'+zb.x+'" y="'+zb.y+'" width="'+zb.w+'" height="'+zb.h+'" rx="14" fill="'+zone.bg+'" stroke="'+zone.colorHex+'" stroke-width="2" opacity="0.7"/>';
+    svg+='<text x="'+(zb.x+zb.w/2)+'" y="'+(zb.y+22)+'" text-anchor="middle" font-family="var(--font-display)" font-size="13" font-weight="700" fill="'+zone.colorHex+'">'+zb.label+'</text>';
+    svg+='<circle cx="'+(zb.x+zb.w-16)+'" cy="'+(zb.y+16)+'" r="6" fill="'+zoneHC+'"/>';
+    // Zone utilization bar
+    svg+='<rect x="'+(zb.x+12)+'" y="'+(zb.y+zb.h-16)+'" width="'+(zb.w-24)+'" height="6" rx="3" fill="#eee"/>';
+    svg+='<rect x="'+(zb.x+12)+'" y="'+(zb.y+zb.h-16)+'" width="'+Math.round((zb.w-24)*Math.min(zonePct,100)/100)+'" height="6" rx="3" fill="'+zoneHC+'"/>';
+    svg+='<text x="'+(zb.x+zb.w-12)+'" y="'+(zb.y+zb.h-10)+'" text-anchor="end" font-size="9" font-weight="600" fill="'+zoneHC+'">'+zonePct+'%</text>';
+
+    var boothW=Math.floor((zb.w-30)/3);
+    progs.forEach(function(prog,pi){
+      var bx=zb.x+15+pi*boothW+boothW/2;
+      var by=zb.y+55;
+      var cl=congestionLevel(prog);
+      var pct=congestionPct(prog);
+      var cc=congHeatColor(pct);
+      var isOp=prog.status==='운영중';
+      var nodeR=isOp?20:14;
+      var wt=waitEstimate(prog);
+
+      svg+='<g class="cong-booth-node" onclick="handleHexClick('+prog.id+',event)" style="opacity:'+(isOp?1:0.4)+'">';
+      svg+='<circle cx="'+bx+'" cy="'+by+'" r="'+nodeR+'" fill="'+cc+'" opacity="0.9"/>';
+      if(cl===2&&isOp) svg+='<circle cx="'+bx+'" cy="'+by+'" r="'+nodeR+'" fill="none" stroke="'+cc+'" stroke-width="2" opacity="0.4"><animate attributeName="r" from="'+nodeR+'" to="'+(nodeR+8)+'" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="1.5s" repeatCount="indefinite"/></circle>';
+      svg+='<text x="'+bx+'" y="'+(by+3)+'" text-anchor="middle" font-size="12" fill="#fff" pointer-events="none">'+prog.icon+'</text>';
+      svg+='<text x="'+bx+'" y="'+(by+nodeR+14)+'" text-anchor="middle" font-size="9" font-weight="600" fill="var(--text-sub)" pointer-events="none">'+prog.name.substring(0,6)+'</text>';
+      if(isOp) svg+='<text x="'+bx+'" y="'+(by+nodeR+25)+'" text-anchor="middle" font-size="8" fill="var(--text-light)" pointer-events="none">'+(wt>0?'대기 '+wt+'분':'여유')+'</text>';
+      svg+='</g>';
     });
   });
 
-  // Legend
-  svg += `<g transform="translate(560,400)">
-    <circle cx="0" cy="0" r="5" fill="#4CAF50"/><text x="10" y="4" font-size="9" fill="var(--text-sub)">여유</text>
-    <circle cx="55" cy="0" r="5" fill="#FFC107"/><text x="65" y="4" font-size="9" fill="var(--text-sub)">보통</text>
-    <circle cx="110" cy="0" r="5" fill="#F44336"/><text x="120" y="4" font-size="9" fill="var(--text-sub)">혼잡</text>
-  </g>`;
+  svg+='<g transform="translate(560,400)">';
+  svg+='<circle cx="0" cy="0" r="5" fill="#4CAF50"/><text x="10" y="4" font-size="9" fill="var(--text-sub)">여유</text>';
+  svg+='<circle cx="55" cy="0" r="5" fill="#FFC107"/><text x="65" y="4" font-size="9" fill="var(--text-sub)">보통</text>';
+  svg+='<circle cx="110" cy="0" r="5" fill="#F44336"/><text x="120" y="4" font-size="9" fill="var(--text-sub)">혼잡</text>';
+  svg+='</g></svg>';
+  html+=svg;
 
-  svg += `</svg>`;
-  html += svg;
-
-  document.getElementById('congestionArea').innerHTML = html;
+  document.getElementById('congestionArea').innerHTML=html;
 }
 
 // ═══════════════════════════════════════
@@ -3602,6 +3748,8 @@ var I18N={
     'insight.2':'⚠️ B존 AI 안전 감시관 부스 대기열 증가 — 추가 세션 권장',
     'insight.3':'🎯 D존 자율주행 시뮬레이터 만석 — 대기 안내 강화 필요',
     'insight.4':'💡 A존 + E존 연계 코스 참가율 높음 — 동선 안내 강화 추천',
+    'cong.cardView':'카드 뷰',
+    'cong.mapView':'맵 뷰',
     'notif.compose':'새 공지 작성',
     'notif.send':'발송',
     'notif.markAllRead':'모두 읽음'
@@ -3680,6 +3828,8 @@ var I18N={
     'insight.2':'⚠️ Zone B AI Safety booth queue growing — additional session recommended',
     'insight.3':'🎯 Zone D Self-driving Simulator full — waiting guidance needed',
     'insight.4':'💡 Zone A + E combined course popular — route guidance enhancement recommended',
+    'cong.cardView':'Card View',
+    'cong.mapView':'Map View',
     'notif.compose':'Compose Notice',
     'notif.send':'Send',
     'notif.markAllRead':'Mark All Read'
