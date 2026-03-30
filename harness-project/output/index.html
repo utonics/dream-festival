@@ -24,6 +24,7 @@
 <link rel="apple-touch-startup-image" media="(device-width:810px) and (device-height:1080px) and (-webkit-device-pixel-ratio:2)" href="icons/splash-ipad-10.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <style>
 /* ═══════════════════════════════════════ */
 /* RESET & BASE                           */
@@ -980,6 +981,7 @@ body.participant-mode .profile-avatar-large{
             <button onclick="exportData('stamps')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.stamps">🏅 스탬프 현황 (CSV)</span></button>
             <button onclick="exportData('leaderboard')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.leaderboard">🏆 리더보드 (CSV)</span></button>
             <button onclick="exportData('mentoring')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.mentoring">👨‍💼 멘토링 예약 (CSV)</span></button>
+            <button onclick="generatePDFReport()" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;border-bottom:1px solid #f0f0f0;font-weight:600;color:#c62828" onmouseover="this.style.background='#fef5f5'" onmouseout="this.style.background=''"><span data-i18n="export.pdf">📄 운영 현황 리포트 (PDF)</span></button>
             <button onclick="exportData('all')" style="display:block;width:100%;padding:10px 16px;text-align:left;font-size:.82rem;border:none;background:none;cursor:pointer;font-family:inherit;font-weight:600;color:var(--green-base)" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background=''"><span data-i18n="export.all">💾 전체 데이터 백업 (JSON)</span></button>
           </div>
         </div>
@@ -3240,6 +3242,289 @@ if(window.DreamSync){
 }
 
 /* ═══════════════════════════════════════ */
+/* PDF REPORT GENERATION                   */
+/* ═══════════════════════════════════════ */
+function generatePDFReport(){
+  document.getElementById('exportMenu').style.display='none';
+  showToast('PDF 리포트 생성 중...','📄',{type:'info',duration:2000});
+
+  try{
+    var jsPDF=window.jspdf.jsPDF;
+    var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var W=210,H=297,M=15;
+    var y=M;
+    var now=new Date();
+    var dateStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    var timeStr=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+
+    // Colors
+    var green=[45,122,79];
+    var greenDark=[27,94,58];
+    var grayC=[107,107,107];
+    var textC=[26,26,26];
+    var zoneColors={A:[232,112,90],B:[212,148,58],C:[43,165,179],D:[107,175,58],E:[139,111,192]};
+
+    function setC(c){doc.setTextColor(c[0],c[1],c[2]);}
+    function hLine(yy){doc.setDrawColor(226,224,220);doc.setLineWidth(0.3);doc.line(M,yy,W-M,yy);}
+    function needPage(need){if(y+need>H-M){doc.addPage();y=M;return true;}return false;}
+
+    // ═══════════ PAGE 1: HEADER & SUMMARY ═══════════
+    doc.setFillColor(green[0],green[1],green[2]);
+    doc.rect(0,0,W,38,'F');
+    doc.setFontSize(20);doc.setTextColor(255,255,255);
+    doc.text('Dream Festival - Future Tech Zone',W/2,18,{align:'center'});
+    doc.setFontSize(11);
+    doc.text('Operations Status Report',W/2,28,{align:'center'});
+
+    y=48;
+    doc.setFontSize(9);setC(grayC);
+    doc.text('Report: '+dateStr+' '+timeStr,W-M,y,{align:'right'});
+    doc.text('2026 Yeongcheon Youth Career Fair',M,y);
+    y+=12;
+
+    // Summary cards
+    var totalCur=PROGRAMS.reduce(function(s,p){return s+p.current;},0);
+    var totalQ=PROGRAMS.reduce(function(s,p){return s+p.queue;},0);
+    var activeBooth=PROGRAMS.filter(function(p){return p.status==='운영중';}).length;
+    var PC={1:38,2:29,3:15,4:45,5:42,6:18,7:33,8:37,9:26,10:31,11:22,12:12,13:28,14:34,15:19};
+    var totalComp=0;Object.keys(PC).forEach(function(k){totalComp+=PC[k];});
+    var stampDist=[5,12,28,42,55,48,38,30,22,18,14,10,7,5,3,23];
+    var totalSV=stampDist.reduce(function(s,v){return s+v;},0);
+    var compAll=stampDist[15]||0;
+
+    var cards=[
+      {label:'Active Visitors',val:String(totalCur),sub:totalQ+' in queue'},
+      {label:'Operating Booths',val:activeBooth+'/15',sub:'All zones active'},
+      {label:'Total Completions',val:String(totalComp),sub:Math.round(totalComp/15)+' avg/booth'},
+      {label:'Tour Complete',val:String(compAll),sub:Math.round(compAll/totalSV*100)+'% of visitors'}
+    ];
+    var cW=(W-M*2-12)/4;
+    cards.forEach(function(c,i){
+      var cx=M+i*(cW+4);
+      doc.setFillColor(247,246,243);
+      doc.roundedRect(cx,y,cW,26,2,2,'F');
+      doc.setFontSize(7);setC(grayC);
+      doc.text(c.label,cx+cW/2,y+7,{align:'center'});
+      doc.setFontSize(15);setC(greenDark);
+      doc.text(c.val,cx+cW/2,y+17,{align:'center'});
+      doc.setFontSize(6.5);setC(grayC);
+      doc.text(c.sub,cx+cW/2,y+23,{align:'center'});
+    });
+    y+=34;
+
+    // Zone overview table
+    hLine(y);y+=6;
+    doc.setFontSize(12);setC(greenDark);
+    doc.text('Zone Overview',M,y);y+=8;
+    doc.setFillColor(green[0],green[1],green[2]);
+    doc.rect(M,y,W-M*2,7,'F');
+    doc.setFontSize(7.5);doc.setTextColor(255,255,255);
+    var zc=[M+2,M+50,M+90,M+120,M+150];
+    doc.text('Zone',zc[0],y+5);doc.text('Programs',zc[1],y+5);
+    doc.text('Current',zc[2],y+5);doc.text('Queue',zc[3],y+5);doc.text('Completed',zc[4],y+5);
+    y+=7;
+
+    ZONES.forEach(function(z,i){
+      var progs=getZonePrograms(z.id);
+      var cur=progs.reduce(function(s,p){return s+p.current;},0);
+      var q=progs.reduce(function(s,p){return s+p.queue;},0);
+      var comp=progs.reduce(function(s,p){return s+(PC[p.id]||0);},0);
+      var ry=y+i*7;
+      if(i%2===0){doc.setFillColor(248,248,245);doc.rect(M,ry,W-M*2,7,'F');}
+      doc.setFontSize(7.5);
+      var zcc=zoneColors[z.id]||textC;
+      doc.setTextColor(zcc[0],zcc[1],zcc[2]);
+      doc.text(z.name.replace('·','-'),zc[0],ry+5);
+      setC(textC);
+      doc.text(String(progs.length),zc[1],ry+5);
+      doc.text(String(cur),zc[2],ry+5);
+      doc.text(String(q),zc[3],ry+5);
+      doc.text(String(comp),zc[4],ry+5);
+    });
+    y+=ZONES.length*7+8;
+
+    // Program Details table
+    hLine(y);y+=6;
+    doc.setFontSize(12);setC(greenDark);
+    doc.text('Program Details (by completion)',M,y);y+=8;
+    doc.setFillColor(green[0],green[1],green[2]);
+    doc.rect(M,y,W-M*2,7,'F');
+    doc.setFontSize(6.5);doc.setTextColor(255,255,255);
+    var pc=[M+2,M+8,M+58,M+78,M+98,M+118,M+143,M+163];
+    doc.text('#',pc[0],y+5);doc.text('Program',pc[1],y+5);doc.text('Zone',pc[2],y+5);
+    doc.text('Current',pc[3],y+5);doc.text('Queue',pc[4],y+5);doc.text('Done',pc[5],y+5);
+    doc.text('Cap.',pc[6],y+5);doc.text('Status',pc[7],y+5);
+    y+=7;
+
+    var sortedP=[].concat(PROGRAMS).sort(function(a,b){return(PC[b.id]||0)-(PC[a.id]||0);});
+    sortedP.forEach(function(p,i){
+      needPage(7);
+      if(i%2===0){doc.setFillColor(248,248,245);doc.rect(M,y,W-M*2,7,'F');}
+      doc.setFontSize(6.5);setC(textC);
+      doc.text(String(p.id),pc[0],y+5);
+      doc.text(p.name,pc[1],y+5);
+      var zcl=zoneColors[p.zone]||textC;
+      doc.setTextColor(zcl[0],zcl[1],zcl[2]);
+      doc.text(p.zone,pc[2],y+5);
+      setC(textC);
+      doc.text(String(p.current),pc[3],y+5);
+      doc.text(String(p.queue),pc[4],y+5);
+      doc.text(String(PC[p.id]||0),pc[5],y+5);
+      doc.text(String(p.capacity),pc[6],y+5);
+      doc.setTextColor(green[0],green[1],green[2]);
+      doc.text(p.status,pc[7],y+5);
+      y+=7;
+    });
+    y+=6;
+
+    // ═══════════ PAGE 2: CHARTS & STAFF ═══════════
+    doc.addPage();y=M;
+
+    // Time series bar chart
+    doc.setFontSize(12);setC(greenDark);
+    doc.text('Hourly Participation Trend',M,y);y+=8;
+    var tLabels=['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+    var tData=[12,45,78,32,65,92,88,70,40];
+    var barMax=W-M*2-30;
+    var maxV=Math.max.apply(null,tData);
+
+    tLabels.forEach(function(t,i){
+      var bW=tData[i]/maxV*barMax;
+      doc.setFillColor(230,245,238);
+      doc.rect(M+25,y,barMax,5,'F');
+      doc.setFillColor(green[0],green[1],green[2]);
+      doc.rect(M+25,y,bW,5,'F');
+      doc.setFontSize(7);setC(textC);
+      doc.text(t,M,y+4);
+      doc.text(String(tData[i]),M+28+bW,y+4);
+      y+=7;
+    });
+    y+=6;
+
+    // Stamp distribution
+    hLine(y);y+=6;
+    doc.setFontSize(12);setC(greenDark);
+    doc.text('Stamp Tour Progress',M,y);y+=8;
+    var stMax=Math.max.apply(null,stampDist);
+    var stBarMax=W-M*2-35;
+
+    stampDist.forEach(function(v,i){
+      needPage(6);
+      var label=i===15?'15(done)':String(i);
+      var bW=v/stMax*stBarMax;
+      if(i===15){doc.setFillColor(green[0],green[1],green[2]);}
+      else{doc.setFillColor(180,215,195);}
+      doc.rect(M+25,y,bW,4.5,'F');
+      doc.setFontSize(6.5);setC(textC);
+      doc.text(label,M+2,y+3.5);
+      doc.text(String(v),M+28+bW,y+3.5);
+      y+=5.5;
+    });
+    y+=6;
+
+    // Staff table
+    needPage(60);
+    hLine(y);y+=6;
+    doc.setFontSize(12);setC(greenDark);
+    doc.text('Staff Assignment',M,y);y+=8;
+    doc.setFillColor(green[0],green[1],green[2]);
+    doc.rect(M,y,W-M*2,7,'F');
+    doc.setFontSize(7.5);doc.setTextColor(255,255,255);
+    var sc=[M+2,M+35,M+65,M+100,M+140];
+    doc.text('Name',sc[0],y+5);doc.text('Role',sc[1],y+5);
+    doc.text('Zone',sc[2],y+5);doc.text('Booth',sc[3],y+5);doc.text('Phone',sc[4],y+5);
+    y+=7;
+
+    STAFF.forEach(function(s,i){
+      needPage(7);
+      if(i%2===0){doc.setFillColor(248,248,245);doc.rect(M,y,W-M*2,7,'F');}
+      doc.setFontSize(7);setC(textC);
+      doc.text(s.name,sc[0],y+5);
+      doc.text(s.role,sc[1],y+5);
+      if(s.zone){
+        var zcl=zoneColors[s.zone]||textC;
+        doc.setTextColor(zcl[0],zcl[1],zcl[2]);
+        doc.text(s.zone+'zone',sc[2],y+5);setC(textC);
+      }else{setC(grayC);doc.text('-',sc[2],y+5);setC(textC);}
+      doc.text(s.booth?getProg(s.booth).name:'-',sc[3],y+5);
+      doc.text(s.phone||'',sc[4],y+5);
+      y+=7;
+    });
+    y+=6;
+
+    // ═══════════ PAGE 3: LEADERBOARD ═══════════
+    doc.addPage();y=M;
+    doc.setFontSize(12);setC(greenDark);
+    doc.text('Leaderboard - Top 10',M,y);y+=8;
+
+    function drawLB(title,data,color,scoreLabel,isPercent){
+      doc.setFontSize(9);setC(green);
+      doc.text(title,M,y);y+=6;
+      doc.setFillColor(color[0],color[1],color[2]);
+      doc.rect(M,y,W-M*2,6,'F');
+      doc.setFontSize(7);doc.setTextColor(255,255,255);
+      doc.text('Rank',M+2,y+4.5);doc.text('Nickname',M+20,y+4.5);
+      doc.text(scoreLabel,M+80,y+4.5);doc.text('Zone',M+120,y+4.5);
+      y+=6;
+      var bgLight=[Math.min(color[0]+23,255),Math.min(color[1]+23,255),Math.min(color[2]+23,255)];
+      data.forEach(function(e,i){
+        if(i%2===0){doc.setFillColor(bgLight[0],bgLight[1],bgLight[2],0.3);doc.rect(M,y,W-M*2,6,'F');}
+        doc.setFontSize(7);setC(textC);
+        doc.text(String(i+1),M+5,y+4.5);
+        doc.text(e.nick,M+20,y+4.5);
+        doc.text(isPercent?e.score+'%':String(e.score),M+80,y+4.5);
+        doc.text(e.zone,M+120,y+4.5);
+        if(e.isNew){doc.setTextColor(color[0],color[1],color[2]);doc.text('NEW',M+140,y+4.5);setC(textC);}
+        y+=6;
+      });
+      y+=8;
+    }
+
+    drawLB('Dance AI Challenge',LEADERBOARD_DATA.dance,[232,112,90],'Score',false);
+    needPage(80);
+    drawLB('AI Classification',LEADERBOARD_DATA.classify,[43,165,179],'Accuracy',true);
+    needPage(80);
+    drawLB('Prompt Art Challenge',LEADERBOARD_DATA.prompt||[],[139,111,192],'Votes',false);
+
+    // AI Insights
+    needPage(40);
+    hLine(y);y+=6;
+    doc.setFontSize(12);setC(greenDark);
+    doc.text('AI Insights & Recommendations',M,y);y+=8;
+
+    var insights=[
+      '[TREND] Zone C congestion expected at 14:00 - Prompt Lab demand surge',
+      '[ALERT] Zone B AI Safety booth queue growing - extra session recommended',
+      '[TARGET] Zone D Self-driving Simulator full - waiting guidance needed',
+      '[TIP] Zone A + E combined course popular - route guidance recommended'
+    ];
+    insights.forEach(function(ins){
+      doc.setFontSize(8);setC(textC);
+      doc.text(ins,M,y);
+      y+=7;
+    });
+
+    // Footer on all pages
+    var pages=doc.internal.getNumberOfPages();
+    for(var pg=1;pg<=pages;pg++){
+      doc.setPage(pg);
+      doc.setFillColor(247,246,243);
+      doc.rect(0,H-12,W,12,'F');
+      doc.setFontSize(7);setC(grayC);
+      doc.text('Dream Festival Future Tech Zone - Report ('+dateStr+')',M,H-5);
+      doc.text('Page '+pg+'/'+pages,W-M,H-5,{align:'right'});
+    }
+
+    var fname='dreamfest_report_'+dateStr+'_'+timeStr.replace(':','')+'.pdf';
+    doc.save(fname);
+    showToast('PDF 리포트 다운로드: '+fname,'✅',{type:'success'});
+  }catch(err){
+    console.error('PDF generation error:',err);
+    showToast('PDF 생성 실패: '+err.message,'❌',{type:'error'});
+  }
+}
+
+/* ═══════════════════════════════════════ */
 /* i18n — 다국어 전환 (한/영)              */
 /* ═══════════════════════════════════════ */
 var I18N={
@@ -3281,6 +3566,7 @@ var I18N={
     'export.stamps':'🏅 스탬프 현황 (CSV)',
     'export.leaderboard':'🏆 리더보드 (CSV)',
     'export.mentoring':'👨‍💼 멘토링 예약 (CSV)',
+    'export.pdf':'📄 운영 현황 리포트 (PDF)',
     'export.all':'💾 전체 데이터 백업 (JSON)',
     'notif.history':'발송 이력',
     'nav.monitor':'모니터링',
@@ -3358,6 +3644,7 @@ var I18N={
     'export.stamps':'🏅 Stamp Status (CSV)',
     'export.leaderboard':'🏆 Leaderboard (CSV)',
     'export.mentoring':'👨‍💼 Mentoring Bookings (CSV)',
+    'export.pdf':'📄 Operations Report (PDF)',
     'export.all':'💾 Full Backup (JSON)',
     'notif.history':'Send History',
     'nav.monitor':'Monitor',

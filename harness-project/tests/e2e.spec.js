@@ -343,6 +343,6 @@ test.describe('내보내기 UI', () => {
     await btn.click();
     var menu = page.locator('#exportMenu');
     await expect(menu).toBeVisible();
-    await expect(menu.locator('button')).toHaveCount(7);
+    await expect(menu.locator('button')).toHaveCount(8);
   });
 });

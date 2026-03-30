@@ -1,5 +1,5 @@
 // Service Worker for 꿈-드림 페스티벌 미래기술존
-const CACHE_NAME = 'dreamfest-v4';
+const CACHE_NAME = 'dreamfest-v5';
 
 // Core app files to pre-cache
 const CORE_ASSETS = [
