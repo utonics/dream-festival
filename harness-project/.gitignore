@@ -16,3 +16,6 @@ Thumbs.db
 
 # Original proposal document
 *.docx
+
+# Playwright test artifacts
+test-results/
