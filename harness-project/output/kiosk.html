@@ -428,6 +428,94 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;color:inhe
 }
 .settings-close:hover{background:rgba(255,255,255,0.14)}
 
+/* ═══════ AUTO-SLIDE SELECTION ═══════ */
+.sel-autoslide{
+  position:fixed;inset:0;z-index:500;display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,var(--bg-dark),var(--bg-mid));
+  cursor:pointer;
+}
+.sel-autoslide.active{display:flex}
+.slide-card{
+  width:min(85vw,520px);background:var(--bg-card);
+  border:2px solid var(--border);border-radius:24px;
+  padding:clamp(28px,5vw,56px);text-align:center;
+  transform:scale(0.95);opacity:0;
+  transition:all 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+.slide-card.visible{transform:scale(1);opacity:1}
+.slide-icon{font-size:clamp(4rem,10vw,7rem);display:block;margin-bottom:16px}
+.slide-name{
+  font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;
+  margin-bottom:12px;font-family:var(--font-kr);
+}
+.slide-zone{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 18px;border-radius:16px;
+  font-size:clamp(0.9rem,1.5vw,1.15rem);font-weight:600;
+  font-family:var(--font-kr);margin-bottom:16px;
+}
+.slide-desc{
+  font-size:clamp(0.95rem,1.5vw,1.2rem);color:var(--text-sub);
+  line-height:1.6;font-family:var(--font-kr);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.slide-progress{
+  display:flex;gap:6px;justify-content:center;margin-top:24px;
+}
+.slide-dot{
+  width:10px;height:10px;border-radius:50%;
+  background:rgba(255,255,255,0.2);transition:all 0.3s;
+}
+.slide-dot.active{width:28px;border-radius:5px;background:rgba(255,255,255,0.7)}
+.slide-hint{
+  position:fixed;bottom:clamp(20px,4vh,48px);
+  font-size:clamp(0.9rem,1.5vw,1.2rem);color:var(--text-dim);
+  animation:ss-blink 2s ease infinite;font-family:var(--font-kr);
+}
+
+/* ═══════ SWIPE INDICATOR ═══════ */
+.swipe-hint{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  padding:8px 20px;border-radius:20px;
+  background:rgba(0,0,0,0.6);color:var(--text-sub);
+  font-size:0.85rem;font-family:var(--font-kr);
+  opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:600;
+}
+.swipe-hint.show{opacity:1}
+
+/* ═══════ FULLSCREEN PROMPT ═══════ */
+.fs-prompt{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  padding:12px 28px;border-radius:16px;
+  background:rgba(45,122,79,0.9);color:#fff;
+  font-size:clamp(0.85rem,1.3vw,1rem);font-weight:600;
+  font-family:var(--font-kr);cursor:pointer;
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
+  z-index:700;display:none;gap:8px;align-items:center;
+  animation:fadeIn 0.5s ease;
+}
+.fs-prompt.show{display:inline-flex}
+.fs-prompt .fs-close{
+  margin-left:12px;opacity:0.7;font-size:1.1rem;cursor:pointer;
+}
+.fs-prompt .fs-close:hover{opacity:1}
+
+/* ═══════ TOUCH TARGETS ═══════ */
+@media(pointer:coarse){
+  .booth-card{padding:clamp(20px,3vw,36px);min-height:100px}
+  .booth-card .card-icon{font-size:clamp(2.5rem,5vw,3.5rem)}
+  .booth-card .card-name{font-size:clamp(1.1rem,1.8vw,1.4rem)}
+  .fullscreen-btn{width:48px;height:48px;font-size:1.3rem}
+  .admin-link{padding:12px 16px;font-size:clamp(0.8rem,1.2vw,1rem)}
+  .start-btn{padding:16px 40px;font-size:clamp(1.1rem,1.8vw,1.4rem)}
+  .settings-btn{padding:14px 24px;font-size:clamp(0.9rem,1.4vw,1.1rem)}
+  .settings-close{padding:18px;font-size:clamp(1.1rem,1.6vw,1.3rem)}
+  .toggle-switch{width:56px;height:30px}
+  .toggle-switch .toggle-knob{width:24px;height:24px}
+  .toggle-switch.on .toggle-knob{left:29px}
+}
+
 /* ═══════ ANIMATIONS ═══════ */
 @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes countUp{from{opacity:0;transform:scale(0.8)}to{opacity:1;transform:scale(1)}}
@@ -536,6 +624,27 @@ button{cursor:pointer;font-family:inherit;border:none;background:none;color:inhe
   </div>
 </div>
 
+<!-- AUTO-SLIDE (selection idle) -->
+<div id="selAutoSlide" class="sel-autoslide">
+  <div class="slide-card" id="slideCard">
+    <div class="slide-icon" id="slideIcon"></div>
+    <div class="slide-name" id="slideName"></div>
+    <div class="slide-zone" id="slideZone"></div>
+    <p class="slide-desc" id="slideDesc"></p>
+    <div class="slide-progress" id="slideProgress"></div>
+  </div>
+  <div class="slide-hint">화면을 터치하여 부스를 선택하세요</div>
+</div>
+
+<!-- SWIPE HINT -->
+<div class="swipe-hint" id="swipeHint">← 스와이프하여 다른 부스 보기 →</div>
+
+<!-- FULLSCREEN PROMPT -->
+<div class="fs-prompt" id="fsPrompt" onclick="acceptFullscreen()">
+  <span>⛶</span> 전체화면으로 전환하시겠습니까?
+  <span class="fs-close" onclick="event.stopPropagation();dismissFsPrompt()">✕</span>
+</div>
+
 <!-- SCREENSAVER -->
 <div id="screensaver">
   <canvas id="ssCanvas"></canvas>
@@ -634,6 +743,12 @@ const SAMPLE_NAMES = ['김민준','이서연','박지호','최수아','정예준
 /* ═══════════════════════════════════════ */
 /* STATE                                    */
 /* ═══════════════════════════════════════ */
+var selSlideTimer = null;
+var selSlideIdx = 0;
+var selIdleTimer = null;
+var SEL_IDLE_MS = 15000;
+var SEL_SLIDE_INTERVAL = 4000;
+var fsDismissed = false;
 let currentBooth = null;
 let currentProgram = null;
 let ssEnabled = true;
@@ -671,6 +786,8 @@ function showSelection(){
   document.getElementById('selectionScreen').classList.add('active');
   document.getElementById('kioskScreen').classList.remove('active');
   buildSelectionGrid();
+  startSelIdleWatch();
+  showFsPrompt();
 }
 
 function buildSelectionGrid(){
@@ -716,6 +833,7 @@ function showKiosk(){
   startScreensaverTimer();
   requestWakeLock();
   bindEvents();
+  showFsPrompt();
 }
 
 function renderKiosk(){
@@ -1097,6 +1215,128 @@ function bindEvents(){
       updateTicker();
     }
   });
+}
+
+/* ═══════════════════════════════════════ */
+/* AUTO-SLIDE ON SELECTION IDLE            */
+/* ═══════════════════════════════════════ */
+function startSelIdleWatch(){
+  resetSelIdleTimer();
+  ['click','touchstart','mousemove','keydown'].forEach(function(evt){
+    document.getElementById('selectionScreen').addEventListener(evt, function(){
+      exitSelAutoSlide();
+      resetSelIdleTimer();
+    }, {passive:true});
+  });
+}
+
+function resetSelIdleTimer(){
+  clearTimeout(selIdleTimer);
+  selIdleTimer = setTimeout(enterSelAutoSlide, SEL_IDLE_MS);
+}
+
+function enterSelAutoSlide(){
+  if(currentBooth) return;
+  selSlideIdx = 0;
+  document.getElementById('selAutoSlide').classList.add('active');
+  renderSlide();
+  selSlideTimer = setInterval(function(){
+    selSlideIdx = (selSlideIdx + 1) % PROGRAMS.length;
+    renderSlide();
+  }, SEL_SLIDE_INTERVAL);
+}
+
+function exitSelAutoSlide(){
+  document.getElementById('selAutoSlide').classList.remove('active');
+  clearInterval(selSlideTimer);
+  selSlideTimer = null;
+}
+
+function renderSlide(){
+  var p = PROGRAMS[selSlideIdx];
+  var z = ZONE_INFO[p.zone];
+  var card = document.getElementById('slideCard');
+  card.classList.remove('visible');
+  setTimeout(function(){
+    document.getElementById('slideIcon').textContent = p.icon;
+    document.getElementById('slideName').textContent = p.name;
+    var zb = document.getElementById('slideZone');
+    zb.textContent = 'Zone ' + p.zone + ' — ' + z.name;
+    zb.style.background = z.color + '22';
+    zb.style.color = z.color;
+    zb.style.border = '1px solid ' + z.color + '44';
+    document.getElementById('slideDesc').textContent = p.desc;
+    card.style.borderColor = z.color + '66';
+    var dots = '';
+    for(var i=0;i<PROGRAMS.length;i++){
+      dots += '<div class="slide-dot'+(i===selSlideIdx?' active':'')+'"></div>';
+    }
+    document.getElementById('slideProgress').innerHTML = dots;
+    card.classList.add('visible');
+  }, 100);
+}
+
+document.getElementById('selAutoSlide').addEventListener('click', function(){
+  exitSelAutoSlide();
+  resetSelIdleTimer();
+});
+
+/* ═══════════════════════════════════════ */
+/* SWIPE GESTURES (Kiosk Screen)           */
+/* ═══════════════════════════════════════ */
+var swipeStartX = 0;
+var swipeStartY = 0;
+var swiping = false;
+
+document.addEventListener('touchstart', function(e){
+  if(!currentBooth || ssActive) return;
+  var t = e.touches[0];
+  swipeStartX = t.clientX;
+  swipeStartY = t.clientY;
+  swiping = true;
+}, {passive:true});
+
+document.addEventListener('touchend', function(e){
+  if(!swiping || !currentBooth) return;
+  swiping = false;
+  var t = e.changedTouches[0];
+  var dx = t.clientX - swipeStartX;
+  var dy = t.clientY - swipeStartY;
+  if(Math.abs(dx) < 60 || Math.abs(dy) > Math.abs(dx) * 0.7) return;
+  var curIdx = PROGRAMS.findIndex(function(p){return p.id===currentBooth;});
+  var newIdx;
+  if(dx < 0){
+    newIdx = curIdx < PROGRAMS.length - 1 ? curIdx + 1 : 0;
+  } else {
+    newIdx = curIdx > 0 ? curIdx - 1 : PROGRAMS.length - 1;
+  }
+  var hint = document.getElementById('swipeHint');
+  hint.classList.add('show');
+  setTimeout(function(){hint.classList.remove('show');}, 1200);
+  window.location.href = 'kiosk.html?booth=' + PROGRAMS[newIdx].id;
+}, {passive:true});
+
+/* ═══════════════════════════════════════ */
+/* FULLSCREEN PROMPT                        */
+/* ═══════════════════════════════════════ */
+function showFsPrompt(){
+  if(fsDismissed || document.fullscreenElement) return;
+  setTimeout(function(){
+    if(!fsDismissed && !document.fullscreenElement){
+      document.getElementById('fsPrompt').classList.add('show');
+    }
+  }, 2000);
+}
+
+function acceptFullscreen(){
+  document.documentElement.requestFullscreen().catch(function(){});
+  document.getElementById('fsPrompt').classList.remove('show');
+  fsDismissed = true;
+}
+
+function dismissFsPrompt(){
+  document.getElementById('fsPrompt').classList.remove('show');
+  fsDismissed = true;
 }
 </script>
 <script src="sync-client.js"></script>

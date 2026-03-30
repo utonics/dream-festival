@@ -766,16 +766,31 @@ button:focus-visible{outline:3px solid var(--green-base);outline-offset:2px}
 .profile-stat{text-align:center;padding:12px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius)}
 .profile-stat .val{font-family:var(--font-display);font-size:1.4rem;font-weight:700}
 .profile-stat .lbl{font-size:.7rem;color:var(--text-light)}
-.timeline{border-left:2px solid var(--border);margin-left:20px;padding-left:20px}
-.timeline-item{position:relative;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.timeline{border-left:3px solid var(--border);margin-left:20px;padding-left:22px}
+.timeline-item{position:relative;margin-bottom:0;padding:12px 14px;border-radius:var(--radius);transition:background .2s}
+.timeline-item:hover{background:rgba(0,0,0,.02)}
 .timeline-item::before{
-  content:'';position:absolute;left:-27px;top:4px;
-  width:12px;height:12px;border-radius:50%;
-  border:2px solid var(--green-base);background:var(--card-bg);
+  content:'';position:absolute;left:-29px;top:16px;
+  width:14px;height:14px;border-radius:50%;
+  border:3px solid var(--green-base);background:var(--card-bg);
+  transition:var(--trans);
 }
-.timeline-item .t-time{font-family:var(--font-mono);font-size:.7rem;color:var(--text-light)}
-.timeline-item .t-title{font-size:.85rem;font-weight:600;margin-top:2px}
-.timeline-item .t-desc{font-size:.75rem;color:var(--text-sub);margin-top:2px}
+.timeline-item.t-complete::before{background:var(--green-base);border-color:var(--green-base)}
+.timeline-item.t-checkin::before{background:var(--card-bg);border-color:var(--zone-b)}
+.timeline-item .t-time{font-family:var(--font-mono);font-size:.72rem;color:var(--text-light);display:flex;align-items:center;gap:6px}
+.timeline-item .t-time .t-badge{font-size:.6rem;padding:1px 6px;border-radius:8px;font-weight:700;font-family:var(--font-sans)}
+.t-badge-in{background:#FFF5E6;color:#D4943A}
+.t-badge-done{background:#E8F5EE;color:#2D7A4F}
+.timeline-item .t-title{font-size:.85rem;font-weight:600;margin-top:3px;display:flex;align-items:center;gap:6px}
+.timeline-item .t-desc{font-size:.75rem;color:var(--text-sub);margin-top:3px;display:flex;align-items:center;gap:8px}
+.timeline-item .t-duration{font-family:var(--font-mono);font-size:.68rem;color:var(--green-base);font-weight:600}
+.timeline-zone-sep{font-size:.72rem;font-weight:700;padding:8px 0 4px;margin-left:-22px;display:flex;align-items:center;gap:8px}
+.timeline-zone-sep::after{content:'';flex:1;height:1px;background:var(--border)}
+.tl-progress{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.tl-prog-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;border:2px solid var(--border);background:var(--card-bg);transition:var(--trans)}
+.tl-prog-dot.done{border-color:var(--green-base);background:var(--green-light)}
+.tl-zone-summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tl-zone-chip{font-size:.72rem;padding:4px 10px;border-radius:12px;font-weight:600;display:flex;align-items:center;gap:4px}
 
 /* ═══════════════════════════════════════ */
 /* VIEW 11: AI ROUTE RECOMMENDATION       */
@@ -1142,7 +1157,10 @@ body.participant-mode .profile-avatar-large{
       <div class="monitor-log-section">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <h3 style="font-size:.92rem;font-weight:700" data-i18n="monitor.errorLog">이벤트 로그</h3>
-          <button onclick="clearMonitorLog()" style="padding:4px 12px;font-size:.75rem;font-weight:600;background:var(--border);color:var(--text-sub);border:none;border-radius:var(--radius);cursor:pointer" data-i18n="monitor.clearLog">로그 초기화</button>
+          <div style="display:flex;gap:6px">
+            <button onclick="exportMonitorLog()" style="padding:4px 12px;font-size:.75rem;font-weight:600;background:var(--green-base);color:#fff;border:none;border-radius:var(--radius);cursor:pointer" data-i18n="monitor.exportLog">CSV 내보내기</button>
+            <button onclick="clearMonitorLog()" style="padding:4px 12px;font-size:.75rem;font-weight:600;background:var(--border);color:var(--text-sub);border:none;border-radius:var(--radius);cursor:pointer" data-i18n="monitor.clearLog">로그 초기화</button>
+          </div>
         </div>
         <div class="monitor-log" id="monitorLog" role="log" aria-live="polite"></div>
       </div>
@@ -2692,8 +2710,65 @@ function renderCongestionMap(){
 // ═══════════════════════════════════════
 function renderProfile(){
   const stamps = participantProfile.stamps.length;
-  const totalTime = participantProfile.checkins.filter(c=>c.type==='완료').length * 18;
+  const completions = participantProfile.checkins.filter(c=>c.type==='완료');
+  const totalTime = completions.length * 18;
   const zonesVisited = [...new Set(participantProfile.stamps.map(id=>getProg(id).zone))].length;
+
+  // Zone visit summary
+  var zoneCounts={};
+  participantProfile.stamps.forEach(function(id){
+    var z=getProg(id).zone;
+    zoneCounts[z]=(zoneCounts[z]||0)+1;
+  });
+  var zoneSummaryHtml=ZONES.map(function(z){
+    var cnt=zoneCounts[z.id]||0;
+    var total=getZonePrograms(z.id).length;
+    return '<div class="tl-zone-chip" style="background:'+z.bg+';color:'+z.colorHex+'">'+z.id+'존 '+cnt+'/'+total+'</div>';
+  }).join('');
+
+  // Progress dots
+  var progDotsHtml=PROGRAMS.map(function(p){
+    var done=participantProfile.stamps.indexOf(p.id)!==-1;
+    return '<div class="tl-prog-dot'+(done?' done':'')+'" title="'+p.name+'" style="'+(done?'border-color:'+getZone(p.zone).colorHex:'')+'">'+p.icon+'</div>';
+  }).join('');
+
+  // Build timeline with duration calculation
+  var checkins=participantProfile.checkins.slice().reverse();
+  var timelineHtml='';
+  var lastZone='';
+
+  checkins.forEach(function(c){
+    var prog=getProg(c.progId);
+    var zone=getZone(prog.zone);
+    var isComplete=c.type==='완료';
+
+    // Zone separator
+    if(zone.id!==lastZone){
+      timelineHtml+='<div class="timeline-zone-sep" style="color:'+zone.colorHex+'">'+zone.name+'</div>';
+      lastZone=zone.id;
+    }
+
+    // Duration calc for completions
+    var durHtml='';
+    if(isComplete){
+      var checkinPair=participantProfile.checkins.find(function(ci){return ci.progId===c.progId&&ci.type==='체크인';});
+      if(checkinPair){
+        var parts1=checkinPair.time.split(':'),parts2=c.time.split(':');
+        var mins=(parseInt(parts2[0])*60+parseInt(parts2[1]))-(parseInt(parts1[0])*60+parseInt(parts1[1]));
+        if(mins>0) durHtml='<span class="t-duration">'+mins+'분 소요</span>';
+      }
+    }
+
+    var badgeCls=isComplete?'t-badge-done':'t-badge-in';
+    var badgeText=isComplete?'완료':'체크인';
+    var itemCls=isComplete?'t-complete':'t-checkin';
+
+    timelineHtml+='<div class="timeline-item '+itemCls+'" style="border-left-color:'+zone.colorHex+'">'+
+      '<div class="t-time">'+c.time+' <span class="t-badge '+badgeCls+'">'+badgeText+'</span></div>'+
+      '<div class="t-title"><span style="color:'+zone.colorHex+'">'+prog.icon+'</span> '+prog.name+'</div>'+
+      '<div class="t-desc">'+zone.name+durHtml+'</div>'+
+    '</div>';
+  });
 
   let html = `
     <div class="profile-header">
@@ -2707,20 +2782,16 @@ function renderProfile(){
     <div class="profile-stats">
       <div class="profile-stat"><div class="val">${stamps}</div><div class="lbl">획득 스탬프</div></div>
       <div class="profile-stat"><div class="val">${totalTime}분</div><div class="lbl">총 체험 시간</div></div>
-      <div class="profile-stat"><div class="val">${zonesVisited}</div><div class="lbl">방문 존</div></div>
+      <div class="profile-stat"><div class="val">${zonesVisited}/5</div><div class="lbl">방문 존</div></div>
+    </div>
+    <div class="panel" style="margin-bottom:16px">
+      <h4 style="font-size:.85rem;font-weight:700;margin-bottom:10px">스탬프 진행률 <span style="font-weight:400;color:var(--text-sub)">${stamps}/15</span></h4>
+      <div class="tl-zone-summary">${zoneSummaryHtml}</div>
+      <div class="tl-progress">${progDotsHtml}</div>
     </div>
     <div class="panel">
       <h4 style="font-size:.85rem;font-weight:700;margin-bottom:14px">체험 타임라인</h4>
-      <div class="timeline">
-        ${participantProfile.checkins.slice().reverse().map(c=>{
-          const prog = getProg(c.progId);
-          return `<div class="timeline-item">
-            <div class="t-time">${c.time}</div>
-            <div class="t-title">${prog.icon} ${prog.name}</div>
-            <div class="t-desc">${c.type} · ${getZone(prog.zone).name}</div>
-          </div>`;
-        }).join('')}
-      </div>
+      <div class="timeline">${timelineHtml}</div>
     </div>
     <div style="margin-top:16px;display:flex;gap:10px">
       <button class="btn btn-primary" onclick="generateCertificate()">참가 인증서 생성</button>
@@ -3378,6 +3449,24 @@ function clearMonitorLog(){
   renderMonitorLog();
   addMonitorLog('info','Log cleared');
 }
+function exportMonitorLog(){
+  if(!_monLogs.length){showToast('내보낼 로그가 없습니다','⚠️',{type:'warning'});return;}
+  var bom='\uFEFF';
+  var csv=bom+'시간,레벨,메시지\r\n';
+  _monLogs.forEach(function(l){
+    csv+=l.ts+','+l.level.toUpperCase()+',"'+l.msg.replace(/"/g,'""')+'"\r\n';
+  });
+  var now=new Date();
+  var ds=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
+  var ts=String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
+  var fname='monitor_log_'+ds+'_'+ts+'.csv';
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=fname;
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(a.href);},100);
+  showToast('로그 내보내기 완료: '+fname,'📥',{type:'success'});
+}
 
 function updateMonitorPanel(){
   var apiBase=window._syncBaseUrl||'http://localhost:3000';
@@ -3846,6 +3935,7 @@ var I18N={
     'monitor.storage':'로컬 저장소',
     'monitor.lang':'현재 언어',
     'monitor.errorLog':'이벤트 로그',
+    'monitor.exportLog':'CSV 내보내기',
     'monitor.clearLog':'로그 초기화',
     'chart.zoneDist':'존별 참가자 분포',
     'chart.timeSeries':'시간대별 참여 추이',
@@ -3926,6 +4016,7 @@ var I18N={
     'monitor.storage':'Local Storage',
     'monitor.lang':'Current Language',
     'monitor.errorLog':'Event Log',
+    'monitor.exportLog':'Export CSV',
     'monitor.clearLog':'Clear Log',
     'chart.zoneDist':'Zone Visitor Distribution',
     'chart.timeSeries':'Hourly Participation Trend',
