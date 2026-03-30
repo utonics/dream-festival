@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'output/**'
+      - 'harness-project/output/**'
   workflow_dispatch:
 
 permissions:
@@ -32,7 +32,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: output
+          path: harness-project/output
 
       - name: Deploy to GitHub Pages
         id: deployment
