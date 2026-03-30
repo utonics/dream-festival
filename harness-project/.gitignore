@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Server data (runtime generated)
+server/data/
+
+# Test screenshots
+test-*.png
+
+# Playwright MCP cache
+.playwright-mcp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Original proposal document
+*.docx

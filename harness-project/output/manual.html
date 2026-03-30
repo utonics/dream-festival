@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>꿈-드림 페스티벌 | 운영 매뉴얼</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--green:#2D7A4F;--green-light:#E8F5E9;--bg:#F7F6F3;--text:#333;--card:#fff;--border:#e2e0dc;--code-bg:#f5f2ed}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);line-height:1.8}
+
+/* ── 레이아웃 ── */
+.manual-wrap{display:flex;min-height:100vh}
+
+/* ── 사이드바 목차 ── */
+.sidebar{
+  width:280px;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;
+  background:var(--card);border-right:1px solid var(--border);padding:20px 0;
+  z-index:100;transition:transform .3s;
+}
+.sidebar-header{padding:0 20px 16px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.sidebar-header h1{font-size:1.1rem;color:var(--green);font-weight:900}
+.sidebar-header .sub{font-size:.7rem;color:#999;margin-top:2px}
+.sidebar-header .back{display:block;font-size:.75rem;color:var(--green);text-decoration:none;margin-top:8px}
+.sidebar-header .back:hover{text-decoration:underline}
+
+.toc{list-style:none}
+.toc li{border-left:3px solid transparent}
+.toc li.active{border-left-color:var(--green);background:var(--green-light)}
+.toc a{display:block;padding:8px 20px;font-size:.8rem;color:var(--text);text-decoration:none;transition:all .15s}
+.toc a:hover{background:#f5f5f5;color:var(--green)}
+.toc .section-title{font-weight:700;color:var(--green);font-size:.75rem;padding:12px 20px 4px;text-transform:uppercase;letter-spacing:1px}
+
+/* ── 메인 콘텐츠 ── */
+.main{margin-left:280px;padding:32px 40px 60px;max-width:900px}
+
+.main h2{
+  font-size:1.5rem;font-weight:900;color:var(--green);margin:48px 0 16px;
+  padding-bottom:8px;border-bottom:2px solid var(--green);
+}
+.main h2:first-of-type{margin-top:0}
+.main h3{font-size:1.1rem;font-weight:700;color:#444;margin:28px 0 12px}
+.main h4{font-size:.95rem;font-weight:700;color:#666;margin:20px 0 8px}
+.main p{margin-bottom:12px;font-size:.9rem}
+.main ul,.main ol{margin:8px 0 16px 20px;font-size:.88rem}
+.main li{margin-bottom:6px}
+
+/* ── 카드/박스 ── */
+.info-box{
+  background:var(--green-light);border-left:4px solid var(--green);
+  padding:14px 18px;border-radius:0 10px 10px 0;margin:16px 0;font-size:.85rem;
+}
+.warn-box{
+  background:#FFF3E0;border-left:4px solid #E67E22;
+  padding:14px 18px;border-radius:0 10px 10px 0;margin:16px 0;font-size:.85rem;
+}
+.danger-box{
+  background:#FFEBEE;border-left:4px solid #C62828;
+  padding:14px 18px;border-radius:0 10px 10px 0;margin:16px 0;font-size:.85rem;
+}
+.info-box strong,.warn-box strong,.danger-box strong{display:block;margin-bottom:4px}
+
+code{
+  font-family:'JetBrains Mono',monospace;background:var(--code-bg);
+  padding:2px 6px;border-radius:4px;font-size:.82rem;
+}
+pre{
+  background:#1a1a2e;color:#e0e0e0;padding:16px 20px;border-radius:10px;
+  overflow-x:auto;margin:12px 0 20px;font-size:.8rem;line-height:1.6;
+  font-family:'JetBrains Mono',monospace;
+}
+pre code{background:none;padding:0;color:inherit}
+
+.step-card{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:16px 20px;margin:12px 0;
+}
+.step-card .step-num{
+  display:inline-flex;width:28px;height:28px;background:var(--green);color:#fff;
+  border-radius:50%;align-items:center;justify-content:center;font-size:.8rem;
+  font-weight:700;margin-right:8px;
+}
+.step-card .step-title{font-weight:700;font-size:.95rem}
+
+table{width:100%;border-collapse:collapse;margin:12px 0 20px;font-size:.85rem}
+th{background:var(--green);color:#fff;padding:10px 14px;text-align:left;font-weight:600}
+td{padding:10px 14px;border-bottom:1px solid var(--border)}
+tr:nth-child(even){background:#fafafa}
+tr:hover{background:var(--green-light)}
+
+.checklist{list-style:none;margin-left:0}
+.checklist li{padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:.88rem}
+.checklist li::before{content:'☐ ';font-size:1rem;margin-right:4px}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.grid-2 .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.grid-2 .card h4{margin:0 0 6px;font-size:.85rem}
+.grid-2 .card p{font-size:.8rem;color:#666;margin:0}
+
+/* ── 모바일 토글 ── */
+.menu-toggle{
+  display:none;position:fixed;top:12px;left:12px;z-index:200;
+  width:40px;height:40px;background:var(--green);color:#fff;border:none;
+  border-radius:10px;font-size:1.2rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0);box-shadow:4px 0 20px rgba(0,0,0,.15)}
+  .main{margin-left:0;padding:20px 16px 60px}
+  .menu-toggle{display:flex;align-items:center;justify-content:center}
+  .grid-2{grid-template-columns:1fr}
+  .main h2{font-size:1.2rem}
+}
+
+/* ── 인쇄 ── */
+@media print{
+  .sidebar,.menu-toggle{display:none!important}
+  .main{margin-left:0;padding:20px;max-width:100%}
+  .main h2{page-break-before:always}
+  .main h2:first-of-type{page-break-before:avoid}
+  pre{white-space:pre-wrap;border:1px solid #ccc;background:#f9f9f9;color:#333}
+}
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">☰</button>
+
+<!-- ═══ 사이드바 목차 ═══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h1>🚀 운영 매뉴얼</h1>
+    <div class="sub">꿈-드림 페스티벌 미래기술존</div>
+    <a href="index.html" class="back">&larr; 대시보드로 돌아가기</a>
+  </div>
+  <ul class="toc" id="toc">
+    <li class="section-title">개요</li>
+    <li><a href="#overview">시스템 구성</a></li>
+    <li><a href="#architecture">시스템 아키텍처</a></li>
+    <li><a href="#devices">필요 장비</a></li>
+
+    <li class="section-title">사전 준비</li>
+    <li><a href="#install">설치 방법</a></li>
+    <li><a href="#network">네트워크 구성</a></li>
+    <li><a href="#pre-check">사전 점검 체크리스트</a></li>
+
+    <li class="section-title">당일 운영</li>
+    <li><a href="#opening">개장 절차</a></li>
+    <li><a href="#dashboard">대시보드 사용법</a></li>
+    <li><a href="#qr">QR 체크인 운영</a></li>
+    <li><a href="#kiosk">키오스크 모드</a></li>
+    <li><a href="#booth-ops">부스 운영</a></li>
+    <li><a href="#certificates">인증서 발급</a></li>
+
+    <li class="section-title">부스 체험 프로그램</li>
+    <li><a href="#zone-a">A존: AI 모션 분석</a></li>
+    <li><a href="#zone-b">B존: YOLO 객체인식</a></li>
+    <li><a href="#zone-c">C존: AI 창작 스튜디오</a></li>
+    <li><a href="#zone-d">D존: 미래직업 시뮬레이션</a></li>
+    <li><a href="#zone-e">E존: 미래기술 진로상담</a></li>
+
+    <li class="section-title">문제 해결</li>
+    <li><a href="#trouble">트러블슈팅</a></li>
+    <li><a href="#emergency">비상 대응</a></li>
+    <li><a href="#contacts">연락처</a></li>
+  </ul>
+</aside>
+
+<!-- ═══ 메인 콘텐츠 ═══ -->
+<div class="main">
+
+<!-- ────────────────────────────────── -->
+<h2 id="overview">📋 시스템 구성</h2>
+
+<p>꿈-드림 페스티벌 미래기술존 운영 시스템은 <strong>웹 기반</strong>으로, 별도 앱 설치 없이 브라우저에서 모든 기능을 사용할 수 있습니다.</p>
+
+<div class="grid-2">
+  <div class="card">
+    <h4>📊 운영 대시보드</h4>
+    <p>관리자/참가자 듀얼 모드. 실시간 관제맵, 통계, 스탬프 보드, 공지 발송</p>
+  </div>
+  <div class="card">
+    <h4>📱 QR 체크인</h4>
+    <p>참가자 등록, QR 코드 발급, 카메라 스캔 체크인, 체크인 현황 대시보드</p>
+  </div>
+  <div class="card">
+    <h4>🖥️ 키오스크 모드</h4>
+    <p>부스 안내 전시용. 대형 화면/태블릿 최적화, 자동 스크린세이버</p>
+  </div>
+  <div class="card">
+    <h4>📜 인증서 발급</h4>
+    <p>참가 확인서, 스탬프 완료 인증서 생성. 인쇄 및 PDF 다운로드</p>
+  </div>
+  <div class="card">
+    <h4>🎮 체험 프로그램 (15개)</h4>
+    <p>AI 모션 분석, 객체인식, 창작 스튜디오 등 인터랙티브 체험 콘텐츠</p>
+  </div>
+  <div class="card">
+    <h4>🖥️ 백엔드 서버</h4>
+    <p>Node.js 실시간 동기화. 다중 기기 데이터 공유, WebSocket 실시간 알림</p>
+  </div>
+</div>
+
+<!-- ────────────────────────────────── -->
+<h2 id="architecture">🏗️ 시스템 아키텍처</h2>
+
+<h3>파일 구조</h3>
+<pre><code>harness-project/
+├── server/
+│   ├── server.js          ← Node.js 백엔드 서버
+│   ├── package.json       ← 의존성 정의
+│   └── data/              ← JSON 데이터 저장소 (자동 생성)
+│
+└── output/                ← 프론트엔드 (정적 파일)
+    ├── index.html         ← 운영 대시보드
+    ├── qr-checkin.html    ← QR 체크인 시스템
+    ├── kiosk.html         ← 키오스크 디스플레이
+    ├── certificates.html  ← 인증서 발급
+    ├── manual.html        ← 이 운영 매뉴얼
+    ├── sync-client.js     ← 서버 동기화 모듈
+    ├── sw.js              ← Service Worker (오프라인)
+    ├── manifest.json      ← PWA 설정
+    └── programs/          ← 15개 체험 프로그램
+        ├── 01-ai-body-scanner.html
+        ├── 02-smart-fitness-trainer.html
+        ├── ...
+        └── 15-tech-mentor-talk.html</code></pre>
+
+<h3>네트워크 구성도</h3>
+<pre><code>                    ┌─────────────────┐
+                    │  백엔드 서버      │
+                    │  (Node.js:3000)  │
+                    │  REST API + WS   │
+                    └───────┬─────────┘
+                            │ WiFi / LAN
+        ┌───────────┬───────┼───────────┬──────────┐
+        │           │       │           │          │
+   ┌────┴────┐ ┌────┴───┐ ┌┴────────┐ ┌┴───────┐ ┌┴──────┐
+   │운영 PC  │ │체크인   │ │키오스크  │ │부스 PC │ │참가자  │
+   │대시보드 │ │태블릿   │ │디스플레이│ │체험용  │ │스마트폰│
+   └─────────┘ └────────┘ └─────────┘ └────────┘ └───────┘</code></pre>
+
+<div class="info-box">
+  <strong>💡 오프라인 모드</strong>
+  서버 없이도 각 기기에서 독립적으로 동작합니다. Service Worker가 모든 페이지를 캐싱하며, 데이터는 localStorage에 저장됩니다. 서버가 연결되면 자동으로 실시간 동기화됩니다.
+</div>
+
+<!-- ────────────────────────────────── -->
+<h2 id="devices">📱 필요 장비</h2>
+
+<table>
+  <tr><th>용도</th><th>수량</th><th>사양</th><th>비고</th></tr>
+  <tr><td>운영 본부 PC</td><td>1대</td><td>노트북 또는 데스크탑, Chrome 브라우저</td><td>대시보드 상시 표시</td></tr>
+  <tr><td>체크인 태블릿</td><td>1~2대</td><td>iPad 또는 Android 태블릿, 카메라 필수</td><td>입구 QR 스캔용</td></tr>
+  <tr><td>키오스크 디스플레이</td><td>5대</td><td>태블릿 또는 대형 모니터</td><td>각 존 입구 안내용</td></tr>
+  <tr><td>부스 체험용 PC</td><td>15대</td><td>노트북/데스크탑, 웹캠, Chrome</td><td>부스별 1대</td></tr>
+  <tr><td>WiFi 공유기</td><td>1~2대</td><td>802.11ac 이상, 30+ 동시 접속</td><td>모든 기기 연결용</td></tr>
+  <tr><td>서버 PC</td><td>1대</td><td>Node.js 설치 가능한 PC/노트북</td><td>운영 본부 PC와 겸용 가능</td></tr>
+</table>
+
+<!-- ────────────────────────────────── -->
+<h2 id="install">⚙️ 설치 방법</h2>
+
+<h3>1단계: Node.js 설치</h3>
+<p>서버 PC에 Node.js (v18 이상)가 설치되어 있어야 합니다.</p>
+<pre><code># Node.js 버전 확인
+node --version    # v18.0.0 이상
+
+# 설치되지 않은 경우
+# https://nodejs.org 에서 LTS 버전 다운로드</code></pre>
+
+<h3>2단계: 서버 의존성 설치</h3>
+<pre><code># 프로젝트 디렉토리로 이동
+cd harness-project/server
+
+# 의존성 설치 (최초 1회)
+npm install</code></pre>
+
+<h3>3단계: 서버 시작</h3>
+<pre><code># 서버 실행
+npm start
+
+# 또는 직접 실행
+node server.js</code></pre>
+
+<div class="info-box">
+  <strong>✅ 서버가 정상 시작되면</strong>
+  <code>http://localhost:3000</code>에서 전체 시스템에 접근할 수 있습니다.<br>
+  같은 네트워크의 다른 기기에서는 <code>http://서버IP:3000</code>으로 접속합니다.
+</div>
+
+<h3>4단계: 서버 IP 확인</h3>
+<pre><code># macOS / Linux
+ifconfig | grep "inet " | grep -v 127.0.0.1
+
+# Windows
+ipconfig | findstr IPv4
+
+# 예: 192.168.1.100 → 다른 기기에서 http://192.168.1.100:3000</code></pre>
+
+<h3>서버 없이 사용하기 (오프라인 모드)</h3>
+<pre><code># 단순 정적 파일 서버로도 동작 (동기화 없음)
+cd harness-project/output
+python3 -m http.server 8000
+
+# http://localhost:8000 에서 접근</code></pre>
+
+<div class="warn-box">
+  <strong>⚠️ 오프라인 모드 제한</strong>
+  서버 없이 사용하면 기기 간 데이터 동기화가 되지 않습니다. 각 기기에서 독립적으로 localStorage에 저장됩니다. 웹캠이 필요한 체험은 HTTPS 또는 localhost에서만 동작합니다.
+</div>
+
+<!-- ────────────────────────────────── -->
+<h2 id="network">🌐 네트워크 구성</h2>
+
+<h3>권장 네트워크 구성</h3>
+<ol>
+  <li>WiFi 공유기를 운영 본부에 설치</li>
+  <li>서버 PC를 유선(LAN)으로 공유기에 연결 (안정성 확보)</li>
+  <li>나머지 기기는 WiFi로 연결</li>
+  <li>SSID 예: <code>DreamFest-Staff</code> (운영진용), <code>DreamFest-Guest</code> (참가자용)</li>
+</ol>
+
+<div class="warn-box">
+  <strong>⚠️ 네트워크 주의사항</strong>
+  <ul style="margin:4px 0 0 16px">
+    <li>행사장 WiFi와 외부 인터넷이 분리된 환경에서는 CDN 리소스(폰트, 라이브러리)가 로드되지 않을 수 있습니다.</li>
+    <li>사전에 한 번 모든 페이지를 열어 Service Worker 캐시를 채워두면 오프라인에서도 동작합니다.</li>
+    <li>웹캠 기반 체험 (프로그램 01~07, 10, 12)은 <code>localhost</code> 또는 <code>HTTPS</code>에서만 카메라 접근이 가능합니다.</li>
+  </ul>
+</div>
+
+<h3>HTTPS 없이 웹캠 사용하기</h3>
+<p>Chrome에서 비보안 origin의 카메라 접근을 허용하는 방법:</p>
+<pre><code># Chrome 실행 시 플래그 추가 (개발/행사용)
+# macOS:
+open -a "Google Chrome" --args --unsafely-treat-insecure-origin-as-secure="http://192.168.1.100:3000"
+
+# Windows:
+chrome.exe --unsafely-treat-insecure-origin-as-secure="http://192.168.1.100:3000"</code></pre>
+
+<p>또는 Chrome 주소창에 <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>를 입력하여 서버 주소를 추가합니다.</p>
+
+<!-- ────────────────────────────────── -->
+<h2 id="pre-check">✅ 사전 점검 체크리스트</h2>
+
+<h3>D-1 (전날)</h3>
+<ul class="checklist">
+  <li>서버 PC에 Node.js 설치 확인</li>
+  <li><code>npm install</code> 완료 확인</li>
+  <li><code>npm start</code>로 서버 정상 기동 확인</li>
+  <li>모든 기기에서 <code>http://서버IP:3000</code> 접속 확인</li>
+  <li>웹캠 사용 부스 PC에서 카메라 접근 권한 허용 확인</li>
+  <li>각 존 키오스크 디스플레이 정상 표시 확인</li>
+  <li>QR 체크인 태블릿 카메라 스캔 테스트</li>
+  <li>인증서 인쇄 프린터 연결 확인</li>
+  <li>모든 페이지를 한 번씩 열어 Service Worker 캐시 채우기</li>
+  <li>WiFi 신호 강도 확인 (모든 부스 위치에서)</li>
+</ul>
+
+<h3>D-Day (당일 아침)</h3>
+<ul class="checklist">
+  <li>서버 PC 전원 켜기 및 <code>npm start</code> 실행</li>
+  <li>운영 대시보드 열기 (관리자 모드)</li>
+  <li>체크인 태블릿에서 QR 체크인 페이지 열기</li>
+  <li>각 부스 PC에서 해당 프로그램 페이지 열기</li>
+  <li>키오스크 디스플레이 전원 및 페이지 열기</li>
+  <li>대시보드 우하단 "Server Connected" 표시 확인</li>
+  <li>테스트 체크인 1건 수행 후 대시보드 반영 확인</li>
+</ul>
+
+<!-- ────────────────────────────────── -->
+<h2 id="opening">🎉 개장 절차</h2>
+
+<div class="step-card">
+  <span class="step-num">1</span>
+  <span class="step-title">서버 시작 (운영본부)</span>
+  <p style="margin:8px 0 0 36px;font-size:.85rem">
+    서버 PC에서 <code>cd server && npm start</code> 실행.
+    콘솔에 "꿈-드림 페스티벌 미래기술존 서버" 배너 확인.
+  </p>
+</div>
+
+<div class="step-card">
+  <span class="step-num">2</span>
+  <span class="step-title">운영 대시보드 확인</span>
+  <p style="margin:8px 0 0 36px;font-size:.85rem">
+    <code>http://서버IP:3000</code> 접속 → 관리자 모드 선택 → 관제 맵에서 15개 부스 표시 확인.
+  </p>
+</div>
+
+<div class="step-card">
+  <span class="step-num">3</span>
+  <span class="step-title">체크인 태블릿 준비</span>
+  <p style="margin:8px 0 0 36px;font-size:.85rem">
+    입구 태블릿에서 <code>http://서버IP:3000/qr-checkin.html</code> 접속.
+    "참가자 등록" 탭에서 테스트 등록 1건 수행.
+  </p>
+</div>
+
+<div class="step-card">
+  <span class="step-num">4</span>
+  <span class="step-title">키오스크 디스플레이 배치</span>
+  <p style="margin:8px 0 0 36px;font-size:.85rem">
+    각 존 입구에 키오스크 설치. <code>http://서버IP:3000/kiosk.html?booth=N</code> (N=부스번호).
+    전체화면 모드(F11) 활성화.
+  </p>
+</div>
+
+<div class="step-card">
+  <span class="step-num">5</span>
+  <span class="step-title">부스 체험 PC 준비</span>
+  <p style="margin:8px 0 0 36px;font-size:.85rem">
+    각 부스 PC에서 해당 프로그램 페이지 접속.<br>
+    예: 1번 부스 → <code>http://서버IP:3000/programs/01-ai-body-scanner.html</code>
+  </p>
+</div>
+
+<div class="step-card">
+  <span class="step-num">6</span>
+  <span class="step-title">개장!</span>
+  <p style="margin:8px 0 0 36px;font-size:.85rem">
+    참가자 입장 → 입구에서 QR 등록 → 자유 부스 체험 → 스탬프 수집 → 인증서 발급
+  </p>
+</div>
+
+<!-- ────────────────────────────────── -->
+<h2 id="dashboard">📊 대시보드 사용법</h2>
+
+<h3>접속 URL</h3>
+<pre><code>http://서버IP:3000/
+또는 http://서버IP:3000/index.html</code></pre>
+
+<h3>관리자 모드</h3>
+<p>상단 "관리자" 버튼을 클릭하면 관리자 전용 탭이 표시됩니다:</p>
+<table>
+  <tr><th>탭</th><th>기능</th></tr>
+  <tr><td>관제 맵</td><td>5개 존, 15개 부스의 실시간 인원/대기 현황. 부스 클릭 시 상세 정보.</td></tr>
+  <tr><td>타임테이블</td><td>부스별 운영 시간표. 드래그로 시간 조정 가능.</td></tr>
+  <tr><td>스태프 배치</td><td>스태프 배정 현황 및 관리.</td></tr>
+  <tr><td>통계 분석</td><td>실시간 참가자 수, 시간대별 추이, 존별 비교 차트.</td></tr>
+  <tr><td>콘텐츠 관리</td><td>프로그램 정보 조회 및 상태 변경.</td></tr>
+  <tr><td>공지 발송</td><td>실시간 공지 메시지 작성 및 발송.</td></tr>
+  <tr><td>QR 체크인</td><td>QR 체크인 시스템 바로가기.</td></tr>
+  <tr><td>인증서 발급</td><td>인증서 생성 페이지 바로가기.</td></tr>
+</table>
+
+<h3>참가자 모드</h3>
+<p>상단 "참가자" 버튼을 클릭하면 참가자 전용 화면이 표시됩니다:</p>
+<ul>
+  <li><strong>스탬프 보드</strong>: 15개 부스 체험 완료 현황 (완료 부스 강조 표시)</li>
+  <li><strong>추천 루트</strong>: 관심사 기반 추천 동선</li>
+  <li><strong>QR 체크인</strong>: 내 QR 코드 표시 및 체크인 이력</li>
+  <li><strong>리더보드</strong>: 댄스/분류/프롬프트 챌린지 순위</li>
+  <li><strong>알림</strong>: 운영 공지 수신</li>
+</ul>
+
+<!-- ────────────────────────────────── -->
+<h2 id="qr">📱 QR 체크인 운영</h2>
+
+<h3>접속 URL</h3>
+<pre><code>http://서버IP:3000/qr-checkin.html</code></pre>
+
+<h3>운영 흐름</h3>
+
+<h4>1. 참가자 등록 (입구)</h4>
+<ol>
+  <li>"참가자 등록" 탭 선택</li>
+  <li>닉네임 입력, 아바타 선택</li>
+  <li>"등록" 버튼 클릭 → DF-XXXX ID 자동 생성</li>
+  <li>화면에 QR 코드 표시 → 참가자에게 보여주거나 스크린샷 안내</li>
+</ol>
+
+<h4>2. 부스 체크인</h4>
+<ol>
+  <li>"부스 체크인" 탭 선택</li>
+  <li>부스 선택 (드롭다운)</li>
+  <li><strong>카메라 스캔</strong>: "카메라 스캔 시작" → 참가자 QR 비추기 → 자동 인식</li>
+  <li><strong>수동 입력</strong>: "수동 입력" 탭 → DF-XXXX ID 입력 → "체크인" 클릭</li>
+</ol>
+
+<h4>3. 체크인 현황</h4>
+<ul>
+  <li>"체크인 현황" 탭에서 전체 통계 및 타임라인 확인</li>
+  <li>존별/부스별 체크인 수 차트</li>
+  <li>CSV 내보내기 기능</li>
+</ul>
+
+<div class="info-box">
+  <strong>💡 팁</strong>
+  참가자가 QR 코드를 분실한 경우, "수동 입력"으로 ID를 직접 입력하거나 대시보드 참가자 목록에서 검색할 수 있습니다.
+</div>
+
+<!-- ────────────────────────────────── -->
+<h2 id="kiosk">🖥️ 키오스크 모드</h2>
+
+<h3>접속 URL</h3>
+<pre><code># 부스 선택 화면
+http://서버IP:3000/kiosk.html
+
+# 특정 부스 키오스크 (예: 1번 부스)
+http://서버IP:3000/kiosk.html?booth=1</code></pre>
+
+<h3>기능</h3>
+<ul>
+  <li><strong>부스 정보 표시</strong>: 프로그램명, 설명, 난이도, 소요시간</li>
+  <li><strong>실시간 현황</strong>: 현재 인원, 대기 인원, 오늘 참가자 수</li>
+  <li><strong>QR 코드</strong>: 해당 부스 체험 페이지 직접 접속 QR</li>
+  <li><strong>스크린세이버</strong>: 2분 무입력 시 자동 활성화 (파티클 애니메이션)</li>
+  <li><strong>설정 패널</strong>: 우하단 톱니바퀴 아이콘 클릭</li>
+</ul>
+
+<h3>설정</h3>
+<table>
+  <tr><th>항목</th><th>설명</th><th>기본값</th></tr>
+  <tr><td>스크린세이버</td><td>자동 스크린세이버 활성화</td><td>ON</td></tr>
+  <tr><td>대기시간</td><td>무입력 후 스크린세이버까지 시간</td><td>120초</td></tr>
+  <tr><td>밝기</td><td>화면 밝기 조절</td><td>100%</td></tr>
+  <tr><td>전체화면</td><td>전체화면 모드 전환</td><td>-</td></tr>
+</table>
+
+<div class="info-box">
+  <strong>💡 추천 설정</strong>
+  키오스크로 사용할 태블릿은 <strong>Guided Access</strong>(iPad) 또는 <strong>화면 고정</strong>(Android)을 활성화하여 참가자가 다른 앱으로 이동하지 못하게 합니다.
+</div>
+
+<!-- ────────────────────────────────── -->
+<h2 id="booth-ops">🎮 부스 운영</h2>
+
+<h3>부스 PC 설정</h3>
+<ol>
+  <li>Chrome 브라우저에서 해당 프로그램 URL 접속</li>
+  <li>카메라 접근 "허용" 클릭 (웹캠 기반 프로그램)</li>
+  <li>전체화면(F11) 활성화</li>
+  <li>참가자 체험 후 "체험 완료" 시 스탬프가 자동 기록됨</li>
+</ol>
+
+<h3>부스별 접속 URL</h3>
+<table>
+  <tr><th>번호</th><th>프로그램</th><th>URL 경로</th><th>웹캠</th></tr>
+  <tr><td>01</td><td>🏃 나의 몸을 읽는 AI</td><td><code>/programs/01-ai-body-scanner.html</code></td><td>필요</td></tr>
+  <tr><td>02</td><td>💪 AI 운동 코치</td><td><code>/programs/02-smart-fitness-trainer.html</code></td><td>필요</td></tr>
+  <tr><td>03</td><td>💃 댄스 AI 챌린지</td><td><code>/programs/03-dance-battle-ai.html</code></td><td>필요</td></tr>
+  <tr><td>04</td><td>👁️ 물건을 알아보는 AI</td><td><code>/programs/04-ai-vision-explorer.html</code></td><td>필요</td></tr>
+  <tr><td>05</td><td>🛡️ AI 안전 감시관</td><td><code>/programs/05-ai-safety-guardian.html</code></td><td>필요</td></tr>
+  <tr><td>06</td><td>🔬 AI 분류 챌린지</td><td><code>/programs/06-train-your-own-ai.html</code></td><td>필요</td></tr>
+  <tr><td>07</td><td>🎭 AI 아바타 스튜디오</td><td><code>/programs/07-my-ai-avatar.html</code></td><td>필요</td></tr>
+  <tr><td>08</td><td>🎬 AI 뮤직비디오 제작</td><td><code>/programs/08-ai-music-video.html</code></td><td>불필요</td></tr>
+  <tr><td>09</td><td>🎨 프롬프트 아트 챌린지</td><td><code>/programs/09-prompt-art-challenge.html</code></td><td>불필요</td></tr>
+  <tr><td>10</td><td>🩺 AI 의사 체험</td><td><code>/programs/10-ai-doctor.html</code></td><td>필요</td></tr>
+  <tr><td>11</td><td>🌱 스마트팜 관제</td><td><code>/programs/11-smart-farm.html</code></td><td>불필요</td></tr>
+  <tr><td>12</td><td>🚗 자율주행 시뮬레이터</td><td><code>/programs/12-self-driving-sim.html</code></td><td>선택</td></tr>
+  <tr><td>13</td><td>🎯 AI 직업 매칭</td><td><code>/programs/13-ai-career-matcher.html</code></td><td>불필요</td></tr>
+  <tr><td>14</td><td>🧩 비주얼 코딩 체험</td><td><code>/programs/14-visual-coding-lab.html</code></td><td>불필요</td></tr>
+  <tr><td>15</td><td>👨‍💻 IT 전문가 멘토링</td><td><code>/programs/15-tech-mentor-talk.html</code></td><td>불필요</td></tr>
+</table>
+
+<!-- ────────────────────────────────── -->
+<h2 id="certificates">📜 인증서 발급</h2>
+
+<h3>접속 URL</h3>
+<pre><code>http://서버IP:3000/certificates.html</code></pre>
+
+<h3>발급 절차</h3>
+<ol>
+  <li><strong>인증서 유형 선택</strong>: 참가 확인서 / 스탬프 완료 인증서</li>
+  <li><strong>참가자 정보 입력</strong>: 이름, 학교 (localStorage에서 자동 불러오기 가능)</li>
+  <li><strong>스탬프 선택</strong> (완료 인증서): 체험 완료한 부스 선택</li>
+  <li><strong>미리보기 생성</strong> → 인증서 확인</li>
+  <li><strong>인쇄</strong> 또는 <strong>PDF 다운로드</strong></li>
+</ol>
+
+<div class="info-box">
+  <strong>💡 프린터 설정</strong>
+  인쇄 시 "배경 그래픽" 옵션을 활성화해야 테두리와 도장이 인쇄됩니다.<br>
+  Chrome: 인쇄 → 추가 설정 → "배경 그래픽" 체크.
+</div>
+
+<!-- ────────────────────────────────── -->
+<h2 id="zone-a">🏃 A존: AI 모션 분석</h2>
+<p>MediaPipe Pose 기반 실시간 신체 분석 체험. <strong>웹캠 필수.</strong></p>
+<table>
+  <tr><th>부스</th><th>체험 내용</th><th>소요시간</th></tr>
+  <tr><td>01. 나의 몸을 읽는 AI</td><td>33개 관절 랜드마크 추출, 신체 비율 분석, 자세 균형도 리포트</td><td>3~5분</td></tr>
+  <tr><td>02. AI 운동 코치</td><td>실시간 운동 자세 교정, 스쿼트/런지 등 12종 운동 가이드</td><td>5~7분</td></tr>
+  <tr><td>03. 댄스 AI 챌린지</td><td>K-Pop 안무 따라하기, 프레임별 코사인 유사도 점수</td><td>5~7분</td></tr>
+</table>
+<div class="warn-box">
+  <strong>⚠️ 운영 유의사항</strong>
+  참가자가 카메라 앞에서 전신이 보이도록 1.5~2m 거리를 유지해야 합니다. 배경이 복잡하지 않은 곳에 부스를 배치하세요.
+</div>
+
+<h2 id="zone-b">👁️ B존: YOLO 객체인식</h2>
+<p>TensorFlow.js COCO-SSD 기반 실시간 객체 인식. <strong>웹캠 필수.</strong></p>
+<table>
+  <tr><th>부스</th><th>체험 내용</th><th>소요시간</th></tr>
+  <tr><td>04. 물건을 알아보는 AI</td><td>80클래스 실시간 인식, 물체 도감 채우기, 미션 모드</td><td>5~7분</td></tr>
+  <tr><td>05. AI 안전 감시관</td><td>위험 상황 감지 시뮬레이션, 3개 시나리오 역할극</td><td>5~7분</td></tr>
+  <tr><td>06. AI 분류 챌린지</td><td>나만의 AI 모델 학습 (3클래스), 정확도 리더보드</td><td>7~10분</td></tr>
+</table>
+<div class="info-box">
+  <strong>💡 팁</strong>
+  06번 부스는 다양한 물건(필통, 음료수, 문구류 등)을 미리 준비해두면 체험이 풍성해집니다.
+</div>
+
+<h2 id="zone-c">🎨 C존: AI 창작 스튜디오</h2>
+<p>AI 기반 창작 활동 체험.</p>
+<table>
+  <tr><th>부스</th><th>체험 내용</th><th>소요시간</th><th>웹캠</th></tr>
+  <tr><td>07. AI 아바타 스튜디오</td><td>얼굴 인식 기반 3D 아바타 생성, 표정 추적</td><td>5~7분</td><td>필요</td></tr>
+  <tr><td>08. AI 뮤직비디오 제작</td><td>음악 비주얼 이펙트 생성, 영상 녹화/다운로드</td><td>5~7분</td><td>불필요</td></tr>
+  <tr><td>09. 프롬프트 아트 챌린지</td><td>텍스트 프롬프트로 아트 생성, 갤러리 투표</td><td>5~7분</td><td>불필요</td></tr>
+</table>
+
+<h2 id="zone-d">🩺 D존: 미래직업 시뮬레이션</h2>
+<p>다양한 미래 직업을 시뮬레이션으로 체험.</p>
+<table>
+  <tr><th>부스</th><th>체험 내용</th><th>소요시간</th><th>웹캠</th></tr>
+  <tr><td>10. AI 의사 체험</td><td>관절 ROM 측정, 재활 운동 추천</td><td>5~7분</td><td>필요</td></tr>
+  <tr><td>11. 스마트팜 관제</td><td>IoT 센서 시뮬레이션, 작물 건강 진단</td><td>5~7분</td><td>불필요</td></tr>
+  <tr><td>12. 자율주행 시뮬레이터</td><td>도로 객체 인식, 가상 주행 체험</td><td>5~7분</td><td>선택</td></tr>
+</table>
+
+<h2 id="zone-e">🎯 E존: 미래기술 진로상담</h2>
+<p>AI/IT 분야 진로 탐색 및 상담.</p>
+<table>
+  <tr><th>부스</th><th>체험 내용</th><th>소요시간</th></tr>
+  <tr><td>13. AI 직업 매칭</td><td>10문항 적성검사, 20개 AI/IT 직업 매칭, 레이더 차트</td><td>5~7분</td></tr>
+  <tr><td>14. 비주얼 코딩 체험</td><td>블록코딩(Blockly)으로 3개 미션 수행</td><td>7~10분</td></tr>
+  <tr><td>15. IT 전문가 멘토링</td><td>5명 멘토 프로필 조회, 30분 단위 예약</td><td>3~5분 (예약)</td></tr>
+</table>
+
+<!-- ────────────────────────────────── -->
+<h2 id="trouble">🔧 트러블슈팅</h2>
+
+<h3>자주 발생하는 문제</h3>
+
+<h4>"Server Connected"가 표시되지 않아요</h4>
+<ul>
+  <li>서버가 실행 중인지 확인: 서버 PC에서 콘솔 출력 확인</li>
+  <li>같은 네트워크에 연결되어 있는지 확인</li>
+  <li>서버 IP와 포트가 정확한지 확인: <code>http://서버IP:3000/api/stats</code> 접속 테스트</li>
+  <li>방화벽에서 3000번 포트를 허용했는지 확인</li>
+</ul>
+
+<h4>웹캠이 작동하지 않아요</h4>
+<ul>
+  <li><code>localhost</code> 또는 <code>HTTPS</code>에서만 카메라 접근 가능</li>
+  <li>Chrome 주소창 왼쪽 자물쇠 아이콘 → 카메라 "허용"으로 변경</li>
+  <li>다른 앱이 카메라를 사용 중이면 해제</li>
+  <li>Chrome 플래그로 비보안 origin 허용 (위 네트워크 구성 섹션 참조)</li>
+</ul>
+
+<h4>페이지가 로드되지 않아요 (오프라인)</h4>
+<ul>
+  <li>인터넷 연결이 없으면 CDN 리소스(폰트, 라이브러리)가 로드되지 않을 수 있음</li>
+  <li>사전에 한 번 모든 페이지를 열어 Service Worker 캐시를 채워두면 해결</li>
+  <li>SW가 등록되었는지 확인: Chrome DevTools → Application → Service Workers</li>
+</ul>
+
+<h4>QR 스캔이 안 돼요</h4>
+<ul>
+  <li>카메라 권한 허용 확인</li>
+  <li>QR 코드에 충분한 조명 확보</li>
+  <li>카메라와 QR 코드 사이 10~30cm 거리 유지</li>
+  <li>수동 입력 모드로 대체 가능</li>
+</ul>
+
+<h4>데이터가 다른 기기에 동기화되지 않아요</h4>
+<ul>
+  <li>모든 기기에서 같은 서버 URL을 사용하는지 확인</li>
+  <li>브라우저 페이지 우하단에 "Server Connected" 표시 확인</li>
+  <li>서버를 재시작하면 기존 데이터는 <code>server/data/</code>에 보존됨</li>
+</ul>
+
+<h4>PDF 다운로드가 안 돼요</h4>
+<ul>
+  <li>팝업 차단 해제 확인</li>
+  <li>CDN(html2canvas, jsPDF)이 로드되었는지 확인 (인터넷 필요)</li>
+  <li>대안: "인쇄" 기능 사용 → "PDF로 저장" 선택</li>
+</ul>
+
+<h3>서버 관련</h3>
+
+<h4>서버가 갑자기 종료되었어요</h4>
+<pre><code># 서버 다시 시작
+cd server && npm start
+
+# 데이터는 server/data/ 에 안전하게 보존됩니다</code></pre>
+
+<h4>데이터를 초기화하고 싶어요</h4>
+<pre><code># API로 초기화 (서버 실행 중)
+curl -X POST http://localhost:3000/api/sync/reset \
+  -H "Content-Type: application/json" \
+  -d '{"confirm":"RESET_ALL_DATA"}'
+
+# 또는 파일 직접 삭제
+rm -rf server/data/
+# 서버 재시작하면 빈 데이터로 시작</code></pre>
+
+<h4>서버 포트를 변경하고 싶어요</h4>
+<pre><code># 환경변수로 포트 지정
+PORT=8080 npm start
+
+# 또는 server.js 상단의 PORT 변수 수정</code></pre>
+
+<!-- ────────────────────────────────── -->
+<h2 id="emergency">🚨 비상 대응</h2>
+
+<div class="danger-box">
+  <strong>🔴 서버 완전 장애 시</strong>
+  <ol style="margin:4px 0 0 16px">
+    <li>각 기기는 오프라인 모드(localStorage)로 자동 전환됨</li>
+    <li>체험 프로그램은 서버 없이 독립 동작</li>
+    <li>체크인은 "수동 입력" 또는 종이 명단으로 대체</li>
+    <li>서버 복구 후 각 기기에서 페이지 새로고침하면 자동 재연결</li>
+  </ol>
+</div>
+
+<div class="danger-box">
+  <strong>🔴 네트워크 전체 장애 시</strong>
+  <ol style="margin:4px 0 0 16px">
+    <li>Service Worker 캐시로 페이지는 계속 로드 가능</li>
+    <li>CDN 의존 리소스(폰트)는 캐시에서 제공됨</li>
+    <li>각 기기에서 독립적으로 체험 계속 진행</li>
+    <li>체크인 데이터는 각 기기 localStorage에 저장되며, 네트워크 복구 후 동기화 가능</li>
+  </ol>
+</div>
+
+<div class="warn-box">
+  <strong>⚠️ 특정 부스 PC 장애 시</strong>
+  <ol style="margin:4px 0 0 16px">
+    <li>Chrome 새로고침(Ctrl+Shift+R) 시도</li>
+    <li>안 되면 Chrome 종료 후 재시작</li>
+    <li>그래도 안 되면 다른 노트북/태블릿으로 교체</li>
+    <li>대시보드에서 해당 부스 상태를 "점검중"으로 변경</li>
+  </ol>
+</div>
+
+<!-- ────────────────────────────────── -->
+<h2 id="contacts">📞 연락처</h2>
+
+<table>
+  <tr><th>담당</th><th>역할</th><th>연락처</th></tr>
+  <tr><td>기술 총괄</td><td>서버/시스템 장애 대응</td><td>(행사 전 기입)</td></tr>
+  <tr><td>A존 담당</td><td>AI 모션 분석 부스 운영</td><td>(행사 전 기입)</td></tr>
+  <tr><td>B존 담당</td><td>YOLO 객체인식 부스 운영</td><td>(행사 전 기입)</td></tr>
+  <tr><td>C존 담당</td><td>AI 창작 스튜디오 부스 운영</td><td>(행사 전 기입)</td></tr>
+  <tr><td>D존 담당</td><td>미래직업 시뮬레이션 부스 운영</td><td>(행사 전 기입)</td></tr>
+  <tr><td>E존 담당</td><td>미래기술 진로상담 부스 운영</td><td>(행사 전 기입)</td></tr>
+  <tr><td>체크인 담당</td><td>입구 QR 체크인 운영</td><td>(행사 전 기입)</td></tr>
+  <tr><td>운영 본부</td><td>전체 총괄</td><td>(행사 전 기입)</td></tr>
+</table>
+
+<div style="text-align:center;margin:40px 0;color:#999;font-size:.8rem">
+  <p>꿈-드림(Dream) 페스티벌 미래기술존 운영 매뉴얼 v1.0</p>
+  <p>2026 영천시 청소년 진로진학 박람회</p>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// 사이드바 토글 (모바일)
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// 목차 활성 상태 업데이트
+var tocLinks = document.querySelectorAll('.toc a');
+var sections = [];
+tocLinks.forEach(function(a){
+  var id = a.getAttribute('href').replace('#','');
+  var el = document.getElementById(id);
+  if(el) sections.push({link:a, el:el, li:a.parentElement});
+});
+
+function updateToc(){
+  var scrollY = window.scrollY + 100;
+  var active = sections[0];
+  sections.forEach(function(s){
+    s.li.classList.remove('active');
+    if(s.el.offsetTop <= scrollY) active = s;
+  });
+  if(active) active.li.classList.add('active');
+}
+
+window.addEventListener('scroll', updateToc);
+updateToc();
+
+// 목차 클릭 시 모바일 사이드바 닫기
+tocLinks.forEach(function(a){
+  a.addEventListener('click', function(){
+    document.getElementById('sidebar').classList.remove('open');
+  });
+});
+</script>
+<script src="sync-client.js"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}</script>
+</body>
+</html>

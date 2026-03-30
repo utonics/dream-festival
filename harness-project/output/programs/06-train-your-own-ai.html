@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 분류 챌린지 – Train Your Own AI</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier@1.2.4/dist/knn-classifier.min.js"></script>
+<style>
+:root {
+  --amber: #D4943A;
+  --amber-dark: #B87820;
+  --amber-light: #F5B85A;
+  --amber-pale: #FDF3E3;
+  --bg: #F7F6F3;
+  --dark: #1A1A1A;
+  --white: #FFFFFF;
+  --text: #2D2D2D;
+  --muted: #8A8A8A;
+  --border: #E2E0DA;
+  --c0: #E84040; --c0-light: #FDEAEA; --c0-mid: rgba(232,64,64,0.15);
+  --c1: #22B35A; --c1-light: #E8F8EF; --c1-mid: rgba(34,179,90,0.15);
+  --c2: #3A8AE8; --c2-light: #E8F1FD; --c2-mid: rgba(58,138,232,0.15);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  background-image: radial-gradient(circle, #D0CEC9 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ─── TOP BAR ─── */
+#topbar {
+  background: var(--amber);
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 16px rgba(212,148,58,0.35);
+}
+#topbar .title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  background: rgba(255,255,255,0.22);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.back-btn:hover { background: rgba(255,255,255,0.38); }
+.zone-badge {
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* ─── SCREENS ─── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ─── LOADING SCREEN ─── */
+#screen-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px);
+  padding: 40px 24px;
+  text-align: center;
+}
+.loading-icon {
+  font-size: 72px;
+  margin-bottom: 24px;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.8; }
+}
+.loading-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.loading-sub {
+  color: var(--muted);
+  font-size: 15px;
+  margin-bottom: 32px;
+}
+.progress-wrap {
+  width: 320px;
+  max-width: 100%;
+  background: var(--border);
+  border-radius: 99px;
+  height: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--amber) 0%, var(--amber-light) 100%);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+.progress-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ─── SETUP SCREEN ─── */
+#screen-setup {
+  padding: 32px 20px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+.setup-header {
+  margin-bottom: 32px;
+}
+.setup-header h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.setup-header p {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 36px;
+}
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.step.active { color: var(--amber); }
+.step.done { color: #22B35A; }
+.step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.step.active .step-dot {
+  background: var(--amber);
+  color: #fff;
+}
+.step.done .step-dot {
+  background: #22B35A;
+  color: #fff;
+}
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin: 0 8px;
+}
+.step-line.done { background: #22B35A; }
+
+.class-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.class-input-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--white);
+  border-radius: 16px;
+  padding: 16px 20px;
+  border: 2px solid var(--border);
+  transition: border-color 0.2s;
+}
+.class-input-row:focus-within { border-color: var(--amber); }
+.class-color-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.class-color-dot.c0 { background: var(--c0); }
+.class-color-dot.c1 { background: var(--c1); }
+.class-color-dot.c2 { background: var(--c2); }
+.class-label-text {
+  font-weight: 700;
+  font-size: 14px;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+.class-label-text.c0 { color: var(--c0); }
+.class-label-text.c1 { color: var(--c1); }
+.class-label-text.c2 { color: var(--c2); }
+.class-name-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  background: transparent;
+  font-family: 'Noto Sans KR', sans-serif;
+  min-width: 0;
+}
+.class-name-input::placeholder { color: #C0BDB8; font-weight: 400; }
+
+.nick-section {
+  background: var(--amber-pale);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 28px;
+  border: 1.5px solid rgba(212,148,58,0.25);
+}
+.nick-section label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--amber-dark);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.nick-input {
+  width: 100%;
+  border: 2px solid rgba(212,148,58,0.3);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--white);
+  outline: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: border-color 0.2s;
+}
+.nick-input:focus { border-color: var(--amber); }
+
+.btn-primary {
+  width: 100%;
+  padding: 16px;
+  background: var(--amber);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  font-family: 'Noto Sans KR', sans-serif;
+  letter-spacing: -0.2px;
+}
+.btn-primary:hover { background: var(--amber-dark); transform: translateY(-1px); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { background: #C0BDB8; cursor: not-allowed; transform: none; }
+
+/* ─── COLLECT SCREEN ─── */
+#screen-collect {
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.collect-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.collect-header h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+.progress-chips {
+  display: flex;
+  gap: 8px;
+}
+.chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.chip.c0 { background: var(--c0-light); color: var(--c0); }
+.chip.c1 { background: var(--c1-light); color: var(--c1); }
+.chip.c2 { background: var(--c2-light); color: var(--c2); }
+.chip.complete { opacity: 0.5; }
+
+.class-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: var(--white);
+  border-radius: 14px;
+  padding: 5px;
+  border: 1.5px solid var(--border);
+}
+.class-tab {
+  flex: 1;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  transition: all 0.18s;
+  font-family: 'Noto Sans KR', sans-serif;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.class-tab.active-0 { background: var(--c0); color: #fff; }
+.class-tab.active-1 { background: var(--c1); color: #fff; }
+.class-tab.active-2 { background: var(--c2); color: #fff; }
+.class-tab .tab-count {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.collect-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 700px) {
+  .collect-layout { grid-template-columns: 1fr; }
+}
+
+.cam-card {
+  background: var(--white);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+}
+.cam-wrapper {
+  position: relative;
+  background: #1A1A1A;
+  aspect-ratio: 4/3;
+}
+#collect-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scaleX(-1);
+}
+.cam-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  gap: 8px;
+  flex-direction: column;
+}
+.cam-overlay.hidden { display: none; }
+.flash-overlay {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.08s;
+}
+.flash-overlay.flash { opacity: 0.7; }
+.cam-bottom {
+  padding: 14px 16px;
+}
+
+.capture-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: 'Noto Sans KR', sans-serif;
+  margin-bottom: 10px;
+}
+.capture-btn.c0 { background: var(--c0); color: #fff; }
+.capture-btn.c1 { background: var(--c1); color: #fff; }
+.capture-btn.c2 { background: var(--c2); color: #fff; }
+.capture-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.capture-btn:active { transform: scale(0.97); }
+.capture-btn:disabled { background: #C0BDB8; cursor: not-allowed; transform: none; opacity: 1; }
+
+.count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--muted);
+}
+.count-bar-wrap {
+  flex: 1;
+  margin: 0 10px;
+  height: 6px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.count-bar {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+.count-bar.c0 { background: var(--c0); }
+.count-bar.c1 { background: var(--c1); }
+.count-bar.c2 { background: var(--c2); }
+.count-num { font-weight: 700; color: var(--text); min-width: 38px; text-align: right; }
+
+.samples-panel {
+  background: var(--white);
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.samples-title {
+  padding: 14px 16px 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.samples-title span { color: var(--muted); font-weight: 500; font-size: 13px; }
+.thumbs-grid {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  flex: 1;
+  align-content: start;
+  min-height: 160px;
+}
+.thumb-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--border);
+}
+.thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.thumb-item .thumb-class-dot {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.thumb-item .thumb-class-dot.c0 { background: var(--c0); }
+.thumb-item .thumb-class-dot.c1 { background: var(--c1); }
+.thumb-item .thumb-class-dot.c2 { background: var(--c2); }
+.empty-thumbs {
+  grid-column: 1/-1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 13px;
+  gap: 8px;
+}
+.empty-thumbs .empty-icon { font-size: 32px; opacity: 0.5; }
+
+.collect-footer {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.total-count-display {
+  flex: 1;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.total-count-display strong { color: var(--text); }
+.btn-train {
+  padding: 14px 28px;
+  background: var(--amber);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.btn-train:hover { background: var(--amber-dark); transform: translateY(-1px); }
+.btn-train:disabled { background: #C0BDB8; cursor: not-allowed; transform: none; }
+
+/* ─── TRAINING SCREEN ─── */
+#screen-training {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 56px);
+  padding: 40px 24px;
+  text-align: center;
+}
+.training-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+  animation: spin-brain 2s linear infinite;
+}
+@keyframes spin-brain {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.08) rotate(-5deg); }
+  75% { transform: scale(1.08) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+.training-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+.training-sub {
+  color: var(--muted);
+  font-size: 15px;
+  margin-bottom: 36px;
+}
+.training-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 320px;
+  max-width: 100%;
+  margin-bottom: 32px;
+}
+.training-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--white);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+  transition: all 0.3s;
+}
+.training-step.active {
+  background: var(--amber-pale);
+  border-color: var(--amber);
+  color: var(--amber-dark);
+}
+.training-step.done {
+  background: #EDFAF3;
+  border-color: #22B35A;
+  color: #22B35A;
+}
+.training-step-icon { font-size: 18px; }
+
+/* ─── TEST SCREEN ─── */
+#screen-test {
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.test-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.test-header h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+.btn-retrain {
+  padding: 10px 20px;
+  background: var(--white);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.btn-retrain:hover { border-color: var(--amber); color: var(--amber); }
+
+.test-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 700px) {
+  .test-layout { grid-template-columns: 1fr; }
+}
+
+.test-cam-card {
+  background: var(--white);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+}
+.test-cam-wrapper {
+  position: relative;
+  background: #1A1A1A;
+  aspect-ratio: 4/3;
+}
+#test-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scaleX(-1);
+}
+.prediction-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 14px 16px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.75));
+}
+.pred-class {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 6px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.confidence-bar-wrap {
+  height: 6px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.confidence-bar {
+  height: 100%;
+  background: var(--amber-light);
+  border-radius: 99px;
+  transition: width 0.2s ease;
+  width: 0%;
+}
+.confidence-text {
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+  font-weight: 600;
+}
+.test-cam-bottom {
+  padding: 14px 16px;
+}
+.manual-confirm {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.truth-btns {
+  display: flex;
+  gap: 6px;
+}
+.truth-btn {
+  flex: 1;
+  padding: 9px 6px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--white);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: 'Noto Sans KR', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.truth-btn.c0 { border-color: var(--c0); color: var(--c0); }
+.truth-btn.c1 { border-color: var(--c1); color: var(--c1); }
+.truth-btn.c2 { border-color: var(--c2); color: var(--c2); }
+.truth-btn:hover.c0 { background: var(--c0); color: #fff; }
+.truth-btn:hover.c1 { background: var(--c1); color: #fff; }
+.truth-btn:hover.c2 { background: var(--c2); color: #fff; }
+.truth-btn:active { transform: scale(0.96); }
+
+.test-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.confusion-card {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 18px;
+  border: 1.5px solid var(--border);
+  flex: 1;
+}
+.confusion-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.confusion-title span { color: var(--muted); font-weight: 500; font-size: 12px; }
+.confusion-matrix {
+  display: grid;
+  grid-template-columns: auto repeat(3, 1fr);
+  gap: 4px;
+}
+.cm-header {
+  display: contents;
+}
+.cm-corner { background: transparent; }
+.cm-col-label {
+  padding: 6px 4px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cm-col-label.c0 { background: var(--c0-light); color: var(--c0); }
+.cm-col-label.c1 { background: var(--c1-light); color: var(--c1); }
+.cm-col-label.c2 { background: var(--c2-light); color: var(--c2); }
+.cm-row { display: contents; }
+.cm-row-label {
+  padding: 6px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+}
+.cm-row-label.c0 { background: var(--c0-light); color: var(--c0); }
+.cm-row-label.c1 { background: var(--c1-light); color: var(--c1); }
+.cm-row-label.c2 { background: var(--c2-light); color: var(--c2); }
+.cm-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  transition: background 0.3s, color 0.3s;
+  min-height: 40px;
+}
+
+.acc-card {
+  background: var(--amber-pale);
+  border-radius: 20px;
+  padding: 18px;
+  border: 1.5px solid rgba(212,148,58,0.25);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.acc-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  color: var(--amber-dark);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.acc-details { flex: 1; }
+.acc-label { font-size: 13px; font-weight: 700; color: var(--amber); margin-bottom: 4px; }
+.acc-count { font-size: 13px; color: var(--muted); }
+.acc-grade {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.finish-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--amber);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Noto Sans KR', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.finish-btn:hover { background: var(--amber-dark); transform: translateY(-1px); }
+.finish-btn:disabled { background: #C0BDB8; cursor: not-allowed; transform: none; }
+
+/* ─── RESULT SCREEN ─── */
+#screen-result {
+  padding: 32px 20px;
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center;
+}
+.result-stamp {
+  font-size: 96px;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 8px 24px rgba(212,148,58,0.4));
+  animation: stamp-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes stamp-in {
+  0% { transform: scale(0.3) rotate(-20deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.result-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.result-subtitle {
+  color: var(--muted);
+  font-size: 15px;
+  margin-bottom: 32px;
+}
+.result-score-big {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 72px;
+  font-weight: 800;
+  color: var(--amber);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.result-grade-text {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 32px;
+}
+.result-breakdown {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.rb-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 16px 12px;
+  border: 1.5px solid var(--border);
+}
+.rb-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 8px;
+}
+.rb-class-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin: 0 auto 6px;
+}
+.rb-class-dot.c0 { background: var(--c0); }
+.rb-class-dot.c1 { background: var(--c1); }
+.rb-class-dot.c2 { background: var(--c2); }
+.rb-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+.rb-acc { font-size: 20px; font-weight: 800; }
+.rb-acc.c0 { color: var(--c0); }
+.rb-acc.c1 { color: var(--c1); }
+.rb-acc.c2 { color: var(--c2); }
+
+.leaderboard-section {
+  background: var(--white);
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.lb-header {
+  padding: 14px 18px;
+  background: var(--amber);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lb-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+.lb-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  gap: 10px;
+  transition: background 0.15s;
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-row.my-row { background: var(--amber-pale); }
+.lb-rank {
+  width: 24px;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  flex-shrink: 0;
+}
+.lb-rank.gold { color: #F59E0B; }
+.lb-rank.silver { color: #94A3B8; }
+.lb-rank.bronze { color: #CD7C2F; }
+.lb-nick { flex: 1; font-weight: 600; }
+.lb-new { font-size: 10px; font-weight: 700; color: var(--amber); background: var(--amber-pale); padding: 2px 6px; border-radius: 4px; }
+.lb-score { font-weight: 800; color: var(--amber-dark); font-family: 'Space Grotesk', sans-serif; }
+
+.result-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.btn-restart {
+  padding: 15px;
+  background: var(--white);
+  color: var(--text);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.btn-restart:hover { border-color: var(--amber); color: var(--amber); }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(26,26,26,0.92);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <button class="back-btn" onclick="location.href='../index.html'">← 대시보드</button>
+  <div class="title">🔬 AI 분류 챌린지</div>
+  <div class="zone-badge">B존</div>
+</div>
+
+<!-- SCREEN: LOADING -->
+<div id="screen-loading" class="screen active">
+  <div class="loading-icon">🧠</div>
+  <div class="loading-title">AI 모델 로딩 중...</div>
+  <div class="loading-sub">MobileNet + KNN 분류기를 준비하고 있어요</div>
+  <div class="progress-wrap">
+    <div class="progress-bar" id="load-progress"></div>
+  </div>
+  <div class="progress-label" id="load-label">TensorFlow.js 초기화...</div>
+</div>
+
+<!-- SCREEN: SETUP -->
+<div id="screen-setup" class="screen">
+  <div class="setup-header">
+    <h2>나만의 AI 분류기 만들기</h2>
+    <p>분류할 3가지 클래스 이름을 정하고 웹캠으로 샘플을 모아 AI를 학습시켜 보세요.</p>
+  </div>
+
+  <div class="step-indicator">
+    <div class="step active" id="step1">
+      <div class="step-dot">1</div>
+      클래스 설정
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step2">
+      <div class="step-dot">2</div>
+      데이터 수집
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step3">
+      <div class="step-dot">3</div>
+      학습
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step4">
+      <div class="step-dot">4</div>
+      테스트
+    </div>
+  </div>
+
+  <div class="class-inputs">
+    <div class="class-input-row">
+      <div class="class-color-dot c0"></div>
+      <div class="class-label-text c0">클래스 1</div>
+      <input class="class-name-input" id="class-0" type="text" placeholder="예: 가위" maxlength="12">
+    </div>
+    <div class="class-input-row">
+      <div class="class-color-dot c1"></div>
+      <div class="class-label-text c1">클래스 2</div>
+      <input class="class-name-input" id="class-1" type="text" placeholder="예: 바위" maxlength="12">
+    </div>
+    <div class="class-input-row">
+      <div class="class-color-dot c2"></div>
+      <div class="class-label-text c2">클래스 3</div>
+      <input class="class-name-input" id="class-2" type="text" placeholder="예: 보" maxlength="12">
+    </div>
+  </div>
+
+  <div class="nick-section">
+    <label>닉네임 (리더보드 등록용)</label>
+    <input class="nick-input" id="nick-input" type="text" placeholder="예: AI마스터123" maxlength="16">
+  </div>
+
+  <button class="btn-primary" id="btn-start-collect">다음: 데이터 수집 →</button>
+</div>
+
+<!-- SCREEN: COLLECT -->
+<div id="screen-collect" class="screen">
+  <div class="collect-header">
+    <h2>📸 샘플 데이터 수집</h2>
+    <div class="progress-chips">
+      <div class="chip c0" id="chip-0">⬜ 0/10</div>
+      <div class="chip c1" id="chip-1">⬜ 0/10</div>
+      <div class="chip c2" id="chip-2">⬜ 0/10</div>
+    </div>
+  </div>
+
+  <div class="class-tabs" id="class-tabs">
+    <button class="class-tab active-0" onclick="switchClass(0)" id="tab-0">클래스 1</button>
+    <button class="class-tab" onclick="switchClass(1)" id="tab-1">클래스 2</button>
+    <button class="class-tab" onclick="switchClass(2)" id="tab-2">클래스 3</button>
+  </div>
+
+  <div class="collect-layout">
+    <div class="cam-card">
+      <div class="cam-wrapper">
+        <video id="collect-video" autoplay playsinline muted></video>
+        <div class="cam-overlay" id="cam-start-overlay">
+          <span style="font-size:32px">📷</span>
+          <span>웹캠 시작 중...</span>
+        </div>
+        <div class="flash-overlay" id="flash-el"></div>
+      </div>
+      <div class="cam-bottom">
+        <button class="capture-btn c0" id="capture-btn" onclick="captureFrame()">📸 샘플 추가 (0/10)</button>
+        <div class="count-row">
+          <span id="count-label" style="min-width:28px;font-size:12px;font-weight:700">0</span>
+          <div class="count-bar-wrap">
+            <div class="count-bar c0" id="count-bar"></div>
+          </div>
+          <span class="count-num" id="count-num">0 / 10</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="samples-panel">
+      <div class="samples-title">
+        수집된 샘플
+        <span id="all-count">전체 0장</span>
+      </div>
+      <div class="thumbs-grid" id="thumbs-grid">
+        <div class="empty-thumbs">
+          <div class="empty-icon">🖼️</div>
+          <div>샘플을 수집하면 여기에 표시됩니다</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="collect-footer">
+    <div class="total-count-display" id="total-count-display">
+      총 <strong>0</strong>장 수집됨 (목표: 각 클래스 10장)
+    </div>
+    <button class="btn-train" id="btn-do-train" onclick="startTraining()" disabled>AI 학습시키기 →</button>
+  </div>
+</div>
+
+<!-- SCREEN: TRAINING -->
+<div id="screen-training" class="screen">
+  <div class="training-icon">🧬</div>
+  <div class="training-title">AI 학습 중...</div>
+  <div class="training-sub">수집한 샘플로 KNN 분류기를 구성하고 있어요</div>
+  <div class="training-steps">
+    <div class="training-step" id="tstep-1">
+      <span class="training-step-icon">📊</span>
+      <span>특징 벡터 추출 중</span>
+    </div>
+    <div class="training-step" id="tstep-2">
+      <span class="training-step-icon">🔗</span>
+      <span>KNN 분류기 구성 중</span>
+    </div>
+    <div class="training-step" id="tstep-3">
+      <span class="training-step-icon">✅</span>
+      <span>학습 완료!</span>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: TEST -->
+<div id="screen-test" class="screen">
+  <div class="test-header">
+    <h2>🤖 실시간 테스트</h2>
+    <button class="btn-retrain" onclick="goToCollect()">← 다시 학습</button>
+  </div>
+
+  <div class="test-layout">
+    <div class="test-cam-card">
+      <div class="test-cam-wrapper">
+        <video id="test-video" autoplay playsinline muted></video>
+        <div class="prediction-overlay">
+          <div class="pred-class" id="pred-class">준비 중...</div>
+          <div class="confidence-bar-wrap">
+            <div class="confidence-bar" id="confidence-bar"></div>
+          </div>
+          <div class="confidence-text" id="confidence-text">신뢰도 0%</div>
+        </div>
+      </div>
+      <div class="test-cam-bottom">
+        <div class="manual-confirm">정답 클래스를 클릭해서 혼동 행렬을 구축하세요:</div>
+        <div class="truth-btns" id="truth-btns">
+          <button class="truth-btn c0" onclick="recordResult(0)" id="truth-0">클래스 1</button>
+          <button class="truth-btn c1" onclick="recordResult(1)" id="truth-1">클래스 2</button>
+          <button class="truth-btn c2" onclick="recordResult(2)" id="truth-2">클래스 3</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="test-right">
+      <div class="acc-card">
+        <div class="acc-num" id="acc-num">–</div>
+        <div class="acc-details">
+          <div class="acc-label">현재 정확도</div>
+          <div class="acc-count" id="acc-count">아직 테스트 결과 없음</div>
+        </div>
+        <div class="acc-grade" id="acc-grade">🔬</div>
+      </div>
+
+      <div class="confusion-card">
+        <div class="confusion-title">
+          혼동 행렬
+          <span>예측 →</span>
+        </div>
+        <div class="confusion-matrix" id="confusion-matrix">
+          <!-- JS로 생성 -->
+        </div>
+      </div>
+
+      <button class="finish-btn" id="btn-finish" onclick="finishTest()" disabled>
+        🏆 결과 저장 &amp; 리더보드 등록
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: RESULT -->
+<div id="screen-result" class="screen">
+  <div class="result-stamp" id="result-stamp">🏅</div>
+  <div class="result-title" id="result-title">챌린지 완료!</div>
+  <div class="result-subtitle" id="result-subtitle">나만의 AI 분류기를 완성했습니다</div>
+  <div class="result-score-big" id="result-score">0%</div>
+  <div class="result-grade-text" id="result-grade-text"></div>
+  <div class="result-breakdown" id="result-breakdown"></div>
+  <div class="leaderboard-section">
+    <div class="lb-header">🏆 리더보드 – AI 분류 챌린지</div>
+    <div class="lb-list" id="lb-list"></div>
+  </div>
+  <div class="result-btns">
+    <button class="btn-primary" onclick="restartAll()">🔄 다시 도전하기</button>
+    <button class="btn-restart" onclick="location.href='../index.html'">← 대시보드로</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const SAMPLES_PER_CLASS = 10;
+const CLASS_COLORS = ['c0','c1','c2'];
+const CLASS_COLOR_HEX = ['#E84040','#22B35A','#3A8AE8'];
+
+let state = {
+  classNames: ['클래스 1','클래스 2','클래스 3'],
+  nick: '',
+  mobilenet: null,
+  knn: null,
+  collectStream: null,
+  testStream: null,
+  activeClass: 0,
+  sampleCounts: [0, 0, 0],
+  allThumbs: [],          // {cls, dataUrl}
+  confusionMatrix: [[0,0,0],[0,0,0],[0,0,0]],  // [actual][predicted]
+  lastPredClass: -1,
+  testRunning: false,
+  testAnimId: null,
+};
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-'+id);
+  if (el) el.classList.add('active');
+}
+
+function showToast(msg, duration=2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function getGrade(acc) {
+  if (acc >= 90) return {grade:'S', stamp:'🏆', text:'전설급 AI 마스터!', emoji:'🌟'};
+  if (acc >= 80) return {grade:'A', stamp:'🥇', text:'뛰어난 AI 엔지니어!', emoji:'🎉'};
+  if (acc >= 70) return {grade:'B', stamp:'🥈', text:'좋은 분류 성능!', emoji:'👍'};
+  if (acc >= 60) return {grade:'C', stamp:'🥉', text:'괜찮은 시작이에요!', emoji:'🙂'};
+  return {grade:'D', stamp:'📚', text:'더 많은 샘플을 모아봐요!', emoji:'💪'};
+}
+
+// ─── MODEL LOADING ────────────────────────────────────────────────────────────
+async function loadModels() {
+  const bar = document.getElementById('load-progress');
+  const label = document.getElementById('load-label');
+
+  try {
+    label.textContent = 'TensorFlow.js 초기화...';
+    bar.style.width = '10%';
+    await tf.ready();
+
+    bar.style.width = '30%';
+    label.textContent = 'MobileNet 모델 다운로드 중...';
+    state.mobilenet = await mobilenet.load({ version: 2, alpha: 0.5 });
+
+    bar.style.width = '80%';
+    label.textContent = 'KNN 분류기 생성 중...';
+    state.knn = knnClassifier.create();
+
+    bar.style.width = '100%';
+    label.textContent = '준비 완료!';
+
+    await new Promise(r => setTimeout(r, 500));
+    showScreen('setup');
+  } catch(e) {
+    label.textContent = '⚠️ 모델 로딩 실패: ' + e.message;
+    console.error(e);
+  }
+}
+
+// ─── SETUP ────────────────────────────────────────────────────────────────────
+document.getElementById('btn-start-collect').addEventListener('click', () => {
+  const names = [0,1,2].map(i => {
+    const v = document.getElementById('class-'+i).value.trim();
+    return v || ['클래스 1','클래스 2','클래스 3'][i];
+  });
+  state.classNames = names;
+  state.nick = document.getElementById('nick-input').value.trim() || '익명 탐험가';
+  goToCollect();
+});
+
+// ─── COLLECT SCREEN ───────────────────────────────────────────────────────────
+async function goToCollect() {
+  // reset knn when re-collecting
+  state.knn = knnClassifier.create();
+  state.sampleCounts = [0,0,0];
+  state.allThumbs = [];
+  state.confusionMatrix = [[0,0,0],[0,0,0],[0,0,0]];
+
+  showScreen('collect');
+  updateCollectUI();
+
+  // stop test stream if any
+  if (state.testStream) {
+    state.testStream.getTracks().forEach(t => t.stop());
+    state.testStream = null;
+  }
+  if (state.testRunning) {
+    state.testRunning = false;
+    if (state.testAnimId) cancelAnimationFrame(state.testAnimId);
+  }
+
+  await startCollectCam();
+  switchClass(0);
+}
+
+async function startCollectCam() {
+  try {
+    if (state.collectStream) {
+      state.collectStream.getTracks().forEach(t => t.stop());
+    }
+    state.collectStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: {ideal:640}, height: {ideal:480}, facingMode:'user' },
+      audio: false
+    });
+    const vid = document.getElementById('collect-video');
+    vid.srcObject = state.collectStream;
+    await vid.play();
+    document.getElementById('cam-start-overlay').classList.add('hidden');
+  } catch(e) {
+    showToast('⚠️ 카메라 접근 실패: ' + e.message);
+  }
+}
+
+function switchClass(idx) {
+  state.activeClass = idx;
+
+  // tabs
+  [0,1,2].forEach(i => {
+    const tab = document.getElementById('tab-'+i);
+    tab.className = 'class-tab';
+    if (i === idx) tab.classList.add('active-'+i);
+    tab.textContent = state.classNames[i] + ` (${state.sampleCounts[i]})`;
+  });
+
+  // capture btn
+  const btn = document.getElementById('capture-btn');
+  btn.className = 'capture-btn c'+idx;
+  btn.textContent = `📸 샘플 추가 (${state.sampleCounts[idx]}/${SAMPLES_PER_CLASS})`;
+  btn.disabled = state.sampleCounts[idx] >= SAMPLES_PER_CLASS;
+
+  // count bar
+  document.getElementById('count-bar').className = 'count-bar c'+idx;
+  updateCountBar(idx);
+}
+
+function updateCountBar(idx) {
+  const cnt = state.sampleCounts[idx];
+  document.getElementById('count-bar').style.width = (cnt/SAMPLES_PER_CLASS*100)+'%';
+  document.getElementById('count-num').textContent = cnt + ' / ' + SAMPLES_PER_CLASS;
+  document.getElementById('count-label').textContent = cnt;
+}
+
+function updateCollectUI() {
+  [0,1,2].forEach(i => {
+    const cnt = state.sampleCounts[i];
+    const chip = document.getElementById('chip-'+i);
+    const done = cnt >= SAMPLES_PER_CLASS;
+    chip.textContent = (done ? '✅' : '⬜') + ' ' + cnt + '/' + SAMPLES_PER_CLASS;
+    chip.classList.toggle('complete', done);
+  });
+
+  const total = state.sampleCounts.reduce((a,b)=>a+b,0);
+  document.getElementById('all-count').textContent = '전체 '+total+'장';
+  document.getElementById('total-count-display').innerHTML =
+    `총 <strong>${total}</strong>장 수집됨 (목표: 각 클래스 ${SAMPLES_PER_CLASS}장)`;
+
+  const canTrain = state.sampleCounts.every(c => c >= 5);
+  document.getElementById('btn-do-train').disabled = !canTrain;
+}
+
+async function captureFrame() {
+  const idx = state.activeClass;
+  if (state.sampleCounts[idx] >= SAMPLES_PER_CLASS) return;
+
+  const video = document.getElementById('collect-video');
+  if (!video.srcObject) { showToast('카메라가 준비되지 않았습니다'); return; }
+
+  // flash effect
+  const flash = document.getElementById('flash-el');
+  flash.classList.add('flash');
+  setTimeout(() => flash.classList.remove('flash'), 180);
+
+  // draw to canvas, get tensor + thumbnail
+  const canvas = document.createElement('canvas');
+  canvas.width = 224; canvas.height = 224;
+  const ctx = canvas.getContext('2d');
+  // mirror the capture to match preview
+  ctx.translate(224, 0); ctx.scale(-1, 1);
+  ctx.drawImage(video, 0, 0, 224, 224);
+  ctx.setTransform(1,0,0,1,0,0);
+
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+  // extract features with mobilenet
+  const imgTensor = tf.browser.fromPixels(canvas);
+  const features = state.mobilenet.infer(imgTensor, true);
+  state.knn.addExample(features, idx);
+  imgTensor.dispose();
+
+  state.sampleCounts[idx]++;
+  state.allThumbs.push({ cls: idx, dataUrl });
+
+  // update UI
+  switchClass(idx);
+  updateCollectUI();
+  renderThumbs();
+
+  const btn = document.getElementById('capture-btn');
+  btn.textContent = `📸 샘플 추가 (${state.sampleCounts[idx]}/${SAMPLES_PER_CLASS})`;
+  if (state.sampleCounts[idx] >= SAMPLES_PER_CLASS) {
+    btn.disabled = true;
+    showToast(`✅ ${state.classNames[idx]} 수집 완료!`);
+  }
+}
+
+function renderThumbs() {
+  const grid = document.getElementById('thumbs-grid');
+  const recent = [...state.allThumbs].reverse().slice(0, 20);
+  if (recent.length === 0) {
+    grid.innerHTML = `<div class="empty-thumbs"><div class="empty-icon">🖼️</div><div>샘플을 수집하면 여기에 표시됩니다</div></div>`;
+    return;
+  }
+  grid.innerHTML = recent.map(t => `
+    <div class="thumb-item">
+      <img src="${t.dataUrl}" alt="">
+      <div class="thumb-class-dot ${CLASS_COLORS[t.cls]}"></div>
+    </div>
+  `).join('');
+}
+
+// ─── TRAINING ─────────────────────────────────────────────────────────────────
+async function startTraining() {
+  showScreen('training');
+
+  const steps = ['tstep-1','tstep-2','tstep-3'];
+  const delays = [600, 800, 600];
+
+  for (let i = 0; i < steps.length; i++) {
+    document.getElementById(steps[i]).classList.add('active');
+    await new Promise(r => setTimeout(r, delays[i]));
+    document.getElementById(steps[i]).classList.remove('active');
+    document.getElementById(steps[i]).classList.add('done');
+    document.getElementById(steps[i]).querySelector('.training-step-icon').textContent = '✅';
+  }
+
+  await new Promise(r => setTimeout(r, 400));
+  goToTest();
+}
+
+// ─── TEST SCREEN ──────────────────────────────────────────────────────────────
+async function goToTest() {
+  showScreen('test');
+  updateConfusionUI();
+  updateAccUI();
+  updateTruthBtns();
+
+  // stop collect cam
+  if (state.collectStream) {
+    state.collectStream.getTracks().forEach(t => t.stop());
+    state.collectStream = null;
+  }
+
+  try {
+    state.testStream = await navigator.mediaDevices.getUserMedia({
+      video: { width: {ideal:640}, height: {ideal:480}, facingMode:'user' },
+      audio: false
+    });
+    const vid = document.getElementById('test-video');
+    vid.srcObject = state.testStream;
+    await vid.play();
+    state.testRunning = true;
+    runInference();
+  } catch(e) {
+    showToast('⚠️ 카메라 접근 실패: ' + e.message);
+  }
+}
+
+async function runInference() {
+  if (!state.testRunning) return;
+
+  const vid = document.getElementById('test-video');
+  if (vid.readyState >= 2 && state.knn.getNumClasses() > 0) {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 224; canvas.height = 224;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(224,0); ctx.scale(-1,1);
+      ctx.drawImage(vid, 0, 0, 224, 224);
+      ctx.setTransform(1,0,0,1,0,0);
+
+      const imgTensor = tf.browser.fromPixels(canvas);
+      const features = state.mobilenet.infer(imgTensor, true);
+      const result = await state.knn.predictClass(features, 3);
+      imgTensor.dispose();
+      features.dispose();
+
+      const classIdx = parseInt(result.label);
+      const confidence = result.confidences[result.label] || 0;
+      state.lastPredClass = classIdx;
+
+      document.getElementById('pred-class').textContent = state.classNames[classIdx];
+      document.getElementById('confidence-bar').style.width = (confidence*100).toFixed(0)+'%';
+      document.getElementById('confidence-text').textContent = `신뢰도 ${(confidence*100).toFixed(0)}%`;
+
+      // color the pred text
+      const colors = ['#E84040','#22B35A','#3A8AE8'];
+      document.getElementById('pred-class').style.color = colors[classIdx] || '#fff';
+    } catch(e) {
+      // silent during inference
+    }
+  }
+
+  state.testAnimId = setTimeout(() => runInference(), 200);
+}
+
+function updateTruthBtns() {
+  [0,1,2].forEach(i => {
+    const btn = document.getElementById('truth-'+i);
+    if (btn) btn.textContent = state.classNames[i];
+  });
+}
+
+function recordResult(actualIdx) {
+  if (state.lastPredClass < 0) {
+    showToast('먼저 카메라 앞에서 포즈를 취해 예측을 확인하세요');
+    return;
+  }
+  state.confusionMatrix[actualIdx][state.lastPredClass]++;
+  updateConfusionUI();
+  updateAccUI();
+
+  const correct = actualIdx === state.lastPredClass;
+  showToast(correct
+    ? `✅ 정답! AI가 ${state.classNames[actualIdx]}을(를) 맞췄어요`
+    : `❌ 오답. 실제: ${state.classNames[actualIdx]} / 예측: ${state.classNames[state.lastPredClass]}`
+  );
+
+  const total = state.confusionMatrix.flat().reduce((a,b)=>a+b,0);
+  if (total >= 3) document.getElementById('btn-finish').disabled = false;
+}
+
+function updateConfusionUI() {
+  const cm = state.confusionMatrix;
+  const max = Math.max(...cm.flat(), 1);
+  const names = state.classNames;
+  const colors = ['var(--c0)','var(--c1)','var(--c2)'];
+  const lightColors = ['var(--c0-mid)','var(--c1-mid)','var(--c2-mid)'];
+
+  let html = `<div class="cm-corner"></div>`;
+  [0,1,2].forEach(i => {
+    html += `<div class="cm-col-label c${i}" title="${names[i]}">${names[i].length>4?names[i].slice(0,4)+'…':names[i]}</div>`;
+  });
+  [0,1,2].forEach(actual => {
+    html += `<div class="cm-row-label c${actual}" title="${names[actual]}">${names[actual].length>4?names[actual].slice(0,4)+'…':names[actual]}</div>`;
+    [0,1,2].forEach(pred => {
+      const val = cm[actual][pred];
+      const intensity = val / max;
+      const isDiag = actual === pred;
+      const bg = val === 0
+        ? '#F5F4F2'
+        : isDiag
+          ? `rgba(${hexToRgb(CLASS_COLOR_HEX[actual])}, ${0.2 + intensity*0.7})`
+          : `rgba(200,50,50,${0.1 + intensity*0.6})`;
+      const textColor = val === 0 ? '#C0BDB8' : (intensity > 0.5 ? '#fff' : var2hex(actual, isDiag));
+      html += `<div class="cm-cell" style="background:${bg};color:${textColor}">${val}</div>`;
+    });
+  });
+  document.getElementById('confusion-matrix').innerHTML = html;
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+function var2hex(idx, diag) {
+  if (!diag) return '#8B2020';
+  return CLASS_COLOR_HEX[idx];
+}
+
+function updateAccUI() {
+  const cm = state.confusionMatrix;
+  const total = cm.flat().reduce((a,b)=>a+b,0);
+  if (total === 0) {
+    document.getElementById('acc-num').textContent = '–';
+    document.getElementById('acc-count').textContent = '아직 테스트 결과 없음';
+    document.getElementById('acc-grade').textContent = '🔬';
+    return;
+  }
+  const correct = cm.reduce((sum,row,i)=>sum+row[i],0);
+  const acc = Math.round(correct/total*100);
+  const { grade, emoji } = getGrade(acc);
+  document.getElementById('acc-num').textContent = acc+'%';
+  document.getElementById('acc-count').textContent = `${correct}/${total} 정답 (등급 ${grade})`;
+  document.getElementById('acc-grade').textContent = emoji;
+}
+
+// ─── FINISH / RESULT ─────────────────────────────────────────────────────────
+function finishTest() {
+  // stop test
+  state.testRunning = false;
+  if (state.testAnimId) clearTimeout(state.testAnimId);
+  if (state.testStream) {
+    state.testStream.getTracks().forEach(t => t.stop());
+    state.testStream = null;
+  }
+
+  const cm = state.confusionMatrix;
+  const total = cm.flat().reduce((a,b)=>a+b,0);
+  const correct = cm.reduce((sum,row,i)=>sum+row[i],0);
+  const accuracy = total > 0 ? Math.round(correct/total*100) : 0;
+  const { grade, stamp, text } = getGrade(accuracy);
+
+  // save localStorage
+  const stamps = JSON.parse(localStorage.getItem('dreamfest_stamps') || '[]');
+  if (!stamps.includes(6)) stamps.push(6);
+  localStorage.setItem('dreamfest_stamps', JSON.stringify(stamps));
+
+  const lb = JSON.parse(localStorage.getItem('dreamfest_leaderboard') || '{"dance":[],"classify":[],"prompt":[]}');
+  if (!lb.classify) lb.classify = [];
+  const entry = { nick: state.nick, score: accuracy, zone: 'B', isNew: true, classNames: state.classNames };
+  // clear isNew flags
+  lb.classify.forEach(e => e.isNew = false);
+  lb.classify.push(entry);
+  lb.classify.sort((a,b)=>b.score-a.score);
+  lb.classify = lb.classify.slice(0,20);
+  localStorage.setItem('dreamfest_leaderboard', JSON.stringify(lb));
+
+  const results = JSON.parse(localStorage.getItem('dreamfest_results') || '{}');
+  results['6'] = { accuracy, completedAt: new Date().toISOString(), classNames: state.classNames };
+  localStorage.setItem('dreamfest_results', JSON.stringify(results));
+
+  renderResult(accuracy, grade, stamp, text, lb.classify);
+  showScreen('result');
+}
+
+function renderResult(accuracy, grade, stamp, text, lbData) {
+  document.getElementById('result-stamp').textContent = stamp;
+  document.getElementById('result-score').textContent = accuracy+'%';
+  document.getElementById('result-grade-text').textContent = `등급 ${grade} — ${text}`;
+
+  // per-class accuracy
+  const cm = state.confusionMatrix;
+  const breakdown = document.getElementById('result-breakdown');
+  breakdown.innerHTML = [0,1,2].map(i => {
+    const rowTotal = cm[i].reduce((a,b)=>a+b,0);
+    const perAcc = rowTotal > 0 ? Math.round(cm[i][i]/rowTotal*100) : 0;
+    return `
+      <div class="rb-card">
+        <div class="rb-label">클래스 ${i+1}</div>
+        <div class="rb-class-dot c${i}"></div>
+        <div class="rb-name">${state.classNames[i]}</div>
+        <div class="rb-acc c${i}">${perAcc}%</div>
+      </div>
+    `;
+  }).join('');
+
+  // leaderboard
+  const lbList = document.getElementById('lb-list');
+  if (!lbData.length) {
+    lbList.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:14px">아직 기록이 없습니다</div>';
+  } else {
+    const rankEmojis = {1:'🥇',2:'🥈',3:'🥉'};
+    const rankClass = {1:'gold',2:'silver',3:'bronze'};
+    lbList.innerHTML = lbData.map((e,i) => {
+      const rank = i+1;
+      const isMe = e.isNew;
+      return `
+        <div class="lb-row ${isMe?'my-row':''}">
+          <div class="lb-rank ${rankClass[rank]||''}">${rankEmojis[rank]||rank}</div>
+          <div class="lb-nick">${escHtml(e.nick)} ${isMe?'<span class="lb-new">NEW</span>':''}</div>
+          <div class="lb-score">${e.score}%</div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function restartAll() {
+  // reset everything
+  state.knn = knnClassifier.create();
+  state.sampleCounts = [0,0,0];
+  state.allThumbs = [];
+  state.confusionMatrix = [[0,0,0],[0,0,0],[0,0,0]];
+  state.lastPredClass = -1;
+  state.testRunning = false;
+  state.classNames = ['클래스 1','클래스 2','클래스 3'];
+  state.nick = '';
+
+  // reset form
+  [0,1,2].forEach(i => {
+    const el = document.getElementById('class-'+i);
+    if (el) el.value = '';
+  });
+  document.getElementById('nick-input').value = '';
+
+  showScreen('setup');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+loadModels();
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "꿈-드림 페스티벌 미래기술존",
+  "short_name": "꿈-드림 페스티벌",
+  "description": "2026 영천시 청소년 진로진학 박람회 미래기술존 운영 시스템",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F7F6F3",
+  "theme_color": "#2D7A4F",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232D7A4F'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>🚀</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["education", "entertainment"],
+  "scope": "./"
+}

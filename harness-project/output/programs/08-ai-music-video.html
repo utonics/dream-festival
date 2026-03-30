@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 뮤직비디오 제작 · AI Music Video Creator</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cyan: #2BA5B3;
+  --cyan-dark: #1E8A97;
+  --cyan-light: #4DC4D1;
+  --cyan-pale: #E6F7F9;
+  --bg: #F7F6F3;
+  --dark: #0A0A0A;
+  --white: #FFFFFF;
+  --text: #1A1A1A;
+  --text-sub: #6B6B6B;
+  --border: #E2E0DA;
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(0,0,0,.07);
+  --shadow-md: 0 4px 24px rgba(0,0,0,.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, #C8C4BC 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Top Bar ── */
+#topbar {
+  position: sticky;
+  top: 0;
+  z-index: 300;
+  height: 56px;
+  background: var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-shadow: 0 2px 16px rgba(43,165,179,0.35);
+}
+#topbar .title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  background: rgba(255,255,255,0.22);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.back-btn:hover { background: rgba(255,255,255,0.38); }
+.zone-badge {
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* ── Main Layout ── */
+.main {
+  position: relative;
+  z-index: 1;
+  padding: 24px 20px 40px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* ── Step Tabs ── */
+.steps {
+  display: flex;
+  gap: 0;
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+.step-tab {
+  flex: 1;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-sub);
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-right: 1px solid var(--border);
+  transition: background 0.18s, color 0.18s;
+  font-family: inherit;
+  position: relative;
+}
+.step-tab:last-child { border-right: none; }
+.step-tab.active {
+  background: var(--cyan);
+  color: #fff;
+}
+.step-tab .step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  font-size: 11px;
+  margin-right: 5px;
+}
+.step-tab:not(.active) .step-num {
+  background: rgba(43,165,179,0.12);
+  color: var(--cyan);
+}
+
+/* ── Panel sections ── */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── Section Card ── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.card-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.card-title span { font-size: 18px; }
+
+/* ── Track Selection ── */
+.track-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.track-card {
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s, transform 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.track-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 60%, rgba(43,165,179,0.06));
+  pointer-events: none;
+}
+.track-card:hover { transform: translateY(-2px); border-color: var(--cyan-light); }
+.track-card.selected { border-color: var(--cyan); background: var(--cyan-pale); }
+.track-icon { font-size: 28px; margin-bottom: 8px; }
+.track-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.track-meta { font-size: 11px; color: var(--text-sub); }
+.track-bpm {
+  display: inline-block;
+  background: rgba(43,165,179,0.1);
+  color: var(--cyan-dark);
+  padding: 2px 7px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 5px;
+}
+
+/* ── Visual Style Selection ── */
+.style-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.style-card {
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.style-card:hover { transform: translateY(-2px); border-color: var(--cyan-light); }
+.style-card.selected { border-color: var(--cyan); background: var(--cyan-pale); }
+.style-preview {
+  width: 52px;
+  height: 40px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #111;
+}
+.style-preview canvas { width: 100%; height: 100%; }
+.style-info {}
+.style-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.style-desc { font-size: 11px; color: var(--text-sub); line-height: 1.4; }
+
+/* ── Step 2: Preview Area ── */
+.preview-wrap {
+  background: var(--dark);
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  position: relative;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+#previewCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.rec-indicator {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.55);
+  padding: 5px 12px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 1px;
+}
+.rec-indicator.visible { display: flex; }
+.rec-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #FF3B3B;
+  animation: blink 1s ease-in-out infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.1; }
+}
+.track-info-overlay {
+  position: absolute;
+  bottom: 14px;
+  left: 16px;
+  background: rgba(0,0,0,0.55);
+  padding: 6px 14px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.track-info-overlay strong { color: var(--cyan-light); }
+
+/* ── Sliders ── */
+.sliders-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.slider-group { display: flex; flex-direction: column; gap: 6px; }
+.slider-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-sub);
+  display: flex;
+  justify-content: space-between;
+}
+.slider-label .val {
+  color: var(--cyan);
+  font-family: 'Space Grotesk', sans-serif;
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: #E0E0E0;
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cyan);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(43,165,179,0.4);
+  transition: transform 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* ── Theme Picker ── */
+.theme-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.theme-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: border-color 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+.theme-swatch:hover { transform: scale(1.1); }
+.theme-swatch.active { border-color: var(--text); }
+
+/* ── Controls Row ── */
+.controls-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 24px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.15s, opacity 0.18s;
+  font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+  letter-spacing: -0.2px;
+}
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(0); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-cyan { background: var(--cyan); color: #fff; box-shadow: 0 3px 12px rgba(43,165,179,0.35); }
+.btn-cyan:hover:not(:disabled) { background: var(--cyan-dark); }
+.btn-red { background: #E84040; color: #fff; box-shadow: 0 3px 12px rgba(232,64,64,0.3); }
+.btn-red:hover:not(:disabled) { background: #C43030; }
+.btn-outline {
+  background: var(--white);
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.btn-outline:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
+.btn-ghost { background: rgba(43,165,179,0.1); color: var(--cyan-dark); }
+.btn-ghost:hover:not(:disabled) { background: rgba(43,165,179,0.2); }
+
+/* ── Progress Bar ── */
+.rec-progress-wrap {
+  display: none;
+  margin-top: 10px;
+}
+.rec-progress-wrap.visible { display: block; }
+.rec-progress-bar-bg {
+  height: 6px;
+  background: #E0E0E0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.rec-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF3B3B, #FF6B6B);
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.25s linear;
+}
+.rec-progress-label {
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-top: 4px;
+  text-align: right;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* ── Step 3: Result ── */
+.result-video-wrap {
+  background: var(--dark);
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+#resultVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: none;
+}
+.result-placeholder {
+  text-align: center;
+  color: rgba(255,255,255,0.35);
+}
+.result-placeholder .icon { font-size: 48px; margin-bottom: 10px; }
+.result-placeholder p { font-size: 13px; }
+
+/* ── Stamp Card ── */
+.stamp-card {
+  background: linear-gradient(135deg, var(--cyan-pale), #fff);
+  border: 2px solid var(--cyan);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.stamp-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--cyan);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(43,165,179,0.4);
+}
+.stamp-info .stamp-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.stamp-info .stamp-desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; }
+.stamp-new {
+  background: #FF3B3B;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-family: 'Space Grotesk', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+/* ── Result Meta ── */
+.result-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.result-meta-item {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.result-meta-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--cyan);
+  margin-bottom: 3px;
+}
+.result-meta-key { font-size: 11px; color: var(--text-sub); }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text);
+  color: #fff;
+  padding: 10px 22px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 9999;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 600px) {
+  .track-grid { grid-template-columns: 1fr; }
+  .style-grid { grid-template-columns: 1fr; }
+  .sliders-grid { grid-template-columns: 1fr; }
+  .result-meta-grid { grid-template-columns: repeat(2, 1fr); }
+  .controls-row { flex-direction: column; align-items: stretch; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div id="topbar">
+  <button class="back-btn" onclick="goBack()">← 대시보드</button>
+  <div class="title"><span>🎬</span> AI 뮤직비디오 제작</div>
+  <div class="zone-badge">C존 · AI 창작</div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Step Tabs -->
+  <div class="steps">
+    <button class="step-tab active" onclick="gotoStep(0)" id="tab0">
+      <span class="step-num">1</span>선택
+    </button>
+    <button class="step-tab" onclick="gotoStep(1)" id="tab1">
+      <span class="step-num">2</span>커스터마이즈
+    </button>
+    <button class="step-tab" onclick="gotoStep(2)" id="tab2">
+      <span class="step-num">3</span>결과
+    </button>
+  </div>
+
+  <!-- ──────────── STEP 1: SELECT ──────────── -->
+  <div class="panel active" id="panel0">
+
+    <div class="card">
+      <div class="card-title"><span>🎵</span> 곡 선택</div>
+      <div class="track-grid" id="trackGrid">
+        <div class="track-card selected" data-track="0" onclick="selectTrack(0)">
+          <div class="track-icon">⚡</div>
+          <div class="track-name">일렉트릭 선라이즈</div>
+          <div class="track-meta">Electric Sunrise</div>
+          <div class="track-bpm">120 BPM · 사인파+사각파</div>
+        </div>
+        <div class="track-card" data-track="1" onclick="selectTrack(1)">
+          <div class="track-icon">🌙</div>
+          <div class="track-name">미드나잇 펄스</div>
+          <div class="track-meta">Midnight Pulse</div>
+          <div class="track-bpm">100 BPM · 삼각파+노이즈</div>
+        </div>
+        <div class="track-card" data-track="2" onclick="selectTrack(2)">
+          <div class="track-icon">🌌</div>
+          <div class="track-name">디지털 오로라</div>
+          <div class="track-meta">Digital Aurora</div>
+          <div class="track-bpm">140 BPM · 톱니파+사인파</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>🎨</span> 비주얼 스타일 선택</div>
+      <div class="style-grid" id="styleGrid">
+        <div class="style-card selected" data-style="0" onclick="selectStyle(0)">
+          <div class="style-preview"><canvas id="prev0" width="104" height="80"></canvas></div>
+          <div class="style-info">
+            <div class="style-name">파티클 웨이브</div>
+            <div class="style-desc">음악에 맞춰 파티클이 파도치는 효과</div>
+          </div>
+        </div>
+        <div class="style-card" data-style="1" onclick="selectStyle(1)">
+          <div class="style-preview"><canvas id="prev1" width="104" height="80"></canvas></div>
+          <div class="style-info">
+            <div class="style-name">네온 서클</div>
+            <div class="style-desc">주파수별 동심원이 확대/축소</div>
+          </div>
+        </div>
+        <div class="style-card" data-style="2" onclick="selectStyle(2)">
+          <div class="style-preview"><canvas id="prev2" width="104" height="80"></canvas></div>
+          <div class="style-info">
+            <div class="style-name">기하학 패턴</div>
+            <div class="style-desc">삼각형/사각형이 비트에 반응</div>
+          </div>
+        </div>
+        <div class="style-card" data-style="3" onclick="selectStyle(3)">
+          <div class="style-preview"><canvas id="prev3" width="104" height="80"></canvas></div>
+          <div class="style-info">
+            <div class="style-name">스펙트럼 바</div>
+            <div class="style-desc">바 차트 스타일 주파수 시각화</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls-row">
+      <button class="btn btn-cyan" onclick="gotoStep(1)">다음: 커스터마이즈 →</button>
+    </div>
+  </div>
+
+  <!-- ──────────── STEP 2: CUSTOMIZE ──────────── -->
+  <div class="panel" id="panel1">
+
+    <div class="preview-wrap">
+      <canvas id="previewCanvas"></canvas>
+      <div class="rec-indicator" id="recIndicator">
+        <div class="rec-dot"></div> REC
+      </div>
+      <div class="track-info-overlay" id="trackOverlay">
+        <strong id="overlayTrackName">일렉트릭 선라이즈</strong> &nbsp;·&nbsp; <span id="overlayStyleName">파티클 웨이브</span>
+      </div>
+    </div>
+
+    <div class="rec-progress-wrap" id="recProgressWrap">
+      <div class="rec-progress-bar-bg">
+        <div class="rec-progress-bar-fill" id="recProgressFill"></div>
+      </div>
+      <div class="rec-progress-label" id="recProgressLabel">0 / 10초</div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <div class="card-title"><span>🎨</span> 색상 테마</div>
+      <div class="theme-row" id="themeRow">
+        <div class="theme-swatch active" data-theme="0" style="background:linear-gradient(135deg,#2BA5B3,#4DC4D1)" onclick="selectTheme(0)" title="시안"></div>
+        <div class="theme-swatch" data-theme="1" style="background:linear-gradient(135deg,#E84040,#FF8C00)" onclick="selectTheme(1)" title="레드-오렌지"></div>
+        <div class="theme-swatch" data-theme="2" style="background:linear-gradient(135deg,#8B6FC0,#E040FB)" onclick="selectTheme(2)" title="퍼플"></div>
+        <div class="theme-swatch" data-theme="3" style="background:linear-gradient(135deg,#22B35A,#A3E635)" onclick="selectTheme(3)" title="그린"></div>
+        <div class="theme-swatch" data-theme="4" style="background:linear-gradient(135deg,#FF6B6B,#FBBF24)" onclick="selectTheme(4)" title="핑크-골드"></div>
+        <div class="theme-swatch" data-theme="5" style="background:linear-gradient(135deg,#60A5FA,#A78BFA)" onclick="selectTheme(5)" title="블루-바이올렛"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>⚙️</span> 파라미터</div>
+      <div class="sliders-grid">
+        <div class="slider-group">
+          <div class="slider-label">파티클 수 <span class="val" id="particleVal">120</span></div>
+          <input type="range" min="40" max="300" value="120" id="particleSlider" oninput="updateParam('particle', this.value)">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">속도 <span class="val" id="speedVal">5</span></div>
+          <input type="range" min="1" max="10" value="5" id="speedSlider" oninput="updateParam('speed', this.value)">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">밝기 <span class="val" id="brightnessVal">7</span></div>
+          <input type="range" min="1" max="10" value="7" id="brightnessSlider" oninput="updateParam('brightness', this.value)">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">반응 감도 <span class="val" id="sensitivityVal">5</span></div>
+          <input type="range" min="1" max="10" value="5" id="sensitivitySlider" oninput="updateParam('sensitivity', this.value)">
+        </div>
+      </div>
+    </div>
+
+    <div class="controls-row">
+      <button class="btn btn-outline" onclick="gotoStep(0)">← 뒤로</button>
+      <button class="btn btn-cyan" id="playBtn" onclick="togglePlay()">▶ 재생 시작</button>
+      <button class="btn btn-red" id="recBtn" onclick="toggleRecord()" disabled>🔴 녹화 시작</button>
+    </div>
+  </div>
+
+  <!-- ──────────── STEP 3: RESULT ──────────── -->
+  <div class="panel" id="panel2">
+
+    <div class="result-video-wrap">
+      <video id="resultVideo" controls loop playsinline></video>
+      <div class="result-placeholder" id="resultPlaceholder">
+        <div class="icon">🎬</div>
+        <p>녹화 완료 후 영상이 여기에 표시됩니다</p>
+      </div>
+    </div>
+
+    <div class="stamp-card" id="stampCard" style="display:none;">
+      <div class="stamp-icon">🎬</div>
+      <div class="stamp-info">
+        <div class="stamp-title">뮤직비디오 크리에이터 <span class="stamp-new">NEW</span></div>
+        <div class="stamp-desc">
+          AI 뮤직비디오 제작 완료!<br>
+          나만의 음악 시각화를 만들었습니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="result-meta-grid" id="resultMeta" style="display:none;">
+      <div class="result-meta-item">
+        <div class="result-meta-val" id="metaTrack">-</div>
+        <div class="result-meta-key">선택 트랙</div>
+      </div>
+      <div class="result-meta-item">
+        <div class="result-meta-val" id="metaStyle">-</div>
+        <div class="result-meta-key">비주얼 스타일</div>
+      </div>
+      <div class="result-meta-item">
+        <div class="result-meta-val" id="metaDuration">10초</div>
+        <div class="result-meta-key">녹화 길이</div>
+      </div>
+    </div>
+
+    <div class="controls-row" id="resultControls" style="display:none;">
+      <button class="btn btn-cyan" onclick="downloadVideo()">⬇ 영상 다운로드</button>
+      <button class="btn btn-ghost" onclick="gotoStep(1)">다시 만들기</button>
+      <button class="btn btn-outline" onclick="gotoStep(0)">← 처음으로</button>
+    </div>
+
+    <div class="card" id="resultPlaceholderCard">
+      <div class="card-title"><span>💡</span> 안내</div>
+      <p style="font-size:13px;color:var(--text-sub);line-height:1.7;">
+        2단계에서 음악을 재생하고 <strong>🔴 녹화 시작</strong>을 누르면<br>
+        10초간 자동 녹화 후 이 페이지에서 결과를 확인할 수 있습니다.
+      </p>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+const STATE = {
+  track: 0,
+  style: 0,
+  theme: 0,
+  particle: 120,
+  speed: 5,
+  brightness: 7,
+  sensitivity: 5,
+  playing: false,
+  recording: false,
+  hasResult: false,
+  resultBlob: null
+};
+
+const TRACKS = [
+  { name: '일렉트릭 선라이즈', bpm: 120, type: 'sine+square', emoji: '⚡' },
+  { name: '미드나잇 펄스',    bpm: 100, type: 'triangle+noise', emoji: '🌙' },
+  { name: '디지털 오로라',   bpm: 140, type: 'sawtooth+sine', emoji: '🌌' }
+];
+const STYLES = ['파티클 웨이브', '네온 서클', '기하학 패턴', '스펙트럼 바'];
+const THEMES = [
+  ['#2BA5B3','#4DC4D1','#7FECF5'],
+  ['#E84040','#FF8C00','#FFD600'],
+  ['#8B6FC0','#E040FB','#FF80AB'],
+  ['#22B35A','#A3E635','#FFF176'],
+  ['#FF6B6B','#FBBF24','#FDE68A'],
+  ['#60A5FA','#A78BFA','#F9A8D4']
+];
+
+/* ══════════════════════════════════════════
+   AUDIO ENGINE
+══════════════════════════════════════════ */
+let audioCtx = null;
+let analyser = null;
+let freqData = null;
+let beatTimer = null;
+let oscillators = [];
+let beatPhase = 0;
+let beatEnergy = 0;
+let lastBeatTime = 0;
+
+function ensureAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.78;
+    analyser.connect(audioCtx.destination);
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function stopOscillators() {
+  oscillators.forEach(o => { try { o.stop(); } catch(e) {} });
+  oscillators = [];
+  if (beatTimer) { clearInterval(beatTimer); beatTimer = null; }
+}
+
+function startTrack(trackIdx) {
+  ensureAudioCtx();
+  stopOscillators();
+
+  const t = TRACKS[trackIdx];
+  const bpmInterval = 60000 / t.bpm;
+
+  function makeBeat() {
+    const now = audioCtx.currentTime;
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.setValueAtTime(0.0001, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    gainNode.connect(analyser);
+
+    const gainNode2 = audioCtx.createGain();
+    gainNode2.gain.setValueAtTime(0.0001, now);
+    gainNode2.gain.exponentialRampToValueAtTime(0.09, now + 0.01);
+    gainNode2.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+    gainNode2.connect(analyser);
+
+    if (trackIdx === 0) {
+      // 일렉트릭 선라이즈: sine + square
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(110, now);
+      osc1.frequency.exponentialRampToValueAtTime(55, now + 0.15);
+      osc1.connect(gainNode);
+      osc1.start(now); osc1.stop(now + 0.2);
+      oscillators.push(osc1);
+
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = 'square';
+      osc2.frequency.setValueAtTime(220, now);
+      osc2.connect(gainNode2);
+      osc2.start(now); osc2.stop(now + 0.09);
+      oscillators.push(osc2);
+
+    } else if (trackIdx === 1) {
+      // 미드나잇 펄스: triangle + noise
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = 'triangle';
+      osc1.frequency.setValueAtTime(80, now);
+      osc1.frequency.exponentialRampToValueAtTime(40, now + 0.2);
+      osc1.connect(gainNode);
+      osc1.start(now); osc1.stop(now + 0.22);
+      oscillators.push(osc1);
+
+      const bufferSize = audioCtx.sampleRate * 0.07;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noiseSource = audioCtx.createBufferSource();
+      noiseSource.buffer = noiseBuffer;
+      noiseSource.connect(gainNode2);
+      noiseSource.start(now); noiseSource.stop(now + 0.07);
+      oscillators.push(noiseSource);
+
+    } else {
+      // 디지털 오로라: sawtooth + sine melody
+      const osc1 = audioCtx.createOscillator();
+      osc1.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(140, now);
+      osc1.frequency.exponentialRampToValueAtTime(70, now + 0.12);
+      osc1.connect(gainNode);
+      osc1.start(now); osc1.stop(now + 0.14);
+      oscillators.push(osc1);
+
+      const notes = [330, 392, 440, 523];
+      const note = notes[Math.floor(Math.random() * notes.length)];
+      const osc2 = audioCtx.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.value = note;
+      const g2 = audioCtx.createGain();
+      g2.gain.setValueAtTime(0.06, now);
+      g2.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+      osc2.connect(g2); g2.connect(analyser);
+      osc2.start(now); osc2.stop(now + 0.1);
+      oscillators.push(osc2);
+    }
+
+    beatEnergy = 1.0;
+    lastBeatTime = performance.now();
+  }
+
+  makeBeat();
+  beatTimer = setInterval(makeBeat, bpmInterval);
+}
+
+/* ══════════════════════════════════════════
+   CANVAS VISUAL ENGINE
+══════════════════════════════════════════ */
+let canvas, ctx;
+let animId = null;
+let particles = [];
+let frameCount = 0;
+
+function initCanvas() {
+  canvas = document.getElementById('previewCanvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+}
+
+function resizeCanvas() {
+  const wrap = canvas.parentElement;
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  initParticles();
+}
+
+function initParticles() {
+  particles = [];
+  const count = STATE.particle;
+  for (let i = 0; i < count; i++) {
+    particles.push(makeParticle());
+  }
+}
+
+function makeParticle(x, y) {
+  return {
+    x: x !== undefined ? x : Math.random() * canvas.width,
+    y: y !== undefined ? y : Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 1.5,
+    vy: (Math.random() - 0.5) * 1.5,
+    size: Math.random() * 3 + 1,
+    life: Math.random(),
+    alpha: Math.random() * 0.7 + 0.3,
+    phase: Math.random() * Math.PI * 2
+  };
+}
+
+function getThemeColors() {
+  return THEMES[STATE.theme];
+}
+
+function getBeat() {
+  const elapsed = performance.now() - lastBeatTime;
+  const bpmInterval = 60000 / TRACKS[STATE.track].bpm;
+  if (!STATE.playing) return 0;
+  const decay = Math.max(0, 1 - elapsed / (bpmInterval * 0.6));
+  return decay;
+}
+
+function getFreqBand(start, end) {
+  if (!freqData || !analyser) return 0;
+  analyser.getByteFrequencyData(freqData);
+  let sum = 0;
+  const len = freqData.length;
+  const s = Math.floor(start * len);
+  const e = Math.floor(end * len);
+  for (let i = s; i < e; i++) sum += freqData[i];
+  return sum / ((e - s) || 1) / 255;
+}
+
+function drawParticleWave() {
+  const [c1, c2, c3] = getThemeColors();
+  const beat = getBeat();
+  const sens = STATE.sensitivity / 5;
+  const spd = STATE.speed / 5;
+  const bri = STATE.brightness / 7;
+
+  ctx.fillStyle = `rgba(10,10,10,${0.12 + beat * 0.08})`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const bass = getFreqBand(0, 0.1) * sens;
+  const mid  = getFreqBand(0.1, 0.4) * sens;
+  const high = getFreqBand(0.4, 1.0) * sens;
+
+  // Wave line
+  const wavePoints = 80;
+  ctx.beginPath();
+  for (let i = 0; i <= wavePoints; i++) {
+    const x = (i / wavePoints) * canvas.width;
+    const wave = Math.sin(i * 0.18 + frameCount * 0.04 * spd) * (40 + bass * 120) * bri;
+    const wave2 = Math.sin(i * 0.32 + frameCount * 0.06 * spd + 1) * (20 + mid * 60) * bri;
+    const y = canvas.height / 2 + wave + wave2;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = c1 + 'CC';
+  ctx.lineWidth = 2 + beat * 3;
+  ctx.shadowColor = c1;
+  ctx.shadowBlur = 8 + beat * 20;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Particles
+  const needed = Math.floor(STATE.particle);
+  while (particles.length < needed) particles.push(makeParticle());
+  while (particles.length > needed) particles.pop();
+
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    const waveInfluence = Math.sin(p.x / canvas.width * Math.PI * 4 + frameCount * 0.04 * spd + p.phase);
+    p.vy += (waveInfluence * (0.3 + bass * 1.2) - p.vy) * 0.08;
+    p.vx += ((Math.random() - 0.5) * 0.2 * spd);
+    p.x += p.vx * spd;
+    p.y += p.vy * spd;
+    if (p.x < 0 || p.x > canvas.width || p.y < 0 || p.y > canvas.height) {
+      particles[i] = makeParticle();
+      continue;
+    }
+    const colorPick = p.phase < 2 ? c1 : (p.phase < 4 ? c2 : c3);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size * (0.5 + bass * 1.5 + beat * 0.5) * bri, 0, Math.PI * 2);
+    ctx.fillStyle = colorPick + Math.floor(p.alpha * 200).toString(16).padStart(2,'0');
+    ctx.fill();
+  }
+}
+
+function drawNeonCircles() {
+  const [c1, c2, c3] = getThemeColors();
+  const beat = getBeat();
+  const sens = STATE.sensitivity / 5;
+  const spd  = STATE.speed / 5;
+  const bri  = STATE.brightness / 7;
+
+  ctx.fillStyle = `rgba(10,10,10,${0.1 + beat * 0.05})`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const bass = getFreqBand(0, 0.08) * sens;
+  const low  = getFreqBand(0.08, 0.2) * sens;
+  const mid  = getFreqBand(0.2, 0.5) * sens;
+  const high = getFreqBand(0.5, 1.0) * sens;
+
+  const rings = [
+    { r: 30 + bass * 80 + beat * 40,  color: c1, bw: bass + beat },
+    { r: 70 + low  * 80 + beat * 20,  color: c2, bw: low },
+    { r: 120+ mid  * 90 + beat * 10,  color: c3, bw: mid },
+    { r: 170+ high * 70,              color: c1, bw: high * 0.5 },
+    { r: 220+ Math.sin(frameCount * 0.03 * spd) * 20, color: c2, bw: 0.2 }
+  ];
+
+  rings.forEach((ring, idx) => {
+    const pulse = Math.sin(frameCount * 0.05 * spd + idx) * 8;
+    const r = ring.r + pulse;
+    const segments = 60 + idx * 20;
+    for (let seg = 0; seg < segments; seg++) {
+      const angle = (seg / segments) * Math.PI * 2 + frameCount * 0.012 * spd * (idx % 2 === 0 ? 1 : -1);
+      const inner = r * (0.92 - ring.bw * 0.1 * bri);
+      const outer = r * (1.0  + ring.bw * 0.15 * bri);
+      const x1 = cx + Math.cos(angle) * inner;
+      const y1 = cy + Math.sin(angle) * inner;
+      const x2 = cx + Math.cos(angle) * outer;
+      const y2 = cy + Math.sin(angle) * outer;
+
+      const alpha = (0.3 + ring.bw * 0.7 + beat * 0.5) * bri;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = ring.color + Math.min(255, Math.floor(alpha * 255)).toString(16).padStart(2,'0');
+      ctx.lineWidth = 1.5 + ring.bw * 3 * bri;
+      ctx.shadowColor = ring.color;
+      ctx.shadowBlur = 4 + ring.bw * 14 * bri;
+      ctx.stroke();
+    }
+  });
+  ctx.shadowBlur = 0;
+
+  // Center dot
+  const dotR = 8 + beat * 20 + bass * 20;
+  const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, dotR);
+  grd.addColorStop(0, c1 + 'FF');
+  grd.addColorStop(1, c1 + '00');
+  ctx.beginPath();
+  ctx.arc(cx, cy, dotR, 0, Math.PI * 2);
+  ctx.fillStyle = grd;
+  ctx.fill();
+}
+
+function drawGeoPattern() {
+  const [c1, c2, c3] = getThemeColors();
+  const beat = getBeat();
+  const sens = STATE.sensitivity / 5;
+  const spd  = STATE.speed / 5;
+  const bri  = STATE.brightness / 7;
+
+  ctx.fillStyle = `rgba(10,10,10,${0.13 + beat * 0.07})`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const bass = getFreqBand(0, 0.1) * sens;
+  const mid  = getFreqBand(0.2, 0.5) * sens;
+  const high = getFreqBand(0.6, 1.0) * sens;
+
+  const shapes = 16;
+  for (let i = 0; i < shapes; i++) {
+    const angle = (i / shapes) * Math.PI * 2 + frameCount * 0.008 * spd;
+    const dist = 60 + Math.sin(frameCount * 0.03 * spd + i) * 40 + bass * 80;
+    const x = canvas.width / 2 + Math.cos(angle) * dist;
+    const y = canvas.height / 2 + Math.sin(angle) * dist;
+    const size = 14 + bass * 40 + beat * 20;
+    const rot = frameCount * 0.025 * spd * (i % 2 === 0 ? 1 : -1) + i;
+    const colorPick = i % 3 === 0 ? c1 : (i % 3 === 1 ? c2 : c3);
+    const alpha = (0.4 + beat * 0.5 + mid * 0.3) * bri;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.strokeStyle = colorPick + Math.min(255, Math.floor(alpha * 255)).toString(16).padStart(2,'0');
+    ctx.fillStyle   = colorPick + Math.min(255, Math.floor(alpha * 0.3 * 255)).toString(16).padStart(2,'0');
+    ctx.lineWidth = 1.5 + beat * 2.5;
+    ctx.shadowColor = colorPick;
+    ctx.shadowBlur  = 6 + beat * 16 * bri;
+
+    if (i % 2 === 0) {
+      // Triangle
+      ctx.beginPath();
+      ctx.moveTo(0, -size);
+      ctx.lineTo(size * 0.866, size * 0.5);
+      ctx.lineTo(-size * 0.866, size * 0.5);
+      ctx.closePath();
+    } else {
+      // Square
+      ctx.beginPath();
+      ctx.rect(-size * 0.7, -size * 0.7, size * 1.4, size * 1.4);
+    }
+    ctx.stroke();
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.shadowBlur = 0;
+
+  // Beat flash rings
+  if (beat > 0.7) {
+    for (let r = 0; r < 3; r++) {
+      const ringR = 20 + r * 35 + (1 - beat) * 80;
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, ringR, 0, Math.PI * 2);
+      ctx.strokeStyle = c1 + Math.floor((beat - 0.7) * 3 * 200).toString(16).padStart(2,'0');
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
+  // Center polygon
+  const sides = 6;
+  const cSize = 20 + bass * 30 + beat * 20;
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(frameCount * 0.02 * spd);
+  ctx.beginPath();
+  for (let s = 0; s < sides; s++) {
+    const a = (s / sides) * Math.PI * 2;
+    s === 0 ? ctx.moveTo(Math.cos(a) * cSize, Math.sin(a) * cSize)
+            : ctx.lineTo(Math.cos(a) * cSize, Math.sin(a) * cSize);
+  }
+  ctx.closePath();
+  ctx.strokeStyle = c1 + 'EE';
+  ctx.lineWidth = 2 + beat * 3;
+  ctx.shadowColor = c1;
+  ctx.shadowBlur  = 8 + beat * 20;
+  ctx.stroke();
+  ctx.restore();
+  ctx.shadowBlur = 0;
+}
+
+function drawSpectrumBars() {
+  const [c1, c2, c3] = getThemeColors();
+  const beat = getBeat();
+  const sens = STATE.sensitivity / 5;
+  const bri  = STATE.brightness / 7;
+  const spd  = STATE.speed / 5;
+
+  ctx.fillStyle = `rgba(10,10,10,0.3)`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  if (!freqData || !analyser) {
+    // Idle animation
+    const bars = 48;
+    const barW = canvas.width / bars;
+    for (let i = 0; i < bars; i++) {
+      const h = 20 + Math.sin(i * 0.4 + frameCount * 0.06 * spd) * 30;
+      const x = i * barW;
+      const y = canvas.height / 2 - h / 2;
+      const frac = i / bars;
+      const col = frac < 0.5 ? c1 : (frac < 0.8 ? c2 : c3);
+      ctx.fillStyle = col + '99';
+      ctx.fillRect(x + 1, y, barW - 2, h);
+    }
+    return;
+  }
+
+  analyser.getByteFrequencyData(freqData);
+  const bars = Math.min(64, freqData.length);
+  const barW = canvas.width / bars;
+  const maxH = canvas.height * 0.85;
+
+  for (let i = 0; i < bars; i++) {
+    const raw = freqData[i] / 255;
+    const h = raw * maxH * (0.4 + sens * 0.6) * bri + (beat > 0.5 ? beat * 15 : 0);
+    const x = i * barW;
+    const y = canvas.height - h;
+    const frac = i / bars;
+
+    const col = frac < 0.35 ? c1 : (frac < 0.65 ? c2 : c3);
+    const alpha = 0.5 + raw * 0.5;
+
+    // Gradient bar
+    const grd = ctx.createLinearGradient(x, canvas.height, x, y);
+    grd.addColorStop(0, col + 'FF');
+    grd.addColorStop(0.6, col + 'CC');
+    grd.addColorStop(1, col + '55');
+    ctx.fillStyle = grd;
+    ctx.fillRect(x + 1, y, barW - 2, h);
+
+    // Top glow cap
+    ctx.shadowColor = col;
+    ctx.shadowBlur = 8 + raw * 14;
+    ctx.fillStyle = col + 'FF';
+    ctx.fillRect(x + 1, y, barW - 2, 3);
+    ctx.shadowBlur = 0;
+
+    // Mirror (reflected)
+    const mirrorH = h * 0.35;
+    const mirrorGrd = ctx.createLinearGradient(x, canvas.height, x, canvas.height + mirrorH);
+    mirrorGrd.addColorStop(0, col + '44');
+    mirrorGrd.addColorStop(1, col + '00');
+    ctx.fillStyle = mirrorGrd;
+    ctx.fillRect(x + 1, canvas.height, barW - 2, mirrorH);
+  }
+}
+
+function drawFrame() {
+  if (!ctx) return;
+  frameCount++;
+  switch (STATE.style) {
+    case 0: drawParticleWave(); break;
+    case 1: drawNeonCircles(); break;
+    case 2: drawGeoPattern(); break;
+    case 3: drawSpectrumBars(); break;
+  }
+}
+
+function startAnimation() {
+  if (animId) return;
+  function loop() {
+    drawFrame();
+    animId = requestAnimationFrame(loop);
+  }
+  animId = requestAnimationFrame(loop);
+}
+
+function stopAnimation() {
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+}
+
+/* ── Preview Thumbnail Animations ── */
+function drawPreviewThumbnail(canvasId, styleIdx) {
+  const c = document.getElementById(canvasId);
+  if (!c) return;
+  const xc = c.getContext('2d');
+  const w = c.width, h = c.height;
+  const cols = THEMES[0];
+
+  xc.fillStyle = '#0A0A0A';
+  xc.fillRect(0, 0, w, h);
+  const t = performance.now() / 1000;
+
+  if (styleIdx === 0) {
+    // particle wave thumb
+    xc.strokeStyle = cols[0] + 'CC';
+    xc.lineWidth = 1.5;
+    xc.beginPath();
+    for (let i = 0; i <= 30; i++) {
+      const x = (i / 30) * w;
+      const y = h/2 + Math.sin(i * 0.4 + t * 2) * 12;
+      i === 0 ? xc.moveTo(x,y) : xc.lineTo(x,y);
+    }
+    xc.stroke();
+    for (let i = 0; i < 18; i++) {
+      xc.beginPath();
+      xc.arc((i/18)*w + Math.sin(t+i)*4, h/2 + Math.cos(t*0.8+i)*16, 1.5, 0, Math.PI*2);
+      xc.fillStyle = [cols[0],cols[1],cols[2]][i%3] + 'CC';
+      xc.fill();
+    }
+  } else if (styleIdx === 1) {
+    // neon circles thumb
+    [20,14,9,5].forEach((r, idx) => {
+      xc.beginPath();
+      xc.arc(w/2, h/2, r + Math.sin(t * 2 + idx) * 3, 0, Math.PI*2);
+      xc.strokeStyle = [cols[0],cols[1],cols[2],cols[0]][idx] + 'CC';
+      xc.lineWidth = 1.5;
+      xc.stroke();
+    });
+  } else if (styleIdx === 2) {
+    // geo thumb
+    for (let i = 0; i < 6; i++) {
+      const a = (i/6) * Math.PI * 2 + t * 0.8;
+      const x = w/2 + Math.cos(a) * 16;
+      const y = h/2 + Math.sin(a) * 14;
+      xc.save();
+      xc.translate(x,y);
+      xc.rotate(t + i);
+      xc.strokeStyle = [cols[0],cols[1],cols[2]][i%3] + 'BB';
+      xc.lineWidth = 1;
+      xc.beginPath();
+      if (i%2===0) { xc.moveTo(0,-5); xc.lineTo(4.3,2.5); xc.lineTo(-4.3,2.5); xc.closePath(); }
+      else { xc.rect(-4,-4,8,8); }
+      xc.stroke();
+      xc.restore();
+    }
+  } else {
+    // spectrum thumb
+    for (let i = 0; i < 20; i++) {
+      const bh = 6 + Math.sin(i * 0.5 + t * 3) * 12;
+      xc.fillStyle = [cols[0],cols[1],cols[2]][i%3] + 'CC';
+      xc.fillRect(i * (w/20) + 1, h - bh, (w/20) - 2, bh);
+    }
+  }
+  requestAnimationFrame(() => drawPreviewThumbnail(canvasId, styleIdx));
+}
+
+/* ══════════════════════════════════════════
+   RECORDING
+══════════════════════════════════════════ */
+let mediaRecorder = null;
+let recordedChunks = [];
+let recProgressInterval = null;
+let recStartTime = 0;
+const REC_DURATION = 10000;
+
+function toggleRecord() {
+  if (STATE.recording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+function startRecording() {
+  if (!canvas) return;
+  try {
+    const stream = canvas.captureStream(30);
+    const opts = { mimeType: 'video/webm;codecs=vp9' };
+    if (!MediaRecorder.isTypeSupported(opts.mimeType)) {
+      opts.mimeType = 'video/webm';
+    }
+    mediaRecorder = new MediaRecorder(stream, opts);
+    recordedChunks = [];
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = onRecordingStop;
+    mediaRecorder.start(100);
+
+    STATE.recording = true;
+    recStartTime = performance.now();
+
+    document.getElementById('recIndicator').classList.add('visible');
+    document.getElementById('recProgressWrap').classList.add('visible');
+    document.getElementById('recBtn').textContent = '⬛ 녹화 종료';
+    document.getElementById('recBtn').classList.remove('btn-red');
+    document.getElementById('recBtn').classList.add('btn-outline');
+
+    recProgressInterval = setInterval(() => {
+      const elapsed = performance.now() - recStartTime;
+      const pct = Math.min(100, (elapsed / REC_DURATION) * 100);
+      const sec = Math.min(10, elapsed / 1000).toFixed(1);
+      document.getElementById('recProgressFill').style.width = pct + '%';
+      document.getElementById('recProgressLabel').textContent = `${sec} / 10초`;
+      if (elapsed >= REC_DURATION) stopRecording();
+    }, 100);
+
+    showToast('🔴 녹화 시작! 10초 후 자동 종료됩니다');
+  } catch(e) {
+    showToast('녹화를 시작할 수 없습니다: ' + e.message);
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  STATE.recording = false;
+  clearInterval(recProgressInterval);
+  document.getElementById('recIndicator').classList.remove('visible');
+  document.getElementById('recProgressWrap').classList.remove('visible');
+  document.getElementById('recBtn').textContent = '🔴 녹화 시작';
+  document.getElementById('recBtn').classList.add('btn-red');
+  document.getElementById('recBtn').classList.remove('btn-outline');
+}
+
+function onRecordingStop() {
+  const blob = new Blob(recordedChunks, { type: 'video/webm' });
+  STATE.resultBlob = blob;
+  STATE.hasResult = true;
+  const url = URL.createObjectURL(blob);
+
+  const vid = document.getElementById('resultVideo');
+  vid.src = url;
+  vid.style.display = 'block';
+  document.getElementById('resultPlaceholder').style.display = 'none';
+  document.getElementById('stampCard').style.display = 'flex';
+  document.getElementById('resultMeta').style.display = 'grid';
+  document.getElementById('resultControls').style.display = 'flex';
+  document.getElementById('resultPlaceholderCard').style.display = 'none';
+
+  document.getElementById('metaTrack').textContent = TRACKS[STATE.track].emoji;
+  document.getElementById('metaStyle').textContent = STYLES[STATE.style].slice(0,3);
+  document.getElementById('metaDuration').textContent = '10초';
+
+  saveToStorage();
+  showToast('🎬 녹화 완료! 결과 탭에서 확인하세요');
+  gotoStep(2);
+}
+
+function downloadVideo() {
+  if (!STATE.resultBlob) { showToast('먼저 녹화를 완료해 주세요'); return; }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(STATE.resultBlob);
+  a.download = `ai-music-video-${Date.now()}.webm`;
+  a.click();
+  showToast('⬇ 다운로드 시작!');
+}
+
+/* ══════════════════════════════════════════
+   PLAY / STOP
+══════════════════════════════════════════ */
+function togglePlay() {
+  if (STATE.playing) {
+    stopPlay();
+  } else {
+    startPlay();
+  }
+}
+
+function startPlay() {
+  ensureAudioCtx();
+  startTrack(STATE.track);
+  startAnimation();
+  STATE.playing = true;
+  document.getElementById('playBtn').textContent = '⏹ 재생 중단';
+  document.getElementById('recBtn').disabled = false;
+  showToast('▶ 재생 중 — 녹화를 시작해 보세요!');
+}
+
+function stopPlay() {
+  stopOscillators();
+  STATE.playing = false;
+  document.getElementById('playBtn').textContent = '▶ 재생 시작';
+  document.getElementById('recBtn').disabled = true;
+  if (STATE.recording) stopRecording();
+}
+
+/* ══════════════════════════════════════════
+   UI INTERACTIONS
+══════════════════════════════════════════ */
+function gotoStep(idx) {
+  document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+  document.querySelectorAll('.step-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  if (idx === 1 && !animId) {
+    initCanvas();
+    startAnimation();
+  }
+}
+
+function selectTrack(idx) {
+  STATE.track = idx;
+  document.querySelectorAll('#trackGrid .track-card').forEach((c, i) => c.classList.toggle('selected', i === idx));
+  document.getElementById('overlayTrackName').textContent = TRACKS[idx].name;
+  if (STATE.playing) { stopOscillators(); startTrack(idx); }
+}
+
+function selectStyle(idx) {
+  STATE.style = idx;
+  document.querySelectorAll('#styleGrid .style-card').forEach((c, i) => c.classList.toggle('selected', i === idx));
+  document.getElementById('overlayStyleName').textContent = STYLES[idx];
+}
+
+function selectTheme(idx) {
+  STATE.theme = idx;
+  document.querySelectorAll('#themeRow .theme-swatch').forEach((s, i) => s.classList.toggle('active', i === idx));
+}
+
+function updateParam(key, val) {
+  STATE[key] = parseFloat(val);
+  const labelMap = { particle: 'particleVal', speed: 'speedVal', brightness: 'brightnessVal', sensitivity: 'sensitivityVal' };
+  document.getElementById(labelMap[key]).textContent = val;
+  if (key === 'particle') initParticles();
+}
+
+function goBack() {
+  stopPlay();
+  window.location.href = '../index.html';
+}
+
+/* ══════════════════════════════════════════
+   STORAGE
+══════════════════════════════════════════ */
+function saveToStorage() {
+  const data = {
+    programId: 8,
+    stamp: true,
+    track: TRACKS[STATE.track].name,
+    style: STYLES[STATE.style],
+    theme: STATE.theme,
+    completedAt: new Date().toISOString()
+  };
+  localStorage.setItem('prog_08_result', JSON.stringify(data));
+
+  // Update global stamps
+  try {
+    const stamps = JSON.parse(localStorage.getItem('festival_stamps') || '{}');
+    stamps[8] = { earned: true, at: data.completedAt, label: '뮤직비디오 크리에이터' };
+    localStorage.setItem('festival_stamps', JSON.stringify(stamps));
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const data = JSON.parse(localStorage.getItem('prog_08_result') || 'null');
+    if (data) {
+      // Restore selections if previously completed
+    }
+  } catch(e) {}
+}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
+  // Start preview thumbnails
+  ['prev0','prev1','prev2','prev3'].forEach((id, i) => drawPreviewThumbnail(id, i));
+});
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

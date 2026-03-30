@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>프롬프트 아트 챌린지 · Prompt Art Challenge</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --zone: #2BA5B3;
+  --zone-dark: #1E8A97;
+  --zone-light: #D6F2F5;
+  --zone-pale: #EAF8FA;
+  --bg: #F7F6F3;
+  --dark: #1A1A1A;
+  --white: #FFFFFF;
+  --text: #2D2D2D;
+  --muted: #8A8A8A;
+  --border: #E2E0DA;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,.07);
+  --shadow-md: 0 4px 24px rgba(0,0,0,.12);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  background-image: radial-gradient(circle, #D0CEC9 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ─── TOP BAR ─── */
+#topbar {
+  background: var(--zone);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 16px rgba(43,165,179,.35);
+}
+#topbar .title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  background: rgba(255,255,255,.22);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: background .2s;
+}
+.back-btn:hover { background: rgba(255,255,255,.38); }
+.zone-badge {
+  background: rgba(255,255,255,.22);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ─── NAV TABS ─── */
+#nav-tabs {
+  display: flex;
+  gap: 0;
+  padding: 16px 20px 0;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.nav-tab {
+  flex: 1;
+  padding: 10px 0;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-bottom: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.nav-tab:first-child { border-radius: var(--radius) 0 0 0; }
+.nav-tab:last-child { border-radius: 0 var(--radius) 0 0; }
+.nav-tab.active {
+  background: var(--zone);
+  color: #fff;
+  border-color: var(--zone);
+}
+.nav-tab:hover:not(.active) { background: var(--zone-pale); color: var(--zone-dark); }
+
+/* ─── MAIN CONTENT ─── */
+#main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px 40px;
+}
+
+/* ─── SCREENS ─── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ─── CREATE SCREEN ─── */
+#screen-create {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 28px 24px 24px;
+}
+.create-heading {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+.create-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+.prompt-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--zone-dark);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+#prompt-input {
+  width: 100%;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  resize: vertical;
+  min-height: 90px;
+  transition: border-color .2s;
+  outline: none;
+}
+#prompt-input:focus { border-color: var(--zone); background: #fff; }
+#prompt-input::placeholder { color: #B0ADA7; }
+
+/* keyword chips */
+.chips-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 14px 0 8px;
+}
+.chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.chip {
+  padding: 6px 13px;
+  border-radius: 20px;
+  background: var(--zone-pale);
+  border: 1.5px solid var(--zone-light);
+  color: var(--zone-dark);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.chip:hover { background: var(--zone); color: #fff; border-color: var(--zone); }
+
+/* generate button */
+#btn-generate {
+  margin-top: 22px;
+  width: 100%;
+  padding: 15px;
+  background: var(--zone);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+  letter-spacing: .3px;
+  transition: background .2s, transform .1s;
+  box-shadow: 0 4px 18px rgba(43,165,179,.38);
+  position: relative;
+  overflow: hidden;
+}
+#btn-generate:hover { background: var(--zone-dark); transform: translateY(-1px); }
+#btn-generate:active { transform: translateY(0); }
+#btn-generate::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.15) 0%, transparent 60%);
+}
+
+/* ─── GENERATING SCREEN ─── */
+#screen-generating {
+  background: #0D1B2A;
+  border: 1.5px solid #1E3A50;
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 32px 24px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+}
+#screen-generating.active { display: flex; }
+.gen-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--zone);
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+#gen-canvas {
+  border-radius: 10px;
+  box-shadow: 0 0 40px rgba(43,165,179,.35);
+  max-width: 100%;
+}
+.gen-progress {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 440px;
+  height: 4px;
+  background: rgba(255,255,255,.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.gen-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--zone), #7ADDE8);
+  border-radius: 2px;
+  width: 0%;
+  transition: width .3s ease;
+}
+.gen-status {
+  color: rgba(255,255,255,.5);
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+/* ─── RESULT SCREEN ─── */
+#screen-result {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 28px 24px;
+}
+.result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 620px) { .result-grid { grid-template-columns: 1fr; } }
+.result-canvas-wrap {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  background: #0D1B2A;
+}
+#result-canvas { width: 100%; display: block; }
+.result-info { display: flex; flex-direction: column; gap: 14px; }
+.result-prompt-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--zone-dark);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.result-prompt-text {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.5;
+  font-weight: 500;
+}
+.result-palette {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.palette-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.8);
+  box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+.result-actions { display: flex; flex-direction: column; gap: 10px; }
+.btn-secondary {
+  padding: 11px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all .15s;
+}
+.btn-secondary:hover { border-color: var(--zone); color: var(--zone-dark); }
+.btn-primary {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: var(--zone);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Space Grotesk', sans-serif;
+  box-shadow: 0 3px 12px rgba(43,165,179,.35);
+  transition: background .15s, transform .1s;
+}
+.btn-primary:hover { background: var(--zone-dark); transform: translateY(-1px); }
+.stamp-notice {
+  background: linear-gradient(135deg, #FFF3CD, #FFF9E6);
+  border: 1.5px solid #FFD966;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #7A5C00;
+  font-weight: 600;
+  display: none;
+}
+.stamp-notice.visible { display: block; }
+
+/* ─── GALLERY SCREEN ─── */
+#screen-gallery {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 24px;
+}
+.gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.gallery-heading {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--dark);
+}
+.gallery-count {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.gallery-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+.gallery-empty-icon { font-size: 48px; margin-bottom: 14px; }
+.gallery-empty-text { font-size: 15px; font-weight: 500; }
+.gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 480px) { .gallery-grid { grid-template-columns: 1fr; } }
+.gallery-card {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  box-shadow: var(--shadow);
+  transition: transform .2s, box-shadow .2s;
+}
+.gallery-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.gallery-card-img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+.gallery-card-body {
+  padding: 12px 14px;
+}
+.gallery-card-prompt {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 10px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.gallery-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.gallery-rank {
+  font-size: 11px;
+  font-weight: 800;
+  font-family: 'Space Grotesk', sans-serif;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: var(--zone-pale);
+  color: var(--zone-dark);
+}
+.gallery-rank.gold { background: #FFF3CD; color: #7A5C00; }
+.gallery-rank.silver { background: #F0F0F0; color: #555; }
+.gallery-rank.bronze { background: #FDE8D8; color: #7A3800; }
+.vote-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.vote-btn:hover { border-color: #FF6B8A; color: #FF4466; background: #FFF0F3; }
+.vote-btn.voted { border-color: #FF4466; color: #FF4466; background: #FFF0F3; }
+.vote-btn.voted .vote-heart { animation: heartPop .25s ease; }
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+/* ─── LEADERBOARD ─── */
+.leaderboard-section {
+  margin-top: 24px;
+  border-top: 1.5px solid var(--border);
+  padding-top: 20px;
+}
+.leaderboard-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lb-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--bg);
+  margin-bottom: 8px;
+  border: 1.5px solid var(--border);
+}
+.lb-rank {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  min-width: 28px;
+  text-align: center;
+}
+.lb-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.lb-info { flex: 1; min-width: 0; }
+.lb-prompt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-votes {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ─── STAMP OVERLAY ─── */
+#stamp-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+}
+#stamp-overlay.show { display: flex; }
+.stamp-modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px 32px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  animation: stampIn .35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes stampIn {
+  from { transform: scale(.7) rotate(-8deg); opacity: 0; }
+  to { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.stamp-big { font-size: 72px; margin-bottom: 16px; }
+.stamp-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+.stamp-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+.stamp-close-btn {
+  padding: 12px 28px;
+  background: var(--zone);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="title">🎨 프롬프트 아트 챌린지</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="zone-badge">C존 · AI 창작 스튜디오</span>
+    <button class="back-btn" onclick="goBack()">← 대시보드</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- NAV TABS -->
+  <div id="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('create')">✏️ 아트 만들기</button>
+    <button class="nav-tab" onclick="switchTab('gallery')">🖼 갤러리 &amp; 투표</button>
+  </div>
+
+  <!-- ── CREATE TAB ── -->
+  <div id="tab-create">
+
+    <!-- Step 1: Input -->
+    <div id="screen-create" class="screen active">
+      <div class="create-heading">영천의 미래를 그려보세요</div>
+      <div class="create-sub">텍스트 프롬프트를 입력하면 AI가 추상 아트로 표현합니다</div>
+
+      <div class="prompt-label">프롬프트 입력</div>
+      <textarea id="prompt-input" placeholder="예: 보현산 위로 떠오르는 별들과 로봇이 포도밭을 가꾸는 미래의 영천..." maxlength="200"></textarea>
+      <div style="text-align:right;font-size:12px;color:var(--muted);margin-top:4px;"><span id="char-count">0</span>/200</div>
+
+      <div class="chips-label">힌트 키워드 클릭으로 추가</div>
+      <div class="chips-wrap" id="chips-wrap">
+        <span class="chip" data-kw="보현산">🏔 보현산</span>
+        <span class="chip" data-kw="포도밭">🍇 포도밭</span>
+        <span class="chip" data-kw="로봇">🤖 로봇</span>
+        <span class="chip" data-kw="하늘">🌌 하늘</span>
+        <span class="chip" data-kw="강">🌊 강</span>
+        <span class="chip" data-kw="별">⭐ 별</span>
+        <span class="chip" data-kw="숲">🌲 숲</span>
+        <span class="chip" data-kw="도시">🏙 도시</span>
+        <span class="chip" data-kw="우주">🚀 우주</span>
+        <span class="chip" data-kw="불꽃">🔥 불꽃</span>
+        <span class="chip" data-kw="미래">✨ 미래</span>
+        <span class="chip" data-kw="꽃">🌸 꽃</span>
+        <span class="chip" data-kw="빛">💡 빛</span>
+        <span class="chip" data-kw="사과">🍎 사과</span>
+        <span class="chip" data-kw="드론">🛸 드론</span>
+      </div>
+
+      <button id="btn-generate" onclick="startGenerate()">🎨 아트 생성하기</button>
+    </div>
+
+    <!-- Step 2: Generating -->
+    <div id="screen-generating" class="screen">
+      <div class="gen-label">✦ AI가 그리는 중... ✦</div>
+      <canvas id="gen-canvas" width="440" height="440"></canvas>
+      <div class="gen-progress" style="max-width:440px;width:100%;">
+        <div class="gen-progress-bar" id="gen-progress-bar"></div>
+      </div>
+      <div class="gen-status" id="gen-status">배경 레이어 생성 중...</div>
+    </div>
+
+    <!-- Step 3: Result -->
+    <div id="screen-result" class="screen">
+      <div class="result-grid">
+        <div class="result-canvas-wrap">
+          <canvas id="result-canvas" width="440" height="440"></canvas>
+        </div>
+        <div class="result-info">
+          <div>
+            <div class="result-prompt-label">프롬프트</div>
+            <div class="result-prompt-text" id="result-prompt-text"></div>
+          </div>
+          <div>
+            <div class="result-prompt-label">색상 팔레트</div>
+            <div class="result-palette" id="result-palette"></div>
+          </div>
+          <div class="result-actions">
+            <button class="btn-secondary" onclick="reGenerate()">🔄 다시 생성</button>
+            <button class="btn-primary" onclick="registerToGallery()">🖼 갤러리에 등록</button>
+          </div>
+          <div class="stamp-notice" id="stamp-notice">🎫 스탬프 획득! 아트를 갤러리에 등록하셨습니다.</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-create -->
+
+  <!-- ── GALLERY TAB ── -->
+  <div id="tab-gallery" style="display:none;">
+    <div id="screen-gallery" class="screen active">
+      <div class="gallery-header">
+        <div class="gallery-heading">🖼 갤러리</div>
+        <div class="gallery-count" id="gallery-count">0개 작품</div>
+      </div>
+      <div id="gallery-grid" class="gallery-grid"></div>
+      <div id="gallery-empty" class="gallery-empty">
+        <div class="gallery-empty-icon">🎨</div>
+        <div class="gallery-empty-text">아직 등록된 작품이 없어요.<br>첫 번째 아트를 만들어보세요!</div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="leaderboard-section" id="leaderboard-section" style="display:none;">
+        <div class="leaderboard-title">🏆 리더보드 · 인기 작품</div>
+        <div id="leaderboard-list"></div>
+      </div>
+    </div>
+  </div><!-- /tab-gallery -->
+
+</div><!-- /main -->
+
+<!-- STAMP OVERLAY -->
+<div id="stamp-overlay">
+  <div class="stamp-modal">
+    <div class="stamp-big">🎫</div>
+    <div class="stamp-title">스탬프 획득!</div>
+    <div class="stamp-sub">프롬프트 아트 챌린지 완료<br>갤러리에 작품이 등록되었어요 🎨</div>
+    <button class="stamp-close-btn" onclick="closeStamp()">계속하기</button>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   KEYWORD → VISUAL MAPPING
+───────────────────────────────────────────── */
+const KW_COLOR = {
+  '자연': ['#3CB371','#228B22','#7CFC00','#2E8B57','#90EE90'],
+  '숲':   ['#2D5A27','#4A7C59','#6BAA75','#A8D5A2','#D4EDDA'],
+  '나무': ['#5D4037','#33691E','#7CB342','#A5D6A7','#2E7D32'],
+  '꽃':   ['#E91E63','#F06292','#FF80AB','#FCE4EC','#880E4F'],
+  '포도': ['#7B1FA2','#9C27B0','#CE93D8','#4A148C','#E1BEE7'],
+  '포도밭': ['#6A1B9A','#8E24AA','#AB47BC','#4527A0','#D1C4E9'],
+  '사과': ['#C62828','#E53935','#FF8A80','#FF5252','#FFCDD2'],
+  '강':   ['#0277BD','#039BE5','#29B6F6','#81D4FA','#E1F5FE'],
+  '물':   ['#00838F','#00ACC1','#4DD0E1','#80DEEA','#E0F7FA'],
+  '바다': ['#01579B','#0288D1','#0097A7','#26C6DA','#B2EBF2'],
+  '하늘': ['#1565C0','#1976D2','#42A5F5','#90CAF9','#BBDEFB'],
+  '별':   ['#F9A825','#FDD835','#FFEE58','#FFF9C4','#F57F17'],
+  '우주': ['#4A148C','#311B92','#1A237E','#0D0D2B','#7B1FA2'],
+  '달':   ['#78909C','#B0BEC5','#CFD8DC','#ECEFF1','#607D8B'],
+  '해':   ['#F57F17','#F9A825','#FDD835','#FF8F00','#FFD54F'],
+  '산':   ['#795548','#6D4C41','#A1887F','#BCAAA4','#4E342E'],
+  '보현산': ['#5D4037','#8D6E63','#A5D6A7','#1565C0','#7986CB'],
+  '도시': ['#455A64','#607D8B','#90A4AE','#B0BEC5','#37474F'],
+  '건물': ['#546E7A','#78909C','#90A4AE','#CFD8DC','#263238'],
+  '로봇': ['#1565C0','#42A5F5','#80DEEA','#B2EBF2','#37474F'],
+  '드론': ['#00695C','#00897B','#26A69A','#80CBC4','#004D40'],
+  '불꽃': ['#E65100','#F4511E','#FF7043','#FFAB40','#FFF8E1'],
+  '빛':   ['#FFD600','#FFEA00','#FFFF00','#FFF9C4','#FFF176'],
+  '미래': ['#00B0FF','#00E5FF','#1DE9B6','#69F0AE','#F0FFF4'],
+  '기술': ['#0091EA','#00B0FF','#40C4FF','#80D8FF','#E1F5FE'],
+  '봄':   ['#F48FB1','#F06292','#CE93D8','#A5D6A7','#FFF9C4'],
+  '여름': ['#00BCD4','#4CAF50','#FFEB3B','#FF9800','#E91E63'],
+  '가을': ['#FF8F00','#F57F17','#BF360C','#4E342E','#FF6D00'],
+  '겨울': ['#B0BEC5','#90A4AE','#78909C','#546E7A','#E3F2FD'],
+};
+const KW_SHAPE = {
+  '산': 'triangle', '보현산': 'triangle', '언덕': 'triangle',
+  '강': 'wave', '물': 'wave', '바다': 'wave', '비': 'wave',
+  '별': 'star', '빛': 'star', '반짝': 'star',
+  '건물': 'rect', '도시': 'rect', '아파트': 'rect',
+  '나무': 'tree', '숲': 'tree', '포도': 'tree',
+  '꽃': 'circle', '태양': 'circle', '달': 'circle', '행성': 'circle',
+  '로봇': 'cross', '기술': 'cross', '드론': 'cross',
+  '우주': 'dots', '하늘': 'dots', '별빛': 'dots',
+};
+const DEFAULT_COLORS = ['#2BA5B3','#1E8A97','#7ADDE8','#D6F2F5','#0D3D42'];
+
+/* ─────────────────────────────────────────────
+   PROMPT ANALYSIS
+───────────────────────────────────────────── */
+function analyzePrompt(text) {
+  const colors = [];
+  const shapes = [];
+  const palette = [...DEFAULT_COLORS];
+
+  const words = text.split(/[\s,!?]+/);
+
+  for (const kw of Object.keys(KW_COLOR)) {
+    if (text.includes(kw)) {
+      KW_COLOR[kw].forEach(c => { if (!palette.includes(c)) palette.push(c); });
+    }
+  }
+  for (const kw of Object.keys(KW_SHAPE)) {
+    if (text.includes(kw) && !shapes.includes(KW_SHAPE[kw])) {
+      shapes.push(KW_SHAPE[kw]);
+    }
+  }
+  if (shapes.length === 0) shapes.push('circle', 'wave', 'dots');
+
+  return { palette: palette.slice(0, 8), shapes };
+}
+
+/* ─────────────────────────────────────────────
+   SEEDED RANDOM
+───────────────────────────────────────────── */
+function mulberry32(seed) {
+  return function() {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function strSeed(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) { h = Math.imul(31, h) + s.charCodeAt(i) | 0; }
+  return h >>> 0;
+}
+
+/* ─────────────────────────────────────────────
+   ART GENERATION
+───────────────────────────────────────────── */
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return [r,g,b];
+}
+function lerp(a,b,t){ return a + (b-a)*t; }
+
+function drawArt(ctx, prompt, extraSeed = 0) {
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const { palette, shapes } = analyzePrompt(prompt);
+  const seed = strSeed(prompt) + extraSeed * 9999999;
+  const rng = mulberry32(seed);
+
+  ctx.clearRect(0, 0, W, H);
+
+  // ── Background gradient ──
+  const bgC1 = palette[0];
+  const bgC2 = palette[Math.floor(rng() * Math.min(palette.length, 3) + 1)] || palette[0];
+  const gtype = rng() < 0.5 ? 'radial' : 'linear';
+  let bg;
+  if (gtype === 'radial') {
+    bg = ctx.createRadialGradient(W*rng(), H*rng(), W*0.05, W/2, H/2, W*0.9);
+  } else {
+    const angle = rng() * Math.PI * 2;
+    const cx = Math.cos(angle), cy = Math.sin(angle);
+    bg = ctx.createLinearGradient(W/2 - cx*W, H/2 - cy*H, W/2 + cx*W, H/2 + cy*H);
+  }
+  bg.addColorStop(0, bgC1);
+  bg.addColorStop(0.5, palette[Math.floor(rng() * palette.length)]);
+  bg.addColorStop(1, bgC2);
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Dark overlay for depth ──
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.fillRect(0, 0, W, H);
+
+  const count = 28 + Math.floor(rng() * 22);
+  for (let i = 0; i < count; i++) {
+    const x = rng() * W;
+    const y = rng() * H;
+    const size = 14 + rng() * 80;
+    const col = palette[Math.floor(rng() * palette.length)];
+    const [r,g,b] = hexToRgb(col);
+    const alpha = 0.18 + rng() * 0.52;
+    const shapeType = shapes[Math.floor(rng() * shapes.length)];
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rng() * Math.PI * 2);
+    ctx.globalAlpha = alpha;
+
+    switch(shapeType) {
+      case 'triangle':
+        ctx.beginPath();
+        ctx.moveTo(0, -size);
+        ctx.lineTo(size * 0.87, size * 0.5);
+        ctx.lineTo(-size * 0.87, size * 0.5);
+        ctx.closePath();
+        ctx.fillStyle = col;
+        if (rng() < 0.4) { ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5; ctx.stroke(); }
+        ctx.fill();
+        break;
+      case 'wave': {
+        ctx.beginPath();
+        const ww = size * 2;
+        ctx.moveTo(-ww, 0);
+        for (let wx = -ww; wx <= ww; wx += 4) {
+          ctx.lineTo(wx, Math.sin(wx / (size * 0.3)) * size * 0.4);
+        }
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 2 + rng() * 3;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        break;
+      }
+      case 'star': {
+        const spikes = 5 + Math.floor(rng() * 3);
+        const outerR = size * 0.5;
+        const innerR = outerR * 0.42;
+        ctx.beginPath();
+        for (let s = 0; s < spikes * 2; s++) {
+          const ang = (s * Math.PI) / spikes;
+          const rad = s % 2 === 0 ? outerR : innerR;
+          ctx.lineTo(Math.cos(ang - Math.PI/2) * rad, Math.sin(ang - Math.PI/2) * rad);
+        }
+        ctx.closePath();
+        ctx.fillStyle = col;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,200,0.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        break;
+      }
+      case 'rect':
+        ctx.fillStyle = col;
+        ctx.fillRect(-size*0.3, -size*0.5, size*0.6, size);
+        if (rng() < 0.5) {
+          ctx.fillStyle = 'rgba(255,255,255,0.15)';
+          for (let row = 0; row < 3; row++) {
+            for (let col2 = 0; col2 < 2; col2++) {
+              ctx.fillRect(-size*0.25 + col2*size*0.28, -size*0.45 + row*size*0.28, size*0.22, size*0.2);
+            }
+          }
+        }
+        break;
+      case 'tree': {
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.moveTo(0, -size);
+        ctx.lineTo(size*0.5, 0);
+        ctx.lineTo(-size*0.5, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = `rgba(${r},${g},${b},0.7)`;
+        ctx.beginPath();
+        ctx.moveTo(0, -size*0.7);
+        ctx.lineTo(size*0.4, size*0.1);
+        ctx.lineTo(-size*0.4, size*0.1);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#5D4037';
+        ctx.fillRect(-size*0.07, 0, size*0.14, size*0.35);
+        break;
+      }
+      case 'cross':
+        ctx.fillStyle = col;
+        ctx.fillRect(-size*0.12, -size*0.45, size*0.24, size*0.9);
+        ctx.fillRect(-size*0.45, -size*0.12, size*0.9, size*0.24);
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(-size*0.12, -size*0.45, size*0.24, size*0.9);
+        break;
+      case 'dots':
+      default:
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.4, 0, Math.PI * 2);
+        ctx.fillStyle = col;
+        ctx.fill();
+        break;
+    }
+    ctx.restore();
+  }
+
+  // ── Glow circles ──
+  const glowCount = 3 + Math.floor(rng() * 4);
+  for (let i = 0; i < glowCount; i++) {
+    const x = rng() * W, y = rng() * H;
+    const r2 = 60 + rng() * 140;
+    const col = palette[Math.floor(rng() * palette.length)];
+    const [r,g,b] = hexToRgb(col);
+    const grd = ctx.createRadialGradient(x, y, 0, x, y, r2);
+    grd.addColorStop(0, `rgba(${r},${g},${b},0.35)`);
+    grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    ctx.beginPath();
+    ctx.arc(x, y, r2, 0, Math.PI * 2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+  }
+
+  // ── Noise overlay ──
+  const imageData = ctx.getImageData(0, 0, W, H);
+  const d = imageData.data;
+  for (let p = 0; p < d.length; p += 4) {
+    const noise = (rng() - 0.5) * 22;
+    d[p]   = Math.min(255, Math.max(0, d[p]   + noise));
+    d[p+1] = Math.min(255, Math.max(0, d[p+1] + noise));
+    d[p+2] = Math.min(255, Math.max(0, d[p+2] + noise));
+  }
+  ctx.putImageData(imageData, 0, 0);
+
+  // ── Vignette ──
+  const vig = ctx.createRadialGradient(W/2, H/2, W*0.2, W/2, H/2, W*0.75);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(0,0,0,0.45)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, W, H);
+
+  return palette;
+}
+
+/* ─────────────────────────────────────────────
+   ANIMATED GENERATION (5s step-by-step)
+───────────────────────────────────────────── */
+let currentPrompt = '';
+let currentSeed = 0;
+let currentPalette = [];
+let genInterval = null;
+
+const STATUS_MSGS = [
+  '색상 팔레트 분석 중...',
+  '배경 레이어 생성 중...',
+  '도형 패턴 배치 중...',
+  '글로우 효과 적용 중...',
+  '노이즈 텍스처 합성 중...',
+  '마무리 처리 중...',
+];
+
+function startGenerate() {
+  const promptVal = document.getElementById('prompt-input').value.trim();
+  if (!promptVal) {
+    document.getElementById('prompt-input').focus();
+    document.getElementById('prompt-input').style.borderColor = '#FF4466';
+    setTimeout(() => { document.getElementById('prompt-input').style.borderColor = ''; }, 1500);
+    return;
+  }
+  currentPrompt = promptVal;
+  currentSeed = Math.floor(Math.random() * 10000);
+
+  showScreen('generating');
+
+  const canvas = document.getElementById('gen-canvas');
+  const ctx = canvas.getContext('2d');
+  const progressBar = document.getElementById('gen-progress-bar');
+  const statusEl = document.getElementById('gen-status');
+
+  let step = 0;
+  const totalSteps = STATUS_MSGS.length;
+
+  // Draw incrementally
+  function drawStep(stepIdx) {
+    const { palette, shapes } = analyzePrompt(currentPrompt);
+    const seed = strSeed(currentPrompt) + currentSeed * 9999999;
+    const rng = mulberry32(seed + stepIdx * 777);
+
+    const W = canvas.width, H = canvas.height;
+
+    if (stepIdx === 0) {
+      // Background only
+      const bgC1 = palette[0];
+      const bgC2 = palette[1] || palette[0];
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0, bgC1);
+      bg.addColorStop(1, bgC2);
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+    } else if (stepIdx < totalSteps - 1) {
+      // Add some shapes per step
+      const shapesPerStep = Math.floor(12 + rng() * 8);
+      for (let i = 0; i < shapesPerStep; i++) {
+        const x = rng() * W, y = rng() * H;
+        const sz = 16 + rng() * 60;
+        const col = palette[Math.floor(rng() * palette.length)];
+        const alpha = 0.15 + rng() * 0.45;
+        const shp = shapes[Math.floor(rng() * shapes.length)];
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rng() * Math.PI * 2);
+        ctx.globalAlpha = alpha;
+
+        switch(shp) {
+          case 'triangle':
+            ctx.beginPath(); ctx.moveTo(0,-sz); ctx.lineTo(sz*0.87,sz*0.5); ctx.lineTo(-sz*0.87,sz*0.5); ctx.closePath();
+            ctx.fillStyle = col; ctx.fill(); break;
+          case 'star': {
+            ctx.beginPath();
+            for (let s = 0; s < 10; s++) {
+              const ang = (s*Math.PI)/5;
+              const r = s%2===0 ? sz*0.5 : sz*0.2;
+              ctx.lineTo(Math.cos(ang-Math.PI/2)*r, Math.sin(ang-Math.PI/2)*r);
+            }
+            ctx.closePath(); ctx.fillStyle = col; ctx.fill(); break;
+          }
+          case 'wave':
+            ctx.beginPath(); ctx.moveTo(-sz,-0);
+            for (let wx=-sz;wx<=sz;wx+=3) ctx.lineTo(wx, Math.sin(wx/(sz*0.25))*sz*0.35);
+            ctx.strokeStyle = col; ctx.lineWidth = 2+rng()*2; ctx.stroke(); break;
+          default:
+            ctx.beginPath(); ctx.arc(0,0,sz*0.4,0,Math.PI*2);
+            ctx.fillStyle = col; ctx.fill();
+        }
+        ctx.restore();
+      }
+    } else {
+      // Final: add glow + vignette
+      for (let i = 0; i < 3; i++) {
+        const x = rng()*W, y = rng()*H, r = 80+rng()*120;
+        const col = palette[Math.floor(rng()*palette.length)];
+        const [rv,gv,bv] = hexToRgb(col);
+        const grd = ctx.createRadialGradient(x,y,0,x,y,r);
+        grd.addColorStop(0,`rgba(${rv},${gv},${bv},0.3)`);
+        grd.addColorStop(1,`rgba(${rv},${gv},${bv},0)`);
+        ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+        ctx.fillStyle = grd; ctx.fill();
+      }
+      const vig = ctx.createRadialGradient(W/2,H/2,W*0.2,W/2,H/2,W*0.75);
+      vig.addColorStop(0,'rgba(0,0,0,0)');
+      vig.addColorStop(1,'rgba(0,0,0,0.4)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0,0,W,H);
+    }
+  }
+
+  step = 0;
+  genInterval = setInterval(() => {
+    drawStep(step);
+    statusEl.textContent = STATUS_MSGS[step] || '마무리 처리 중...';
+    progressBar.style.width = ((step + 1) / totalSteps * 100) + '%';
+    step++;
+    if (step >= totalSteps) {
+      clearInterval(genInterval);
+      setTimeout(() => { finishGenerate(canvas); }, 400);
+    }
+  }, 750);
+}
+
+function finishGenerate(genCanvas) {
+  const resultCanvas = document.getElementById('result-canvas');
+  const ctx = resultCanvas.getContext('2d');
+  currentPalette = drawArt(ctx, currentPrompt, currentSeed);
+  showResultPalette(currentPalette);
+  document.getElementById('result-prompt-text').textContent = currentPrompt;
+  document.getElementById('stamp-notice').classList.remove('visible');
+  showScreen('result');
+}
+
+function reGenerate() {
+  currentSeed = Math.floor(Math.random() * 10000);
+  startGenerate();
+}
+
+function showResultPalette(palette) {
+  const el = document.getElementById('result-palette');
+  el.innerHTML = '';
+  palette.slice(0,6).forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'palette-dot';
+    d.style.background = c;
+    el.appendChild(d);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   GALLERY & STORAGE
+───────────────────────────────────────────── */
+function loadGallery() {
+  return JSON.parse(localStorage.getItem('dreamfest_gallery') || '[]');
+}
+function saveGallery(items) {
+  localStorage.setItem('dreamfest_gallery', JSON.stringify(items));
+}
+
+let stampGiven = false;
+
+function registerToGallery() {
+  const canvas = document.getElementById('result-canvas');
+  const dataUrl = canvas.toDataURL('image/png');
+  const gallery = loadGallery();
+  const item = {
+    id: Date.now(),
+    prompt: currentPrompt,
+    imageDataUrl: dataUrl,
+    votes: 0,
+    votedBy: [],
+    createdAt: new Date().toISOString(),
+  };
+  gallery.unshift(item);
+  saveGallery(gallery);
+
+  // Stamp
+  if (!stampGiven) {
+    stampGiven = true;
+    grantStamp();
+    document.getElementById('stamp-notice').classList.add('visible');
+    document.getElementById('stamp-overlay').classList.add('show');
+  } else {
+    document.getElementById('stamp-notice').classList.add('visible');
+    document.getElementById('stamp-notice').textContent = '✅ 갤러리에 추가로 등록되었습니다!';
+  }
+
+  renderGallery();
+}
+
+function grantStamp() {
+  try {
+    const PROG_ID = 9;
+    const stamps = JSON.parse(localStorage.getItem('dreamfest_stamps') || '{}');
+    stamps[PROG_ID] = { earned: true, ts: Date.now() };
+    localStorage.setItem('dreamfest_stamps', JSON.stringify(stamps));
+
+    const results = JSON.parse(localStorage.getItem('dreamfest_results') || '{}');
+    results[PROG_ID] = { completed: true, score: null, ts: Date.now() };
+    localStorage.setItem('dreamfest_results', JSON.stringify(results));
+  } catch(e) {}
+}
+
+function closeStamp() {
+  document.getElementById('stamp-overlay').classList.remove('show');
+}
+
+/* voting */
+function getVotedItems() {
+  return JSON.parse(localStorage.getItem('dreamfest_voted_items') || '[]');
+}
+function saveVotedItems(arr) {
+  localStorage.setItem('dreamfest_voted_items', JSON.stringify(arr));
+}
+
+function vote(id) {
+  const gallery = loadGallery();
+  const voted = getVotedItems();
+  const idx = gallery.findIndex(g => g.id === id);
+  if (idx === -1) return;
+
+  if (voted.includes(id)) {
+    gallery[idx].votes = Math.max(0, (gallery[idx].votes || 0) - 1);
+    saveVotedItems(voted.filter(v => v !== id));
+  } else {
+    gallery[idx].votes = (gallery[idx].votes || 0) + 1;
+    saveVotedItems([...voted, id]);
+  }
+  saveGallery(gallery);
+  renderGallery();
+}
+
+function renderGallery() {
+  const gallery = loadGallery();
+  const voted = getVotedItems();
+  const gridEl = document.getElementById('gallery-grid');
+  const emptyEl = document.getElementById('gallery-empty');
+  const countEl = document.getElementById('gallery-count');
+  const lbSection = document.getElementById('leaderboard-section');
+
+  countEl.textContent = `${gallery.length}개 작품`;
+
+  if (gallery.length === 0) {
+    gridEl.innerHTML = '';
+    emptyEl.style.display = 'block';
+    lbSection.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  lbSection.style.display = 'block';
+
+  const sorted = [...gallery].sort((a,b) => (b.votes||0) - (a.votes||0));
+
+  gridEl.innerHTML = '';
+  const rankMap = {};
+  sorted.forEach((item, i) => { rankMap[item.id] = i + 1; });
+
+  gallery.forEach((item) => {
+    const rank = rankMap[item.id];
+    const isVoted = voted.includes(item.id);
+    const rankLabel = rank === 1 ? '<span class="gallery-rank gold">🥇 1위</span>'
+      : rank === 2 ? '<span class="gallery-rank silver">🥈 2위</span>'
+      : rank === 3 ? '<span class="gallery-rank bronze">🥉 3위</span>'
+      : `<span class="gallery-rank">#${rank}</span>`;
+
+    const card = document.createElement('div');
+    card.className = 'gallery-card';
+    card.innerHTML = `
+      <img class="gallery-card-img" src="${item.imageDataUrl}" alt="${item.prompt}" loading="lazy">
+      <div class="gallery-card-body">
+        <div class="gallery-card-prompt">${escHtml(item.prompt)}</div>
+        <div class="gallery-card-footer">
+          ${rankLabel}
+          <button class="vote-btn${isVoted ? ' voted' : ''}" onclick="vote(${item.id})" aria-label="투표">
+            <span class="vote-heart">${isVoted ? '❤️' : '🤍'}</span>
+            <span>${item.votes || 0}</span>
+          </button>
+        </div>
+      </div>
+    `;
+    gridEl.appendChild(card);
+  });
+
+  // Leaderboard top 5
+  const lbList = document.getElementById('leaderboard-list');
+  lbList.innerHTML = '';
+  sorted.slice(0, 5).forEach((item, i) => {
+    const emoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+    const row = document.createElement('div');
+    row.className = 'lb-row';
+    row.innerHTML = `
+      <div class="lb-rank">${emoji}</div>
+      <img class="lb-thumb" src="${item.imageDataUrl}" alt="">
+      <div class="lb-info">
+        <div class="lb-prompt">${escHtml(item.prompt)}</div>
+        <div class="lb-votes">❤️ ${item.votes || 0} 표</div>
+      </div>
+    `;
+    lbList.appendChild(row);
+  });
+
+  // sync leaderboard to dreamfest_leaderboard
+  try {
+    const lb = JSON.parse(localStorage.getItem('dreamfest_leaderboard') || '[]');
+    sorted.slice(0,3).forEach((item) => {
+      const found = lb.find(l => l.id === `prompt-${item.id}`);
+      if (found) { found.votes = item.votes; }
+      else { lb.push({ id: `prompt-${item.id}`, type: 'prompt', prompt: item.prompt, votes: item.votes, imageDataUrl: item.imageDataUrl }); }
+    });
+    localStorage.setItem('dreamfest_leaderboard', JSON.stringify(lb));
+  } catch(e) {}
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─────────────────────────────────────────────
+   SCREEN & TAB SWITCHING
+───────────────────────────────────────────── */
+function showScreen(name) {
+  ['create','generating','result'].forEach(s => {
+    const el = document.getElementById(`screen-${s}`);
+    if (!el) return;
+    if (s === name) { el.classList.add('active'); el.style.display = s === 'generating' ? 'flex' : 'block'; }
+    else { el.classList.remove('active'); el.style.display = 'none'; }
+  });
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='create') || (i===1 && tab==='gallery')));
+  document.getElementById('tab-create').style.display = tab === 'create' ? 'block' : 'none';
+  document.getElementById('tab-gallery').style.display = tab === 'gallery' ? 'block' : 'none';
+  if (tab === 'gallery') renderGallery();
+}
+
+function goBack() {
+  window.location.href = '../index.html';
+}
+
+/* ─────────────────────────────────────────────
+   CHIP INTERACTION
+───────────────────────────────────────────── */
+document.getElementById('chips-wrap').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  const kw = chip.dataset.kw;
+  const inp = document.getElementById('prompt-input');
+  if (!inp.value.includes(kw)) {
+    inp.value = inp.value ? inp.value.trimEnd() + ' ' + kw : kw;
+  }
+  updateCharCount();
+  inp.focus();
+});
+
+document.getElementById('prompt-input').addEventListener('input', updateCharCount);
+function updateCharCount() {
+  document.getElementById('char-count').textContent = document.getElementById('prompt-input').value.length;
+}
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+showScreen('create');
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

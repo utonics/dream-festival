@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>꿈-드림 페스티벌 | QR 체크인</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F6F3;
+  --bg-dot:rgba(0,0,0,.04);
+  --text:#1A1A1A;
+  --text-sub:#6B6B6B;
+  --text-light:#9A9A9A;
+  --border:#E2E0DC;
+  --zone-a:#E8654A;--zone-a-bg:#FFF0ED;
+  --zone-b:#D4A029;--zone-b-bg:#FFF5E6;
+  --zone-c:#2ABFBF;--zone-c-bg:#E6F7F9;
+  --zone-d:#5BAD5E;--zone-d-bg:#F0F8E6;
+  --zone-e:#8B5CF6;--zone-e-bg:#F3EFF9;
+  --green-base:#2D7A4F;
+  --green-light:#E8F5EE;
+  --green-dark:#1B5E3A;
+  --card-bg:#FFFFFF;
+  --shadow:0 2px 12px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.1);
+  --radius:6px;
+  --radius-lg:10px;
+  --radius-xl:16px;
+  --font-sans:'Noto Sans KR','Space Grotesk',sans-serif;
+  --font-display:'Space Grotesk','Noto Sans KR',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --trans:all .2s ease;
+}
+html{font-size:15px;scroll-behavior:smooth}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  background-image:radial-gradient(circle,var(--bg-dot) 1px,transparent 1px);
+  background-size:20px 20px;
+  min-height:100vh;
+}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:inherit;border:none;background:none}
+input,select,textarea{
+  font-family:inherit;font-size:inherit;
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:10px 14px;background:#fff;color:var(--text);
+  width:100%;transition:var(--trans);
+}
+input:focus,select:focus{outline:none;border-color:var(--green-base);box-shadow:0 0 0 3px rgba(45,122,79,.12)}
+
+/* TOP BAR */
+.top-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 24px;
+  background:var(--green-dark);
+  color:#fff;
+  position:sticky;top:0;z-index:100;
+}
+.top-bar .logo{
+  font-family:var(--font-display);
+  font-weight:700;font-size:1.1rem;
+  display:flex;align-items:center;gap:10px;
+}
+.top-bar .logo .dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--zone-a);
+  animation:pulse-dot 2s infinite;
+}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.back-link{
+  display:flex;align-items:center;gap:6px;
+  font-size:.82rem;font-weight:500;
+  color:rgba(255,255,255,.8);
+  transition:var(--trans);
+}
+.back-link:hover{color:#fff}
+
+/* TABS */
+.tab-strip{
+  display:flex;gap:0;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.tab-strip button{
+  flex:1;min-width:0;
+  padding:14px 20px;
+  font-size:.85rem;
+  font-weight:500;
+  color:var(--text-sub);
+  white-space:nowrap;
+  border-bottom:2px solid transparent;
+  transition:var(--trans);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.tab-strip button.active{
+  color:var(--green-base);
+  border-bottom-color:var(--green-base);
+  font-weight:600;
+}
+.tab-strip button:hover{color:var(--text)}
+
+/* MAIN */
+.main-area{flex:1;padding:20px 24px;max-width:900px;margin:0 auto;width:100%}
+.view{display:none}
+.view.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* CARDS & PANELS */
+.card{
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius-xl);
+  padding:24px;
+  margin-bottom:16px;
+  transition:var(--trans);
+}
+.card:hover{box-shadow:var(--shadow)}
+.card-title{
+  font-family:var(--font-display);
+  font-size:1.1rem;font-weight:700;
+  margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+
+/* FORM */
+.form-group{margin-bottom:16px}
+.form-group label{
+  display:block;font-size:.8rem;font-weight:600;
+  color:var(--text-sub);margin-bottom:6px;
+}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:10px 20px;border-radius:var(--radius);
+  font-size:.85rem;font-weight:600;
+  transition:var(--trans);
+  white-space:nowrap;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--green-base),var(--green-dark));
+  color:#fff;
+  box-shadow:0 2px 8px rgba(45,122,79,.25);
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(45,122,79,.35)}
+.btn-outline{border:1px solid var(--border);color:var(--text-sub)}
+.btn-outline:hover{border-color:var(--text-sub);color:var(--text)}
+.btn-block{width:100%;justify-content:center}
+.btn-lg{padding:14px 28px;font-size:.95rem;border-radius:var(--radius-lg)}
+.btn-sm{padding:6px 12px;font-size:.75rem}
+.btn-danger{background:#E85D4A;color:#fff}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+
+/* STAT CARDS */
+.stat-row{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:12px;margin-bottom:20px;
+}
+.stat-card{
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius-xl);
+  padding:16px 18px;
+  transition:var(--trans);
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.stat-card .label{font-size:.72rem;color:var(--text-sub);font-weight:500;margin-bottom:4px}
+.stat-card .value{font-family:var(--font-display);font-size:1.6rem;font-weight:700}
+.stat-card .sub{font-size:.72rem;color:var(--text-light);margin-top:2px}
+
+/* ZONE TAGS */
+.zone-tag{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:12px;
+  font-size:.72rem;font-weight:600;
+}
+.zone-tag.a{background:var(--zone-a-bg);color:var(--zone-a)}
+.zone-tag.b{background:var(--zone-b-bg);color:var(--zone-b)}
+.zone-tag.c{background:var(--zone-c-bg);color:var(--zone-c)}
+.zone-tag.d{background:var(--zone-d-bg);color:var(--zone-d)}
+.zone-tag.e{background:var(--zone-e-bg);color:var(--zone-e)}
+
+/* QR PARTICIPANT CARD */
+.participant-card{
+  background:var(--card-bg);
+  border:2px solid var(--green-base);
+  border-radius:var(--radius-xl);
+  padding:28px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.participant-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--zone-a),var(--zone-b),var(--zone-c),var(--zone-d),var(--zone-e));
+}
+.participant-card .pid{
+  font-family:var(--font-mono);
+  font-size:1.4rem;font-weight:700;
+  color:var(--green-base);
+  margin-bottom:8px;letter-spacing:.05em;
+}
+.participant-card .pname{
+  font-size:1.2rem;font-weight:700;margin-bottom:2px;
+}
+.participant-card .pinfo{
+  font-size:.82rem;color:var(--text-sub);margin-bottom:16px;
+}
+.participant-card canvas,
+.participant-card img{
+  margin:0 auto 16px;display:block;
+  border-radius:var(--radius);
+}
+.participant-card .qr-wrap{
+  background:#fff;padding:16px;border-radius:var(--radius-lg);
+  display:inline-block;margin-bottom:16px;
+  border:1px solid var(--border);
+}
+
+/* SCANNER */
+#scanner-region{
+  width:100%;max-width:400px;margin:0 auto 16px;
+  border-radius:var(--radius-xl);overflow:hidden;
+  border:2px dashed var(--border);
+  min-height:300px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.02);
+}
+#scanner-region video{border-radius:var(--radius-xl)}
+
+/* SUCCESS OVERLAY */
+.scan-success{
+  background:var(--green-light);
+  border:2px solid var(--green-base);
+  border-radius:var(--radius-xl);
+  padding:24px;text-align:center;
+  animation:scaleIn .3s ease;
+}
+@keyframes scaleIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.scan-success .check-icon{
+  width:64px;height:64px;
+  background:var(--green-base);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 12px;
+  font-size:2rem;color:#fff;
+}
+
+/* DUPLICATE WARNING */
+.scan-duplicate{
+  background:#FFF5E6;
+  border:2px solid var(--zone-b);
+  border-radius:var(--radius-xl);
+  padding:24px;text-align:center;
+}
+.scan-duplicate .warn-icon{
+  width:64px;height:64px;
+  background:var(--zone-b);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 12px;
+  font-size:2rem;color:#fff;
+}
+
+/* LOG LIST */
+.log-list{max-height:400px;overflow-y:auto}
+.log-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 0;
+  border-bottom:1px solid var(--border);
+  font-size:.85rem;
+}
+.log-item:last-child{border-bottom:none}
+.log-item .log-time{
+  font-family:var(--font-mono);
+  font-size:.75rem;color:var(--text-light);
+  min-width:50px;
+}
+.log-item .log-name{font-weight:600;flex:1}
+.log-item .log-booth{font-size:.78rem;color:var(--text-sub)}
+
+/* BAR CHART */
+.bar-chart{margin:16px 0}
+.bar-row{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:6px;font-size:.78rem;
+}
+.bar-label{
+  min-width:140px;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;font-weight:500;
+  display:flex;align-items:center;gap:6px;
+}
+.bar-track{flex:1;height:24px;background:var(--bg);border-radius:12px;overflow:hidden}
+.bar-fill{
+  height:100%;border-radius:12px;
+  transition:width .5s ease;
+  display:flex;align-items:center;justify-content:flex-end;
+  padding-right:8px;
+  font-size:.7rem;font-weight:700;color:#fff;
+  min-width:0;
+}
+.bar-fill.a{background:linear-gradient(90deg,var(--zone-a),#f0846e)}
+.bar-fill.b{background:linear-gradient(90deg,var(--zone-b),#e0b44e)}
+.bar-fill.c{background:linear-gradient(90deg,var(--zone-c),#4dd4d4)}
+.bar-fill.d{background:linear-gradient(90deg,var(--zone-d),#7ec87e)}
+.bar-fill.e{background:linear-gradient(90deg,var(--zone-e),#a78bfa)}
+
+/* ZONE SUMMARY */
+.zone-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:12px;margin-bottom:20px;
+}
+.zone-card{
+  border-radius:var(--radius-xl);
+  padding:16px;text-align:center;
+  font-weight:600;
+}
+.zone-card.a{background:var(--zone-a-bg);color:var(--zone-a);border:1px solid rgba(232,101,74,.2)}
+.zone-card.b{background:var(--zone-b-bg);color:var(--zone-b);border:1px solid rgba(212,160,41,.2)}
+.zone-card.c{background:var(--zone-c-bg);color:var(--zone-c);border:1px solid rgba(42,191,191,.2)}
+.zone-card.d{background:var(--zone-d-bg);color:var(--zone-d);border:1px solid rgba(91,173,94,.2)}
+.zone-card.e{background:var(--zone-e-bg);color:var(--zone-e);border:1px solid rgba(139,92,246,.2)}
+.zone-card .zone-label{font-size:.75rem;margin-bottom:4px}
+.zone-card .zone-count{font-family:var(--font-display);font-size:1.8rem;font-weight:700}
+.zone-card .zone-sub{font-size:.7rem;opacity:.7;margin-top:2px}
+
+/* SEARCH */
+.search-box{
+  position:relative;margin-bottom:16px;
+}
+.search-box input{padding-left:36px}
+.search-box .search-icon{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  font-size:.9rem;opacity:.4;
+}
+
+/* TIMELINE */
+.timeline{max-height:300px;overflow-y:auto}
+.timeline-item{
+  display:flex;gap:12px;padding:8px 0;
+  border-bottom:1px solid rgba(0,0,0,.04);
+  font-size:.82rem;
+}
+.timeline-dot{
+  width:10px;height:10px;border-radius:50%;
+  margin-top:5px;flex-shrink:0;
+}
+
+/* MANUAL INPUT */
+.manual-input{
+  display:flex;gap:8px;margin-top:12px;
+}
+.manual-input input{flex:1;font-family:var(--font-mono)}
+
+/* TOAST */
+.toast{
+  position:fixed;top:80px;right:20px;z-index:1000;
+  background:var(--green-dark);color:#fff;
+  padding:12px 20px;border-radius:var(--radius-lg);
+  font-size:.85rem;font-weight:500;
+  box-shadow:var(--shadow-lg);
+  transform:translateX(120%);transition:transform .3s ease;
+}
+.toast.show{transform:translateX(0)}
+.toast.error{background:#E85D4A}
+.toast.warn{background:var(--zone-b)}
+
+/* REGISTERED COUNT */
+.reg-count{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px;
+  background:var(--green-light);
+  border-radius:var(--radius);
+  font-size:.85rem;font-weight:500;
+  color:var(--green-base);
+  margin-bottom:16px;
+}
+
+/* BOOTH SELECT */
+.booth-select{
+  width:100%;padding:12px 14px;
+  border:2px solid var(--border);
+  border-radius:var(--radius-lg);
+  font-size:.9rem;
+  background:#fff;
+  cursor:pointer;
+}
+.booth-select:focus{border-color:var(--green-base)}
+
+/* PRINT STYLES */
+@media print{
+  .top-bar,.tab-strip,.no-print{display:none!important}
+  .main-area{padding:0}
+  .participant-card{border:2px solid #000;break-inside:avoid}
+  body{background:#fff;background-image:none}
+}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .top-bar{padding:10px 16px}
+  .top-bar .logo{font-size:.95rem}
+  .main-area{padding:16px}
+  .form-row{grid-template-columns:1fr}
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .zone-grid{grid-template-columns:repeat(2,1fr)}
+  .tab-strip button{padding:12px 14px;font-size:.8rem}
+  .bar-label{min-width:100px;font-size:.72rem}
+  .btn-group{flex-direction:column}
+  .btn-group .btn{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="logo">
+    <span class="dot"></span>
+    꿈-드림 페스티벌 · QR 체크인
+  </div>
+  <a href="index.html" class="back-link">
+    <span>&larr;</span> 대시보드
+  </a>
+</div>
+
+<!-- TAB NAVIGATION -->
+<div class="tab-strip no-print">
+  <button class="active" onclick="switchTab('register')">
+    <span>📝</span> 참가자 등록
+  </button>
+  <button onclick="switchTab('scanner')">
+    <span>📷</span> 부스 체크인
+  </button>
+  <button onclick="switchTab('dashboard')">
+    <span>📊</span> 체크인 현황
+  </button>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-area">
+
+  <!-- TAB 1: REGISTRATION -->
+  <div id="view-register" class="view active">
+    <div id="reg-form-section">
+      <div class="card">
+        <div class="card-title">📝 참가자 등록</div>
+        <div class="reg-count" id="reg-count-display">
+          총 등록 참가자: <strong>0</strong>명
+        </div>
+        <form id="regForm" onsubmit="return handleRegister(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label>이름 <span style="color:var(--zone-a)">*</span></label>
+              <input type="text" id="reg-name" placeholder="홍길동" required maxlength="20" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label>학교 <span style="color:var(--zone-a)">*</span></label>
+              <input type="text" id="reg-school" placeholder="영천초등학교" required maxlength="30" autocomplete="off">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>학년 <span style="color:var(--zone-a)">*</span></label>
+              <select id="reg-grade" required>
+                <option value="">학년 선택</option>
+                <option value="1학년">1학년</option>
+                <option value="2학년">2학년</option>
+                <option value="3학년">3학년</option>
+                <option value="4학년">4학년</option>
+                <option value="5학년">5학년</option>
+                <option value="6학년">6학년</option>
+                <option value="중1">중1</option>
+                <option value="중2">중2</option>
+                <option value="중3">중3</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>연락처 <span style="color:var(--text-light)">(선택)</span></label>
+              <input type="tel" id="reg-phone" placeholder="010-1234-5678" autocomplete="off">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" style="margin-top:8px">
+            등록 및 QR 생성
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Generated participant card (hidden initially) -->
+    <div id="reg-result" style="display:none">
+      <div class="participant-card" id="participant-card">
+        <div style="font-size:.75rem;color:var(--text-light);margin-bottom:8px">꿈-드림(Dream) 페스티벌 미래기술존</div>
+        <div class="pid" id="card-pid"></div>
+        <div class="pname" id="card-name"></div>
+        <div class="pinfo" id="card-info"></div>
+        <div class="qr-wrap">
+          <canvas id="card-qr"></canvas>
+        </div>
+        <div style="font-size:.72rem;color:var(--text-light)">이 QR코드를 각 부스에서 스캔하세요</div>
+      </div>
+      <div class="btn-group no-print" style="margin-top:16px;justify-content:center">
+        <button class="btn btn-primary" onclick="downloadQR()">
+          💾 QR 저장하기
+        </button>
+        <button class="btn btn-outline" onclick="window.print()">
+          🖨️ 인쇄하기
+        </button>
+        <button class="btn btn-outline" onclick="resetRegForm()">
+          ➕ 새 등록
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SCANNER -->
+  <div id="view-scanner" class="view">
+    <div class="card">
+      <div class="card-title">📷 부스 체크인 스캐너</div>
+      <div class="form-group">
+        <label>체크인 부스 선택 <span style="color:var(--zone-a)">*</span></label>
+        <select id="scan-booth" class="booth-select" onchange="onBoothChange()">
+          <option value="">-- 부스를 선택하세요 --</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="scanner-section" style="display:none">
+      <div class="card" style="text-align:center">
+        <div id="scanner-region"></div>
+        <div class="btn-group" style="justify-content:center;margin-top:12px">
+          <button class="btn btn-primary" id="btn-start-scan" onclick="startScanner()">
+            📷 스캔 시작
+          </button>
+          <button class="btn btn-outline" id="btn-stop-scan" onclick="stopScanner()" style="display:none">
+            ⏹ 스캔 중지
+          </button>
+        </div>
+        <div class="manual-input" style="margin-top:16px">
+          <input type="text" id="manual-id" placeholder="참가자 ID 직접 입력 (예: DF-1234)" style="font-family:var(--font-mono)">
+          <button class="btn btn-outline" onclick="handleManualCheckin()">확인</button>
+        </div>
+      </div>
+
+      <!-- Scan result area -->
+      <div id="scan-result"></div>
+
+      <!-- Recent checkins -->
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">최근 체크인 기록</div>
+        <div class="log-list" id="recent-checkins">
+          <div style="text-align:center;padding:20px;color:var(--text-light);font-size:.85rem">
+            아직 체크인 기록이 없습니다
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: DASHBOARD -->
+  <div id="view-dashboard" class="view">
+    <div class="stat-row" id="dash-stats"></div>
+
+    <div class="card">
+      <div class="card-title">🏷️ 존별 체크인 현황</div>
+      <div class="zone-grid" id="zone-summary"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 부스별 체크인</div>
+      <div class="bar-chart" id="booth-chart"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🕐 최근 체크인 타임라인</div>
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="dash-search" placeholder="참가자 ID 또는 이름 검색" oninput="renderTimeline()">
+      </div>
+      <div class="timeline" id="dash-timeline"></div>
+    </div>
+
+    <div style="text-align:center;margin-top:16px" class="no-print">
+      <button class="btn btn-outline" onclick="exportCSV()">
+        📥 CSV 내보내기
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════ */
+/* DATA                                    */
+/* ═══════════════════════════════════════ */
+const PROGRAMS = [
+  {id:1,zone:'A',name:'나의 몸을 읽는 AI',icon:'🏃'},
+  {id:2,zone:'A',name:'AI 운동 코치',icon:'💪'},
+  {id:3,zone:'A',name:'댄스 AI 챌린지',icon:'💃'},
+  {id:4,zone:'B',name:'물건을 알아보는 AI',icon:'👁️'},
+  {id:5,zone:'B',name:'AI 안전 감시관',icon:'🛡️'},
+  {id:6,zone:'B',name:'AI 분류 챌린지',icon:'🔬'},
+  {id:7,zone:'C',name:'AI 아바타 스튜디오',icon:'🎭'},
+  {id:8,zone:'C',name:'AI 뮤직비디오 제작',icon:'🎬'},
+  {id:9,zone:'C',name:'프롬프트 아트 챌린지',icon:'🎨'},
+  {id:10,zone:'D',name:'AI 의사 체험',icon:'🩺'},
+  {id:11,zone:'D',name:'스마트팜 관제',icon:'🌱'},
+  {id:12,zone:'D',name:'자율주행 시뮬레이터',icon:'🚗'},
+  {id:13,zone:'E',name:'AI 직업 매칭',icon:'🎯'},
+  {id:14,zone:'E',name:'비주얼 코딩 체험',icon:'🧩'},
+  {id:15,zone:'E',name:'IT 전문가 멘토링',icon:'👨‍💻'}
+];
+
+const ZONE_NAMES = {A:'AI 체육관',B:'AI 탐정단',C:'AI 크리에이터',D:'AI 미래직업',E:'AI 진로탐색'};
+const ZONE_COLORS = {A:'a',B:'b',C:'c',D:'d',E:'e'};
+
+let html5QrCode = null;
+let scannerRunning = false;
+
+/* ═══════════════════════════════════════ */
+/* LOCAL STORAGE HELPERS                   */
+/* ═══════════════════════════════════════ */
+function getParticipants() {
+  try { return JSON.parse(localStorage.getItem('dreamfest_qr_participants') || '[]'); }
+  catch { return []; }
+}
+function saveParticipants(arr) {
+  localStorage.setItem('dreamfest_qr_participants', JSON.stringify(arr));
+}
+function getCheckins() {
+  try { return JSON.parse(localStorage.getItem('dreamfest_checkins') || '[]'); }
+  catch { return []; }
+}
+function saveCheckins(arr) {
+  localStorage.setItem('dreamfest_checkins', JSON.stringify(arr));
+}
+function getStamps() {
+  try { return JSON.parse(localStorage.getItem('dreamfest_stamps') || '[]'); }
+  catch { return []; }
+}
+function saveStamps(arr) {
+  localStorage.setItem('dreamfest_stamps', JSON.stringify(arr));
+}
+
+/* ═══════════════════════════════════════ */
+/* TAB SWITCHING                           */
+/* ═══════════════════════════════════════ */
+function switchTab(tab) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab-strip button').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+  const idx = {register:0,scanner:1,dashboard:2}[tab];
+  document.querySelectorAll('.tab-strip button')[idx].classList.add('active');
+
+  if (tab === 'scanner' && scannerRunning) {
+    // keep scanner running
+  } else if (tab !== 'scanner' && scannerRunning) {
+    stopScanner();
+  }
+
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'register') updateRegCount();
+  if (tab === 'scanner') renderRecentCheckins();
+}
+
+/* ═══════════════════════════════════════ */
+/* REGISTRATION                            */
+/* ═══════════════════════════════════════ */
+function generateId() {
+  const existing = getParticipants().map(p => p.id);
+  let id;
+  do {
+    const num = Math.floor(1000 + Math.random() * 9000);
+    id = 'DF-' + num;
+  } while (existing.includes(id));
+  return id;
+}
+
+function updateRegCount() {
+  const count = getParticipants().length;
+  document.getElementById('reg-count-display').innerHTML =
+    '총 등록 참가자: <strong>' + count + '</strong>명';
+}
+
+function handleRegister(e) {
+  e.preventDefault();
+  const name = document.getElementById('reg-name').value.trim();
+  const school = document.getElementById('reg-school').value.trim();
+  const grade = document.getElementById('reg-grade').value;
+  const phone = document.getElementById('reg-phone').value.trim();
+
+  if (!name || !school || !grade) {
+    showToast('필수 항목을 모두 입력해주세요', 'error');
+    return false;
+  }
+
+  const participant = {
+    id: generateId(),
+    name: name,
+    school: school,
+    grade: grade,
+    phone: phone || '',
+    registeredAt: new Date().toISOString()
+  };
+
+  // Save
+  const participants = getParticipants();
+  participants.push(participant);
+  saveParticipants(participants);
+
+  // Generate card
+  showParticipantCard(participant);
+  showToast('참가자 등록 완료: ' + participant.id);
+  return false;
+}
+
+function showParticipantCard(p) {
+  document.getElementById('reg-form-section').style.display = 'none';
+  document.getElementById('reg-result').style.display = 'block';
+
+  document.getElementById('card-pid').textContent = p.id;
+  document.getElementById('card-name').textContent = p.name;
+  document.getElementById('card-info').textContent = p.school + ' · ' + p.grade;
+
+  const qrData = JSON.stringify({
+    id: p.id,
+    name: p.name,
+    school: p.school,
+    grade: p.grade,
+    registeredAt: p.registeredAt
+  });
+
+  const canvas = document.getElementById('card-qr');
+  QRCode.toCanvas(canvas, qrData, {
+    width: 200,
+    margin: 2,
+    color: { dark: '#1A1A1A', light: '#FFFFFF' }
+  }, function(err) {
+    if (err) console.error(err);
+  });
+
+  // Store data URL for download
+  QRCode.toDataURL(qrData, {
+    width: 400,
+    margin: 2,
+    color: { dark: '#1A1A1A', light: '#FFFFFF' }
+  }, function(err, url) {
+    if (!err) canvas.dataset.downloadUrl = url;
+  });
+}
+
+function downloadQR() {
+  const canvas = document.getElementById('card-qr');
+  const url = canvas.dataset.downloadUrl;
+  if (!url) { showToast('QR 코드를 먼저 생성하세요', 'error'); return; }
+
+  const pid = document.getElementById('card-pid').textContent;
+  const pname = document.getElementById('card-name').textContent;
+
+  const a = document.createElement('a');
+  a.download = 'dreamfest_' + pid + '_' + pname + '.png';
+  a.href = url;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('QR 코드가 저장되었습니다');
+}
+
+function resetRegForm() {
+  document.getElementById('reg-form-section').style.display = 'block';
+  document.getElementById('reg-result').style.display = 'none';
+  document.getElementById('regForm').reset();
+  updateRegCount();
+}
+
+/* ═══════════════════════════════════════ */
+/* SCANNER                                 */
+/* ═══════════════════════════════════════ */
+function populateBoothSelect() {
+  const sel = document.getElementById('scan-booth');
+  PROGRAMS.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    const zoneLabel = '[' + p.zone + '존] ';
+    opt.textContent = p.icon + ' ' + zoneLabel + p.name;
+    opt.dataset.zone = p.zone;
+    sel.appendChild(opt);
+  });
+}
+
+function onBoothChange() {
+  const val = document.getElementById('scan-booth').value;
+  document.getElementById('scanner-section').style.display = val ? 'block' : 'none';
+  if (!val && scannerRunning) stopScanner();
+}
+
+function startScanner() {
+  const boothId = document.getElementById('scan-booth').value;
+  if (!boothId) { showToast('부스를 먼저 선택하세요', 'error'); return; }
+
+  if (html5QrCode && scannerRunning) return;
+
+  html5QrCode = new Html5Qrcode('scanner-region');
+
+  html5QrCode.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
+    onScanSuccess,
+    function() {} // ignore scan failures
+  ).then(function() {
+    scannerRunning = true;
+    document.getElementById('btn-start-scan').style.display = 'none';
+    document.getElementById('btn-stop-scan').style.display = 'inline-flex';
+  }).catch(function(err) {
+    console.error('Camera error:', err);
+    showToast('카메라를 사용할 수 없습니다. 수동 입력을 이용하세요.', 'error');
+  });
+}
+
+function stopScanner() {
+  if (html5QrCode && scannerRunning) {
+    html5QrCode.stop().then(function() {
+      html5QrCode.clear();
+      scannerRunning = false;
+      document.getElementById('btn-start-scan').style.display = 'inline-flex';
+      document.getElementById('btn-stop-scan').style.display = 'none';
+    }).catch(function() {
+      scannerRunning = false;
+    });
+  }
+}
+
+function onScanSuccess(decodedText) {
+  let data;
+  try {
+    data = JSON.parse(decodedText);
+  } catch {
+    showToast('유효하지 않은 QR 코드입니다', 'error');
+    return;
+  }
+
+  if (!data.id || !data.id.startsWith('DF-')) {
+    showToast('꿈-드림 페스티벌 QR 코드가 아닙니다', 'error');
+    return;
+  }
+
+  processCheckin(data);
+}
+
+function handleManualCheckin() {
+  const idInput = document.getElementById('manual-id').value.trim().toUpperCase();
+  if (!idInput) { showToast('참가자 ID를 입력하세요', 'error'); return; }
+
+  const normalizedId = idInput.startsWith('DF-') ? idInput : 'DF-' + idInput;
+  const participants = getParticipants();
+  const participant = participants.find(p => p.id === normalizedId);
+
+  if (!participant) {
+    showToast('등록되지 않은 참가자입니다: ' + normalizedId, 'error');
+    return;
+  }
+
+  processCheckin(participant);
+  document.getElementById('manual-id').value = '';
+}
+
+function processCheckin(participantData) {
+  const boothId = parseInt(document.getElementById('scan-booth').value);
+  if (!boothId) { showToast('부스를 선택하세요', 'error'); return; }
+
+  const program = PROGRAMS.find(p => p.id === boothId);
+  const pid = participantData.id;
+
+  // Validate participant exists
+  const participants = getParticipants();
+  const registered = participants.find(p => p.id === pid);
+  if (!registered) {
+    showToast('등록되지 않은 참가자입니다', 'error');
+    return;
+  }
+
+  // Check for duplicate within 1 hour
+  const checkins = getCheckins();
+  const oneHourAgo = Date.now() - (60 * 60 * 1000);
+  const duplicate = checkins.find(c =>
+    c.participantId === pid &&
+    c.progId === boothId &&
+    (function(){ var dt = new Date(c.time); return !isNaN(dt.getTime()) && dt.getTime() > oneHourAgo; })()
+  );
+
+  const resultDiv = document.getElementById('scan-result');
+
+  if (duplicate) {
+    const dupeTime = new Date(duplicate.time || Date.now());
+    resultDiv.innerHTML =
+      '<div class="scan-duplicate" style="margin-top:16px">' +
+        '<div class="warn-icon">⚠️</div>' +
+        '<div style="font-size:1.1rem;font-weight:700;margin-bottom:4px">중복 체크인</div>' +
+        '<div style="font-size:.9rem;margin-bottom:8px">' +
+          '<strong>' + registered.name + '</strong> (' + pid + ')' +
+        '</div>' +
+        '<div style="font-size:.82rem;color:var(--text-sub)">' +
+          program.icon + ' ' + program.name + '에 ' +
+          formatTime(dupeTime) + '에 이미 체크인 완료' +
+        '</div>' +
+      '</div>';
+    showToast('1시간 이내 중복 체크인입니다', 'warn');
+    return;
+  }
+
+  // Record check-in
+  const checkin = {
+    participantId: pid,
+    participantName: registered.name,
+    participantSchool: registered.school,
+    progId: boothId,
+    boothName: program.name,
+    zone: program.zone,
+    time: new Date().toISOString(),
+    type: 'qr'
+  };
+  checkins.unshift(checkin);
+  saveCheckins(checkins);
+
+  // Update stamps
+  const stamps = getStamps();
+  if (!stamps.includes(boothId)) {
+    stamps.push(boothId);
+    saveStamps(stamps);
+  }
+
+  // Show success
+  resultDiv.innerHTML =
+    '<div class="scan-success" style="margin-top:16px">' +
+      '<div class="check-icon">✓</div>' +
+      '<div style="font-size:1.2rem;font-weight:700;margin-bottom:4px">체크인 완료!</div>' +
+      '<div style="font-size:1rem;margin-bottom:4px">' +
+        '<strong>' + registered.name + '</strong>' +
+      '</div>' +
+      '<div style="font-size:.85rem;color:var(--text-sub);margin-bottom:8px">' +
+        pid + ' · ' + registered.school + ' · ' + registered.grade +
+      '</div>' +
+      '<div class="zone-tag ' + ZONE_COLORS[program.zone] + '" style="font-size:.85rem;padding:6px 14px">' +
+        program.icon + ' ' + program.zone + '존 · ' + program.name +
+      '</div>' +
+    '</div>';
+
+  showToast(registered.name + ' 체크인 완료!');
+  renderRecentCheckins();
+
+  // Auto-clear after 5 seconds
+  setTimeout(function() {
+    resultDiv.innerHTML = '';
+  }, 5000);
+}
+
+function renderRecentCheckins() {
+  const checkins = getCheckins().slice(0, 20);
+  const container = document.getElementById('recent-checkins');
+
+  if (checkins.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-size:.85rem">아직 체크인 기록이 없습니다</div>';
+    return;
+  }
+
+  let html = '';
+  checkins.forEach(function(c) {
+    const program = PROGRAMS.find(p => p.id === c.progId);
+    const zone = program ? program.zone : '?';
+    // Handle both ISO date strings and legacy HH:MM format
+    var timeStr;
+    if (typeof c.time === 'string' && c.time.length <= 5) {
+      timeStr = c.time; // Legacy "HH:MM" format from dashboard
+    } else {
+      var t = new Date(c.time);
+      timeStr = isNaN(t.getTime()) ? (c.time || '--:--') : formatTime(t);
+    }
+    var nameStr = c.participantName || c.participantId || c.type || '참가자';
+    html +=
+      '<div class="log-item">' +
+        '<span class="log-time">' + timeStr + '</span>' +
+        '<span class="zone-tag ' + ZONE_COLORS[zone] + '" style="font-size:.65rem">' + zone + '</span>' +
+        '<span class="log-name">' + nameStr + '</span>' +
+        '<span class="log-booth">' + (program ? program.icon + ' ' + program.name : c.boothName || '') + '</span>' +
+      '</div>';
+  });
+  container.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════ */
+/* DASHBOARD                               */
+/* ═══════════════════════════════════════ */
+function renderDashboard() {
+  const participants = getParticipants();
+  const checkins = getCheckins();
+
+  // Today's checkins
+  const today = new Date().toDateString();
+  const todayCheckins = checkins.filter(function(c) {
+    if (typeof c.time === 'string' && c.time.length <= 5) return true; // legacy HH:MM = today
+    var d = new Date(c.time); return !isNaN(d.getTime()) && d.toDateString() === today;
+  });
+  const uniqueToday = new Set(todayCheckins.map(c => c.participantId)).size;
+
+  // Stats
+  document.getElementById('dash-stats').innerHTML =
+    '<div class="stat-card">' +
+      '<div class="label">총 등록자</div>' +
+      '<div class="value">' + participants.length + '</div>' +
+      '<div class="sub">명</div>' +
+    '</div>' +
+    '<div class="stat-card">' +
+      '<div class="label">오늘 체크인</div>' +
+      '<div class="value">' + todayCheckins.length + '</div>' +
+      '<div class="sub">건</div>' +
+    '</div>' +
+    '<div class="stat-card">' +
+      '<div class="label">오늘 방문자</div>' +
+      '<div class="value">' + uniqueToday + '</div>' +
+      '<div class="sub">명 (중복제외)</div>' +
+    '</div>' +
+    '<div class="stat-card">' +
+      '<div class="label">전체 체크인</div>' +
+      '<div class="value">' + checkins.length + '</div>' +
+      '<div class="sub">건 누적</div>' +
+    '</div>';
+
+  // Zone summary
+  const zoneCounts = {A:0,B:0,C:0,D:0,E:0};
+  todayCheckins.forEach(function(c) {
+    const prog = PROGRAMS.find(p => p.id === c.progId);
+    if (prog) zoneCounts[prog.zone]++;
+  });
+
+  let zoneHtml = '';
+  ['A','B','C','D','E'].forEach(function(z) {
+    zoneHtml +=
+      '<div class="zone-card ' + ZONE_COLORS[z] + '">' +
+        '<div class="zone-label">' + z + '존</div>' +
+        '<div class="zone-count">' + zoneCounts[z] + '</div>' +
+        '<div class="zone-sub">' + (ZONE_NAMES[z] || '') + '</div>' +
+      '</div>';
+  });
+  document.getElementById('zone-summary').innerHTML = zoneHtml;
+
+  // Bar chart
+  const boothCounts = {};
+  PROGRAMS.forEach(function(p) { boothCounts[p.id] = 0; });
+  todayCheckins.forEach(function(c) {
+    if (boothCounts[c.progId] !== undefined) boothCounts[c.progId]++;
+  });
+  const maxCount = Math.max(1, ...Object.values(boothCounts));
+
+  let chartHtml = '';
+  PROGRAMS.forEach(function(p) {
+    const count = boothCounts[p.id] || 0;
+    const pct = (count / maxCount) * 100;
+    chartHtml +=
+      '<div class="bar-row">' +
+        '<div class="bar-label">' +
+          '<span class="zone-tag ' + ZONE_COLORS[p.zone] + '" style="font-size:.6rem;padding:1px 6px">' + p.zone + '</span>' +
+          p.icon + ' ' + p.name +
+        '</div>' +
+        '<div class="bar-track">' +
+          '<div class="bar-fill ' + ZONE_COLORS[p.zone] + '" style="width:' + (count > 0 ? Math.max(pct, 8) : 0) + '%">' +
+            (count > 0 ? count : '') +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  });
+  document.getElementById('booth-chart').innerHTML = chartHtml;
+
+  // Timeline
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const query = (document.getElementById('dash-search').value || '').trim().toLowerCase();
+  let checkins = getCheckins();
+
+  if (query) {
+    checkins = checkins.filter(function(c) {
+      return (c.participantId || '').toLowerCase().includes(query) ||
+             (c.participantName || '').toLowerCase().includes(query);
+    });
+  }
+
+  checkins = checkins.slice(0, 50);
+  const container = document.getElementById('dash-timeline');
+
+  if (checkins.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-light);font-size:.85rem">' +
+      (query ? '검색 결과가 없습니다' : '아직 체크인 기록이 없습니다') + '</div>';
+    return;
+  }
+
+  let html = '';
+  checkins.forEach(function(c) {
+    const program = PROGRAMS.find(p => p.id === c.progId);
+    const zone = program ? program.zone : 'a';
+    var timeStr, dateStr;
+    if (typeof c.time === 'string' && c.time.length <= 5) {
+      timeStr = c.time;
+      dateStr = '오늘';
+    } else {
+      var t = new Date(c.time);
+      if (isNaN(t.getTime())) { timeStr = c.time || '--:--'; dateStr = ''; }
+      else { timeStr = formatTime(t); dateStr = (t.getMonth()+1) + '/' + t.getDate(); }
+    }
+    var nameStr = c.participantName || c.participantId || c.type || '참가자';
+    var idStr = c.participantId || '';
+    html +=
+      '<div class="timeline-item">' +
+        '<div class="timeline-dot" style="background:var(--zone-' + ZONE_COLORS[zone] + ')"></div>' +
+        '<div style="flex:1">' +
+          '<div style="font-weight:600;font-size:.85rem">' +
+            nameStr +
+            (idStr ? ' <span style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-light)">' + idStr + '</span>' : '') +
+          '</div>' +
+          '<div style="font-size:.78rem;color:var(--text-sub)">' +
+            (program ? program.icon + ' ' + program.name : c.boothName || '') +
+          '</div>' +
+        '</div>' +
+        '<div style="font-family:var(--font-mono);font-size:.72rem;color:var(--text-light);text-align:right;white-space:nowrap">' +
+          dateStr + '<br>' + timeStr +
+        '</div>' +
+      '</div>';
+  });
+  container.innerHTML = html;
+}
+
+/* ═══════════════════════════════════════ */
+/* CSV EXPORT                              */
+/* ═══════════════════════════════════════ */
+function exportCSV() {
+  const checkins = getCheckins();
+  if (checkins.length === 0) {
+    showToast('내보낼 데이터가 없습니다', 'warn');
+    return;
+  }
+
+  const header = '참가자ID,이름,학교,부스ID,부스명,존,체크인시간,유형\n';
+  const rows = checkins.map(function(c) {
+    const prog = PROGRAMS.find(p => p.id === c.progId);
+    const participant = getParticipants().find(p => p.id === c.participantId);
+    return [
+      c.participantId,
+      c.participantName || '',
+      participant ? participant.school : (c.participantSchool || ''),
+      c.progId,
+      prog ? prog.name : (c.boothName || ''),
+      prog ? prog.zone : (c.zone || ''),
+      c.time,
+      c.type || 'qr'
+    ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\n');
+
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + header + rows], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const now = new Date();
+  a.download = 'dreamfest_checkins_' +
+    now.getFullYear() + (now.getMonth()+1+'').padStart(2,'0') + (now.getDate()+'').padStart(2,'0') + '.csv';
+  a.href = url;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV 파일이 다운로드되었습니다');
+}
+
+/* ═══════════════════════════════════════ */
+/* UTILITIES                               */
+/* ═══════════════════════════════════════ */
+function formatTime(d) {
+  const h = (d.getHours() + '').padStart(2, '0');
+  const m = (d.getMinutes() + '').padStart(2, '0');
+  return h + ':' + m;
+}
+
+function showToast(msg, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast' + (type ? ' ' + type : '');
+  requestAnimationFrame(function() {
+    toast.classList.add('show');
+  });
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(function() {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+/* ═══════════════════════════════════════ */
+/* CROSS-TAB SYNC                          */
+/* ═══════════════════════════════════════ */
+window.addEventListener('storage', function(e) {
+  if (e.key === 'dreamfest_qr_participants') updateRegCount();
+  if (e.key === 'dreamfest_checkins') {
+    renderRecentCheckins();
+    if (document.getElementById('view-dashboard').classList.contains('active')) {
+      renderDashboard();
+    }
+  }
+});
+
+/* ═══════════════════════════════════════ */
+/* INIT                                    */
+/* ═══════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function() {
+  populateBoothSelect();
+  updateRegCount();
+});
+</script>
+<script src="sync-client.js"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}</script>
+<script>
+// Sync QR check-in data with server
+if(window.DreamSync){
+  DreamSync.on('checkin:new',function(d){
+    if(typeof renderRecentCheckins==='function') renderRecentCheckins();
+    if(typeof updateDashboardStats==='function') updateDashboardStats();
+  });
+  DreamSync.on('participant:new',function(d){
+    if(typeof updateRegCount==='function') updateRegCount();
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스마트팜 관제 · Smart Farm Controller</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --zone: #6BAF3A;
+  --zone-dark: #4E8A25;
+  --zone-light: #C8E8A0;
+  --zone-pale: #EAF5D8;
+  --bg: #F7F6F3;
+  --dark: #1A1A1A;
+  --white: #FFFFFF;
+  --text: #2D2D2D;
+  --muted: #8A8A8A;
+  --border: #E2E0DA;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,.07);
+  --shadow-md: 0 4px 24px rgba(0,0,0,.12);
+  --red: #E84040;
+  --orange: #F07020;
+  --yellow: #F5C400;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  background-image: radial-gradient(circle, #D0CEC9 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ─── TOP BAR ─── */
+#topbar {
+  background: var(--zone);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 16px rgba(107,175,58,.4);
+}
+#topbar .title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  background: rgba(255,255,255,.22);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: background .2s;
+}
+.back-btn:hover { background: rgba(255,255,255,.38); }
+.zone-badge {
+  background: rgba(255,255,255,.22);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ─── MAIN WRAPPER ─── */
+#main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+/* ─── CROP SELECTION ─── */
+#crop-select-section {
+  margin-bottom: 20px;
+}
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  margin-bottom: 12px;
+}
+#crop-cards {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.crop-card {
+  flex: 1;
+  min-width: 120px;
+  background: var(--white);
+  border: 2.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all .2s;
+  position: relative;
+}
+.crop-card:hover {
+  border-color: var(--zone);
+  background: var(--zone-pale);
+}
+.crop-card.active {
+  border-color: var(--zone);
+  background: var(--zone-pale);
+  box-shadow: 0 0 0 3px rgba(107,175,58,.2);
+}
+.crop-emoji {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 6px;
+}
+.crop-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--dark);
+}
+.crop-badge {
+  display: inline-block;
+  margin-top: 5px;
+  background: #FFD700;
+  color: #7A5400;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 8px;
+}
+.crop-badge.hidden { visibility: hidden; }
+
+/* ─── CONTROL AREA ─── */
+#control-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 700px) {
+  #control-area { grid-template-columns: 1fr; }
+}
+
+/* ─── GREENHOUSE SVG PANEL ─── */
+#greenhouse-panel {
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  border: 1.5px solid var(--border);
+}
+
+#greenhouse-panel h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#gh-svg-wrap {
+  width: 100%;
+  aspect-ratio: 4/3;
+  position: relative;
+}
+
+/* ─── HEALTH GAUGE ─── */
+#health-section {
+  margin-bottom: 16px;
+}
+.health-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.health-label {
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+}
+#health-score-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--zone);
+}
+#health-status-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: right;
+  max-width: 200px;
+}
+
+/* semicircle gauge */
+.gauge-wrap {
+  width: 160px;
+  margin: 0 auto 8px;
+  position: relative;
+}
+.gauge-svg { width: 100%; }
+
+/* warning badges */
+#warning-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 28px;
+  margin-bottom: 12px;
+}
+.warn-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #FDEAEA;
+  border: 1.5px solid #E84040;
+  color: #C00;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  animation: pulseBadge 1.2s ease-in-out infinite;
+}
+@keyframes pulseBadge {
+  0%,100% { opacity: 1; }
+  50% { opacity: .6; }
+}
+.warn-badge.pest {
+  background: #FFF3E8;
+  border-color: var(--orange);
+  color: #A04000;
+}
+
+/* ─── SENSOR SLIDERS ─── */
+#sensor-panel {
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  border: 1.5px solid var(--border);
+}
+#sensor-panel h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sensor-row {
+  margin-bottom: 18px;
+}
+.sensor-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+.sensor-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark);
+}
+.sensor-value-display {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+}
+.sensor-range-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+/* slider track wrapper */
+.slider-track-wrap {
+  position: relative;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+.slider-bg {
+  position: absolute;
+  width: 100%;
+  height: 8px;
+  background: #EEE;
+  border-radius: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.slider-optimal {
+  position: absolute;
+  height: 8px;
+  background: var(--zone-light);
+  border-radius: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: all .2s;
+}
+.slider-fill {
+  position: absolute;
+  height: 8px;
+  background: var(--zone);
+  border-radius: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: width .15s;
+  left: 0;
+}
+input[type=range].sensor-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  outline: none;
+}
+input[type=range].sensor-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--zone);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,.25);
+  transition: transform .15s;
+}
+input[type=range].sensor-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+input[type=range].sensor-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--zone);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,.25);
+}
+input[type=range].sensor-slider.warn::-webkit-slider-thumb {
+  background: var(--red);
+}
+input[type=range].sensor-slider.warn::-moz-range-thumb {
+  background: var(--red);
+}
+
+/* ─── AI DIAGNOSE BUTTON ─── */
+#diagnose-btn {
+  width: 100%;
+  padding: 13px;
+  background: var(--zone);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+#diagnose-btn:hover { background: var(--zone-dark); transform: translateY(-1px); }
+#diagnose-btn:active { transform: translateY(0); }
+
+/* ─── AI REPORT ─── */
+#ai-report {
+  margin-top: 16px;
+  background: var(--zone-pale);
+  border: 1.5px solid var(--zone-light);
+  border-radius: 14px;
+  padding: 16px;
+  display: none;
+}
+#ai-report.show { display: block; }
+#ai-report h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--zone-dark);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.report-item {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.report-icon { flex-shrink: 0; font-size: 14px; }
+.report-text { color: var(--text); }
+.report-text strong { color: var(--dark); }
+
+/* ─── RESULT / STAMP SECTION ─── */
+#result-section {
+  margin-top: 20px;
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 24px;
+  text-align: center;
+  display: none;
+  border: 1.5px solid var(--border);
+}
+#result-section.show { display: block; }
+.result-score-big {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.result-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.result-breakdown {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.result-breakdown-item {
+  text-align: center;
+}
+.result-breakdown-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+.result-breakdown-name {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.stamp-earn-btn {
+  padding: 12px 32px;
+  background: var(--zone);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s;
+}
+.stamp-earn-btn:hover { background: var(--zone-dark); }
+
+/* ─── STAMP OVERLAY ─── */
+#stamp-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 999;
+  align-items: center;
+  justify-content: center;
+}
+#stamp-overlay.show { display: flex; }
+.stamp-modal {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 36px 32px;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  animation: stampIn .35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes stampIn {
+  from { transform: scale(.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.stamp-big { font-size: 72px; margin-bottom: 16px; }
+.stamp-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+.stamp-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+.stamp-close-btn {
+  padding: 12px 28px;
+  background: var(--zone);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="title">🌱 스마트팜 관제</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span class="zone-badge">D존 · 미래직업 시뮬레이션</span>
+    <button class="back-btn" onclick="goBack()">← 대시보드</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- CROP SELECTION -->
+  <div id="crop-select-section">
+    <div class="section-title">작물 선택</div>
+    <div id="crop-cards">
+      <div class="crop-card active" data-crop="tomato" onclick="selectCrop('tomato')">
+        <span class="crop-emoji">🍅</span>
+        <div class="crop-name">토마토</div>
+        <span class="crop-badge hidden">영천 특산</span>
+      </div>
+      <div class="crop-card" data-crop="lettuce" onclick="selectCrop('lettuce')">
+        <span class="crop-emoji">🥬</span>
+        <div class="crop-name">상추</div>
+        <span class="crop-badge hidden">영천 특산</span>
+      </div>
+      <div class="crop-card" data-crop="strawberry" onclick="selectCrop('strawberry')">
+        <span class="crop-emoji">🍓</span>
+        <div class="crop-name">딸기</div>
+        <span class="crop-badge hidden">영천 특산</span>
+      </div>
+      <div class="crop-card" data-crop="grape" onclick="selectCrop('grape')">
+        <span class="crop-emoji">🍇</span>
+        <div class="crop-name">포도</div>
+        <span class="crop-badge">영천 특산</span>
+      </div>
+      <div class="crop-card" data-crop="apple" onclick="selectCrop('apple')">
+        <span class="crop-emoji">🍎</span>
+        <div class="crop-name">사과</div>
+        <span class="crop-badge">영천 특산</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEALTH GAUGE -->
+  <div id="health-section">
+    <div style="background:var(--white);border-radius:16px;box-shadow:var(--shadow);padding:16px;border:1.5px solid var(--border);display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+      <div class="gauge-wrap" style="flex-shrink:0;">
+        <svg class="gauge-svg" viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg">
+          <!-- bg arc -->
+          <path d="M 12 88 A 68 68 0 0 1 148 88" fill="none" stroke="#EEE" stroke-width="14" stroke-linecap="round"/>
+          <!-- colored arc -->
+          <path id="gauge-arc" d="M 12 88 A 68 68 0 0 1 148 88" fill="none" stroke="#6BAF3A" stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="213" stroke-dashoffset="0"/>
+          <!-- score text -->
+          <text id="gauge-score-txt" x="80" y="76" text-anchor="middle" font-size="26" font-weight="800" font-family="Space Grotesk,sans-serif" fill="#1A1A1A">100</text>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:200px;">
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">작물 건강도</div>
+        <div id="health-status-text" style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:8px;">최적 상태입니다 🎉</div>
+        <div id="warning-row"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTROL AREA -->
+  <div id="control-area">
+
+    <!-- GREENHOUSE SVG -->
+    <div id="greenhouse-panel">
+      <h3>🏡 온실 현황</h3>
+      <div id="gh-svg-wrap">
+        <svg id="gh-svg" viewBox="0 0 420 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+          <!-- sky bg -->
+          <rect width="420" height="320" fill="#E8F5D8" rx="12"/>
+          <!-- ground -->
+          <rect x="0" y="250" width="420" height="70" fill="#8B6A3A" rx="0 0 12 12"/>
+          <rect x="0" y="250" width="420" height="12" fill="#6B4E2A"/>
+          <!-- soil rows -->
+          <rect x="30" y="253" width="60" height="4" fill="#5A3E1A" rx="2"/>
+          <rect x="110" y="253" width="60" height="4" fill="#5A3E1A" rx="2"/>
+          <rect x="190" y="253" width="60" height="4" fill="#5A3E1A" rx="2"/>
+          <rect x="270" y="253" width="60" height="4" fill="#5A3E1A" rx="2"/>
+          <rect x="350" y="253" width="40" height="4" fill="#5A3E1A" rx="2"/>
+
+          <!-- greenhouse structure - arch -->
+          <path d="M 30 250 L 30 140 Q 30 40 210 40 Q 390 40 390 140 L 390 250 Z"
+                fill="rgba(200,240,180,0.35)" stroke="#6BAF3A" stroke-width="3"/>
+          <!-- glass panels -->
+          <path d="M 30 250 L 30 140 Q 30 40 210 40" fill="none" stroke="rgba(107,175,58,.4)" stroke-width="1.5" stroke-dasharray="8,5"/>
+          <path d="M 390 250 L 390 140 Q 390 40 210 40" fill="none" stroke="rgba(107,175,58,.4)" stroke-width="1.5" stroke-dasharray="8,5"/>
+          <!-- horizontal rib -->
+          <path d="M 60 200 Q 210 160 360 200" fill="none" stroke="rgba(107,175,58,.5)" stroke-width="1.5"/>
+          <path d="M 45 170 Q 210 118 375 170" fill="none" stroke="rgba(107,175,58,.5)" stroke-width="1.5"/>
+          <path d="M 38 140 Q 210 88 382 140" fill="none" stroke="rgba(107,175,58,.4)" stroke-width="1.5"/>
+          <!-- door -->
+          <rect x="176" y="208" width="68" height="42" fill="rgba(200,240,180,0.6)" stroke="#6BAF3A" stroke-width="2" rx="4 4 0 0"/>
+          <circle cx="236" cy="230" r="3" fill="#6BAF3A"/>
+
+          <!-- crop group - 5 plants -->
+          <g id="crop-group">
+            <!-- plant 1 -->
+            <line x1="60" y1="250" x2="60" y2="215" stroke="#3A7D22" stroke-width="3"/>
+            <text x="60" y="212" text-anchor="middle" font-size="22" id="crop-e1">🍅</text>
+            <!-- plant 2 -->
+            <line x1="120" y1="250" x2="120" y2="210" stroke="#3A7D22" stroke-width="3"/>
+            <text x="120" y="207" text-anchor="middle" font-size="26" id="crop-e2">🍅</text>
+            <!-- plant 3 (center, biggest) -->
+            <line x1="210" y1="250" x2="210" y2="202" stroke="#3A7D22" stroke-width="3"/>
+            <text x="210" y="198" text-anchor="middle" font-size="30" id="crop-e3">🍅</text>
+            <!-- plant 4 -->
+            <line x1="300" y1="250" x2="300" y2="210" stroke="#3A7D22" stroke-width="3"/>
+            <text x="300" y="207" text-anchor="middle" font-size="26" id="crop-e4">🍅</text>
+            <!-- plant 5 -->
+            <line x1="360" y1="250" x2="360" y2="215" stroke="#3A7D22" stroke-width="3"/>
+            <text x="360" y="212" text-anchor="middle" font-size="22" id="crop-e5">🍅</text>
+          </g>
+
+          <!-- sensor icons -->
+          <!-- temperature sensor top-left inside -->
+          <g transform="translate(55,70)">
+            <rect x="-22" y="-16" width="44" height="32" fill="white" rx="6" opacity=".9"/>
+            <text x="0" y="-2" text-anchor="middle" font-size="14">🌡️</text>
+            <text id="svg-temp" x="0" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#E84040" font-family="Space Grotesk,sans-serif">22°C</text>
+          </g>
+          <!-- humidity sensor top-right inside -->
+          <g transform="translate(365,70)">
+            <rect x="-22" y="-16" width="44" height="32" fill="white" rx="6" opacity=".9"/>
+            <text x="0" y="-2" text-anchor="middle" font-size="14">💧</text>
+            <text id="svg-hum" x="0" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#3A8AE8" font-family="Space Grotesk,sans-serif">70%</text>
+          </g>
+          <!-- soil sensor left side -->
+          <g transform="translate(55,175)">
+            <rect x="-22" y="-16" width="44" height="32" fill="white" rx="6" opacity=".9"/>
+            <text x="0" y="-2" text-anchor="middle" font-size="14">🌱</text>
+            <text id="svg-soil" x="0" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#6BAF3A" font-family="Space Grotesk,sans-serif">50%</text>
+          </g>
+          <!-- light sensor top-center -->
+          <g transform="translate(210,65)">
+            <rect x="-24" y="-16" width="48" height="32" fill="white" rx="6" opacity=".9"/>
+            <text x="0" y="-2" text-anchor="middle" font-size="14">☀️</text>
+            <text id="svg-lux" x="0" y="11" text-anchor="middle" font-size="9" font-weight="700" fill="#F5C400" font-family="Space Grotesk,sans-serif">30klx</text>
+          </g>
+
+          <!-- pest warning group (hidden by default) -->
+          <g id="pest-group" opacity="0">
+            <text x="95" y="230" font-size="18" id="pest-e1">🐛</text>
+            <text x="315" y="225" font-size="18" id="pest-e2">🦠</text>
+            <circle cx="100" cy="222" r="12" fill="none" stroke="#E84040" stroke-width="2" opacity=".8">
+              <animate attributeName="r" values="10;16;10" dur="1.2s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values=".8;0;.8" dur="1.2s" repeatCount="indefinite"/>
+            </circle>
+          </g>
+
+          <!-- wilting overlay (hidden) -->
+          <g id="wilt-overlay" opacity="0">
+            <text x="148" y="242" font-size="22" opacity=".7">😿</text>
+            <text x="238" y="238" font-size="22" opacity=".7">😿</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- SENSOR SLIDERS -->
+    <div id="sensor-panel">
+      <h3>📡 환경 센서 조절</h3>
+
+      <!-- Temperature -->
+      <div class="sensor-row">
+        <div class="sensor-label-row">
+          <span class="sensor-name">🌡️ 온도</span>
+          <span class="sensor-value-display" id="val-temp" style="color:var(--red)">22°C</span>
+        </div>
+        <div class="sensor-range-hint" id="hint-temp">최적 범위: 20–28°C</div>
+        <div class="slider-track-wrap">
+          <div class="slider-bg"></div>
+          <div class="slider-optimal" id="opt-temp"></div>
+          <div class="slider-fill" id="fill-temp"></div>
+          <input type="range" class="sensor-slider" id="sl-temp"
+                 min="0" max="50" value="22"
+                 oninput="onSlider('temp',this.value)">
+        </div>
+      </div>
+
+      <!-- Humidity -->
+      <div class="sensor-row">
+        <div class="sensor-label-row">
+          <span class="sensor-name">💧 습도</span>
+          <span class="sensor-value-display" id="val-hum" style="color:#3A8AE8">70%</span>
+        </div>
+        <div class="sensor-range-hint" id="hint-hum">최적 범위: 60–80%</div>
+        <div class="slider-track-wrap">
+          <div class="slider-bg"></div>
+          <div class="slider-optimal" id="opt-hum"></div>
+          <div class="slider-fill" id="fill-hum"></div>
+          <input type="range" class="sensor-slider" id="sl-hum"
+                 min="0" max="100" value="70"
+                 oninput="onSlider('hum',this.value)">
+        </div>
+      </div>
+
+      <!-- Soil Moisture -->
+      <div class="sensor-row">
+        <div class="sensor-label-row">
+          <span class="sensor-name">🌱 토양수분</span>
+          <span class="sensor-value-display" id="val-soil" style="color:var(--zone-dark)">50%</span>
+        </div>
+        <div class="sensor-range-hint" id="hint-soil">최적 범위: 40–60%</div>
+        <div class="slider-track-wrap">
+          <div class="slider-bg"></div>
+          <div class="slider-optimal" id="opt-soil"></div>
+          <div class="slider-fill" id="fill-soil"></div>
+          <input type="range" class="sensor-slider" id="sl-soil"
+                 min="0" max="100" value="50"
+                 oninput="onSlider('soil',this.value)">
+        </div>
+      </div>
+
+      <!-- Light -->
+      <div class="sensor-row">
+        <div class="sensor-label-row">
+          <span class="sensor-name">☀️ 조도</span>
+          <span class="sensor-value-display" id="val-lux" style="color:#D4A017">30000 lux</span>
+        </div>
+        <div class="sensor-range-hint" id="hint-lux">최적 범위: 20000–40000 lux</div>
+        <div class="slider-track-wrap">
+          <div class="slider-bg"></div>
+          <div class="slider-optimal" id="opt-lux"></div>
+          <div class="slider-fill" id="fill-lux"></div>
+          <input type="range" class="sensor-slider" id="sl-lux"
+                 min="0" max="60000" value="30000" step="1000"
+                 oninput="onSlider('lux',this.value)">
+        </div>
+      </div>
+
+      <!-- AI Diagnose Button -->
+      <button id="diagnose-btn" onclick="runDiagnose()">
+        🤖 AI 진단 분석
+      </button>
+
+      <!-- AI Report -->
+      <div id="ai-report">
+        <h4>🤖 AI 분석 리포트</h4>
+        <div id="ai-report-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT SECTION -->
+  <div id="result-section">
+    <div id="result-score-big" class="result-score-big" style="color:var(--zone)">87</div>
+    <div class="result-label">최적화 점수</div>
+    <div class="result-breakdown" id="result-breakdown"></div>
+    <button class="stamp-earn-btn" onclick="earnStamp()">🎫 스탬프 획득하기</button>
+  </div>
+
+</div><!-- /main -->
+
+<!-- STAMP OVERLAY -->
+<div id="stamp-overlay">
+  <div class="stamp-modal">
+    <div class="stamp-big">🎫</div>
+    <div class="stamp-title">스탬프 획득!</div>
+    <div class="stamp-sub">스마트팜 관제 체험 완료<br>미래 농업 전문가가 되셨어요 🌱</div>
+    <button class="stamp-close-btn" onclick="closeStamp()">계속하기</button>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   CROP DATA
+───────────────────────────────────────────── */
+const CROPS = {
+  tomato:     { name:'토마토', emoji:'🍅', temp:[20,28], hum:[60,80], soil:[40,60], lux:[20000,40000] },
+  lettuce:    { name:'상추',   emoji:'🥬', temp:[15,22], hum:[50,70], soil:[50,70], lux:[10000,25000] },
+  strawberry: { name:'딸기',   emoji:'🍓', temp:[18,25], hum:[55,75], soil:[45,65], lux:[15000,35000] },
+  grape:      { name:'포도',   emoji:'🍇', temp:[22,30], hum:[50,65], soil:[35,55], lux:[25000,45000] },
+  apple:      { name:'사과',   emoji:'🍎', temp:[18,26], hum:[50,70], soil:[40,60], lux:[20000,40000] },
+};
+
+const SLIDER_CONFIG = {
+  temp:  { min:0,  max:50,    unit:'°C',   label:'온도',     step:1 },
+  hum:   { min:0,  max:100,   unit:'%',    label:'습도',     step:1 },
+  soil:  { min:0,  max:100,   unit:'%',    label:'토양수분', step:1 },
+  lux:   { min:0,  max:60000, unit:' lux', label:'조도',     step:1000 },
+};
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+let currentCrop = 'tomato';
+let sensors = { temp:22, hum:70, soil:50, lux:30000 };
+let stampGiven = false;
+let diagnoseCount = 0;
+
+/* ─────────────────────────────────────────────
+   CROP SELECTION
+───────────────────────────────────────────── */
+function selectCrop(cropKey) {
+  currentCrop = cropKey;
+  document.querySelectorAll('.crop-card').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[data-crop="${cropKey}"]`).classList.add('active');
+
+  // update crop emoji in SVG
+  const emoji = CROPS[cropKey].emoji;
+  ['1','2','3','4','5'].forEach(i => {
+    document.getElementById('crop-e' + i).textContent = emoji;
+  });
+
+  // update optimal range hints and sliders
+  updateAllOptimalBars();
+  updateHealth();
+  document.getElementById('ai-report').classList.remove('show');
+}
+
+/* ─────────────────────────────────────────────
+   SLIDER INTERACTION
+───────────────────────────────────────────── */
+function onSlider(key, rawVal) {
+  sensors[key] = parseFloat(rawVal);
+  updateDisplay(key);
+  updateHealth();
+  document.getElementById('ai-report').classList.remove('show');
+}
+
+function updateDisplay(key) {
+  const v = sensors[key];
+  const cfg = SLIDER_CONFIG[key];
+  const crop = CROPS[currentCrop];
+  const [lo, hi] = crop[key];
+  const inRange = v >= lo && v <= hi;
+
+  // value label
+  let displayVal;
+  if (key === 'lux') {
+    displayVal = v >= 1000 ? Math.round(v/1000*10)/10 + 'k lux' : v + ' lux';
+  } else {
+    displayVal = v + cfg.unit;
+  }
+  document.getElementById('val-' + key).textContent = displayVal;
+
+  // slider warn class
+  const sl = document.getElementById('sl-' + key);
+  if (inRange) sl.classList.remove('warn');
+  else sl.classList.add('warn');
+
+  // fill bar
+  const pct = (v - cfg.min) / (cfg.max - cfg.min) * 100;
+  document.getElementById('fill-' + key).style.width = pct + '%';
+
+  // SVG sensor label
+  updateSvgSensor(key, v);
+}
+
+function updateSvgSensor(key, v) {
+  const svgMap = { temp:'svg-temp', hum:'svg-hum', soil:'svg-soil', lux:'svg-lux' };
+  const el = document.getElementById(svgMap[key]);
+  if (!el) return;
+  if (key === 'temp') el.textContent = v + '°C';
+  else if (key === 'hum') el.textContent = v + '%';
+  else if (key === 'soil') el.textContent = v + '%';
+  else if (key === 'lux') el.textContent = Math.round(v/1000) + 'klx';
+}
+
+function updateAllOptimalBars() {
+  const crop = CROPS[currentCrop];
+  Object.keys(SLIDER_CONFIG).forEach(key => {
+    const cfg = SLIDER_CONFIG[key];
+    const [lo, hi] = crop[key];
+    const range = cfg.max - cfg.min;
+    const leftPct = (lo - cfg.min) / range * 100;
+    const widthPct = (hi - lo) / range * 100;
+    const bar = document.getElementById('opt-' + key);
+    bar.style.left = leftPct + '%';
+    bar.style.width = widthPct + '%';
+
+    // update hint text
+    const hintEl = document.getElementById('hint-' + key);
+    if (hintEl) {
+      if (key === 'lux') {
+        hintEl.textContent = `최적 범위: ${lo/1000}k–${hi/1000}k lux`;
+      } else {
+        hintEl.textContent = `최적 범위: ${lo}–${hi}${cfg.unit}`;
+      }
+    }
+
+    updateDisplay(key);
+  });
+}
+
+/* ─────────────────────────────────────────────
+   HEALTH CALCULATION
+───────────────────────────────────────────── */
+function calcScore() {
+  const crop = CROPS[currentCrop];
+  let total = 0;
+  const keys = ['temp','hum','soil','lux'];
+
+  keys.forEach(key => {
+    const v = sensors[key];
+    const [lo, hi] = crop[key];
+    const mid = (lo + hi) / 2;
+    const half = (hi - lo) / 2;
+    if (v >= lo && v <= hi) {
+      // perfect = 25, slightly off center = 20-25
+      const deviation = Math.abs(v - mid) / half;
+      total += 25 * (1 - deviation * 0.15);
+    } else {
+      // out of range penalty
+      const over = v > hi ? v - hi : lo - v;
+      const rangeSize = hi - lo;
+      const penalty = Math.min(1, over / rangeSize);
+      total += 25 * Math.max(0, 1 - penalty * 1.8);
+    }
+  });
+  return Math.round(Math.max(0, Math.min(100, total)));
+}
+
+function calcKeyScore(key) {
+  const crop = CROPS[currentCrop];
+  const v = sensors[key];
+  const [lo, hi] = crop[key];
+  const mid = (lo + hi) / 2;
+  const half = (hi - lo) / 2;
+  if (v >= lo && v <= hi) {
+    const deviation = Math.abs(v - mid) / half;
+    return Math.round(100 * (1 - deviation * 0.15));
+  } else {
+    const over = v > hi ? v - hi : lo - v;
+    const rangeSize = hi - lo;
+    const penalty = Math.min(1, over / rangeSize);
+    return Math.round(100 * Math.max(0, 1 - penalty * 1.8));
+  }
+}
+
+function getWarnings() {
+  const crop = CROPS[currentCrop];
+  const warnings = [];
+  const keys = ['temp','hum','soil','lux'];
+  const keyLabels = { temp:'온도', hum:'습도', soil:'토양수분', lux:'조도' };
+
+  keys.forEach(key => {
+    const v = sensors[key];
+    const [lo, hi] = crop[key];
+    if (v < lo) warnings.push({ key, type:'low', label: keyLabels[key] + ' 낮음' });
+    else if (v > hi) warnings.push({ key, type:'high', label: keyLabels[key] + ' 높음' });
+  });
+  return warnings;
+}
+
+function hasPestRisk(score) {
+  const crop = CROPS[currentCrop];
+  const tempOk = sensors.temp >= crop.temp[0] && sensors.temp <= crop.temp[1];
+  const humOk = sensors.hum >= crop.hum[0] && sensors.hum <= crop.hum[1];
+  return !tempOk || !humOk || score < 55;
+}
+
+function updateHealth() {
+  const score = calcScore();
+  const warnings = getWarnings();
+  const pestRisk = hasPestRisk(score);
+
+  // gauge arc
+  const maxDash = 213;
+  const dashOffset = maxDash * (1 - score / 100);
+  const arc = document.getElementById('gauge-arc');
+  arc.setAttribute('stroke-dashoffset', dashOffset);
+
+  // arc color
+  let arcColor;
+  if (score >= 75) arcColor = '#6BAF3A';
+  else if (score >= 45) arcColor = '#F5C400';
+  else arcColor = '#E84040';
+  arc.setAttribute('stroke', arcColor);
+
+  // score text
+  document.getElementById('gauge-score-txt').textContent = score;
+
+  // status text
+  const statusEl = document.getElementById('health-status-text');
+  if (score >= 80) statusEl.textContent = '최적 상태입니다 🎉';
+  else if (score >= 60) statusEl.textContent = '양호한 상태입니다 👍';
+  else if (score >= 40) statusEl.textContent = '주의가 필요합니다 ⚠️';
+  else statusEl.textContent = '위험! 즉각 조치 필요 🚨';
+
+  // warning badges
+  const warningRow = document.getElementById('warning-row');
+  warningRow.innerHTML = '';
+  warnings.forEach(w => {
+    const badge = document.createElement('span');
+    badge.className = 'warn-badge';
+    badge.textContent = '⚠️ ' + w.label;
+    warningRow.appendChild(badge);
+  });
+  if (pestRisk && score < 65) {
+    const pb = document.createElement('span');
+    pb.className = 'warn-badge pest';
+    pb.textContent = '🐛 병충해 위험';
+    warningRow.appendChild(pb);
+  }
+
+  // SVG pest + wilt
+  const pestGroup = document.getElementById('pest-group');
+  const wiltOverlay = document.getElementById('wilt-overlay');
+  pestGroup.setAttribute('opacity', (pestRisk && score < 55) ? '1' : '0');
+  wiltOverlay.setAttribute('opacity', (score < 35) ? '1' : '0');
+}
+
+/* ─────────────────────────────────────────────
+   AI DIAGNOSE
+───────────────────────────────────────────── */
+function runDiagnose() {
+  diagnoseCount++;
+  const crop = CROPS[currentCrop];
+  const score = calcScore();
+  const warnings = getWarnings();
+  const keyLabels = { temp:'온도', hum:'습도', soil:'토양수분', lux:'조도' };
+
+  const items = [];
+
+  // Overall
+  if (score >= 80) {
+    items.push({ icon:'✅', text:`<strong>종합 판정: 최적</strong> — ${crop.name} 생육에 매우 적합한 환경입니다. (점수: ${score}/100)` });
+  } else if (score >= 60) {
+    items.push({ icon:'🟡', text:`<strong>종합 판정: 양호</strong> — 일부 환경 개선이 필요합니다. (점수: ${score}/100)` });
+  } else if (score >= 40) {
+    items.push({ icon:'⚠️', text:`<strong>종합 판정: 주의</strong> — 여러 환경 요소가 최적 범위를 벗어났습니다. (점수: ${score}/100)` });
+  } else {
+    items.push({ icon:'🚨', text:`<strong>종합 판정: 위험</strong> — 즉각적인 환경 조치가 필요합니다. (점수: ${score}/100)` });
+  }
+
+  // Per-sensor feedback
+  if (warnings.length === 0) {
+    items.push({ icon:'🌡️', text:'모든 센서 값이 최적 범위 안에 있습니다.' });
+  } else {
+    warnings.forEach(w => {
+      const [lo, hi] = crop[w.key];
+      const unit = SLIDER_CONFIG[w.key].unit;
+      const cur = sensors[w.key];
+      if (w.type === 'low') {
+        items.push({ icon:'📉', text:`<strong>${keyLabels[w.key]}</strong>이 너무 낮습니다. 현재 ${cur}${unit} → 권장 ${lo}–${hi}${unit}로 올려주세요.` });
+      } else {
+        items.push({ icon:'📈', text:`<strong>${keyLabels[w.key]}</strong>이 너무 높습니다. 현재 ${cur}${unit} → 권장 ${lo}–${hi}${unit}로 낮춰주세요.` });
+      }
+    });
+  }
+
+  // Pest check
+  const pestRisk = hasPestRisk(score);
+  if (pestRisk && score < 65) {
+    items.push({ icon:'🐛', text:`<strong>병충해 경고</strong> — 온도/습도 불균형으로 해충·곰팡이 발생 위험이 높습니다. 환기 및 방제 조치를 취하세요.` });
+  } else {
+    items.push({ icon:'🛡️', text:`병충해 위험: 낮음 — 현재 환경에서 해충 발생 가능성이 낮습니다.` });
+  }
+
+  // Crop-specific tip
+  const tips = {
+    tomato:     '토마토는 충분한 광량과 환기가 핵심입니다. 잎이 노랗게 변하면 질소 부족을 확인하세요.',
+    lettuce:    '상추는 고온에 약하므로 여름철 차광 관리가 중요합니다. 적정 온도 유지가 생산성의 핵심입니다.',
+    strawberry: '딸기는 꽃가루 매개를 위해 습도 관리가 중요합니다. 과습 시 잿빛곰팡이병에 주의하세요.',
+    grape:      '포도(영천 특산)는 일교차가 클수록 당도가 올라갑니다. 조도를 높게 유지하면 색택이 향상됩니다.',
+    apple:      '사과(영천 특산)는 착색 향상을 위해 수확 2주 전 조도를 최대화하세요. 토양수분 안정이 열과 방지에 필수입니다.',
+  };
+  items.push({ icon:'💡', text:`<strong>작물 팁 (${crop.name})</strong> — ${tips[currentCrop]}` });
+
+  // Render
+  const body = document.getElementById('ai-report-body');
+  body.innerHTML = items.map(it =>
+    `<div class="report-item"><span class="report-icon">${it.icon}</span><span class="report-text">${it.text}</span></div>`
+  ).join('');
+
+  document.getElementById('ai-report').classList.add('show');
+
+  // Show result section if score is decent
+  if (score >= 50 || diagnoseCount >= 2) {
+    showResult(score);
+  }
+}
+
+/* ─────────────────────────────────────────────
+   RESULT
+───────────────────────────────────────────── */
+function showResult(score) {
+  const rs = document.getElementById('result-section');
+  rs.classList.add('show');
+
+  const bigEl = document.getElementById('result-score-big');
+  bigEl.textContent = score;
+  if (score >= 80) bigEl.style.color = '#6BAF3A';
+  else if (score >= 60) bigEl.style.color = '#D4A017';
+  else bigEl.style.color = '#E84040';
+
+  const keys = ['temp','hum','soil','lux'];
+  const labels = { temp:'온도', hum:'습도', soil:'토양수분', lux:'조도' };
+  const bd = document.getElementById('result-breakdown');
+  bd.innerHTML = keys.map(k => {
+    const s = calcKeyScore(k);
+    const color = s >= 80 ? '#6BAF3A' : s >= 55 ? '#D4A017' : '#E84040';
+    return `<div class="result-breakdown-item">
+      <div class="result-breakdown-val" style="color:${color}">${s}</div>
+      <div class="result-breakdown-name">${labels[k]}</div>
+    </div>`;
+  }).join('');
+
+  rs.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+/* ─────────────────────────────────────────────
+   STAMP
+───────────────────────────────────────────── */
+function earnStamp() {
+  const score = calcScore();
+  const PROG_ID = 11;
+
+  const stamps = JSON.parse(localStorage.getItem('dreamfest_stamps') || '{}');
+  stamps[PROG_ID] = { earned: true, ts: Date.now(), score };
+  localStorage.setItem('dreamfest_stamps', JSON.stringify(stamps));
+
+  const results = JSON.parse(localStorage.getItem('dreamfest_results') || '{}');
+  results[PROG_ID] = { completed: true, score, ts: Date.now(), crop: currentCrop };
+  localStorage.setItem('dreamfest_results', JSON.stringify(results));
+
+  stampGiven = true;
+  document.getElementById('stamp-overlay').classList.add('show');
+}
+
+function closeStamp() {
+  document.getElementById('stamp-overlay').classList.remove('show');
+}
+
+/* ─────────────────────────────────────────────
+   NAVIGATION
+───────────────────────────────────────────── */
+function goBack() {
+  window.location.href = '../index.html';
+}
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+function init() {
+  // Set initial slider values for tomato defaults
+  document.getElementById('sl-temp').value = 24;
+  document.getElementById('sl-hum').value = 70;
+  document.getElementById('sl-soil').value = 50;
+  document.getElementById('sl-lux').value = 30000;
+  sensors = { temp:24, hum:70, soil:50, lux:30000 };
+
+  updateAllOptimalBars();
+  updateHealth();
+}
+
+init();
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

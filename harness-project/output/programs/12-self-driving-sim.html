@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자율주행 시뮬레이터 · Self-Driving Simulator</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --zone: #6BAF3A;
+  --zone-dark: #569030;
+  --zone-light: #D8EFC4;
+  --zone-pale: #EDF7E0;
+  --bg: #F7F6F3;
+  --dark: #1A1A1A;
+  --white: #FFFFFF;
+  --text: #2D2D2D;
+  --muted: #8A8A8A;
+  --border: #E2E0DA;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,.07);
+  --shadow-md: 0 4px 24px rgba(0,0,0,.12);
+  --terminal-bg: #0D1117;
+  --terminal-text: #39FF14;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  background-image: radial-gradient(circle, #D0CEC9 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── TOP BAR ─── */
+#topbar {
+  background: var(--zone);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 16px rgba(107,175,58,.4);
+}
+#topbar .title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  background: rgba(255,255,255,.22);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: background .2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.back-btn:hover { background: rgba(255,255,255,.38); }
+.zone-badge {
+  background: rgba(255,255,255,.22);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ─── SCREENS ─── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ─── INTRO SCREEN ─── */
+#intro-screen {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+}
+.intro-hero {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.intro-hero .hero-icon {
+  font-size: 72px;
+  display: block;
+  margin-bottom: 16px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.intro-hero h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 10px;
+}
+.intro-hero p {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.info-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+@media (max-width: 480px) { .info-cards { grid-template-columns: 1fr; } }
+.info-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+.info-card .ic-icon { font-size: 28px; margin-bottom: 8px; }
+.info-card h3 { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+.info-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+.mode-select {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.mode-select h2 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--dark);
+}
+.mode-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 480px) { .mode-options { grid-template-columns: 1fr; } }
+.mode-opt {
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all .2s;
+  background: #fafafa;
+  position: relative;
+}
+.mode-opt:hover { border-color: var(--zone); background: var(--zone-pale); }
+.mode-opt.selected { border-color: var(--zone); background: var(--zone-pale); }
+.mode-opt.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--zone);
+  color: #fff;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+.mode-opt .mo-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+.mode-opt h3 { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+.mode-opt p { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+.start-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--zone);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 17px;
+  font-weight: 700;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+  box-shadow: 0 4px 14px rgba(107,175,58,.4);
+}
+.start-btn:hover { background: var(--zone-dark); transform: translateY(-1px); }
+.start-btn:active { transform: translateY(0); }
+
+/* ─── SIMULATION SCREEN ─── */
+#sim-screen {
+  display: none;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+}
+#sim-screen.active { display: flex; }
+
+/* HUD Bar */
+.hud {
+  background: var(--dark);
+  color: #fff;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--zone);
+  flex-shrink: 0;
+}
+.hud-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+}
+.hud-label { color: #888; font-size: 11px; }
+.hud-val { font-weight: 700; font-size: 16px; color: #fff; }
+.hud-val.green { color: var(--zone); }
+.hud-val.yellow { color: #FFC107; }
+.hud-val.red { color: #FF4444; }
+.mode-indicator {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.mode-indicator.auto { background: var(--zone); color: #fff; }
+.mode-indicator.manual { background: #2196F3; color: #fff; }
+
+/* Sim Body */
+.sim-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Canvas Area */
+.canvas-wrap {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  background: #1a1a2e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#simCanvas {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+.canvas-wrap.flash {
+  animation: redFlash .3s ease;
+}
+@keyframes redFlash {
+  0% { background: #1a1a2e; }
+  30% { background: rgba(255,0,0,.35); }
+  100% { background: #1a1a2e; }
+}
+.canvas-wrap.shake {
+  animation: shake .3s ease;
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* AI Log Panel */
+.log-panel {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--terminal-bg);
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid #222;
+  overflow: hidden;
+}
+@media (max-width: 700px) { .log-panel { display: none; } }
+.log-header {
+  padding: 10px 14px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  font-family: 'Space Grotesk', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--terminal-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.log-dot { width: 8px; height: 8px; background: var(--terminal-text); border-radius: 50%; animation: blink 1s infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
+.log-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.log-scroll::-webkit-scrollbar { width: 4px; }
+.log-scroll::-webkit-scrollbar-track { background: transparent; }
+.log-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+.log-entry {
+  font-family: 'Space Grotesk', 'Courier New', monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  padding: 3px 6px;
+  border-radius: 4px;
+  animation: logFade .3s ease;
+}
+@keyframes logFade { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+.log-entry.info { color: var(--terminal-text); }
+.log-entry.warn { color: #FFC107; }
+.log-entry.danger { color: #FF5555; }
+.log-entry.system { color: #58a6ff; }
+.log-entry.action { color: #bd93f9; }
+.log-time { color: #444; margin-right: 4px; }
+
+/* Touch Joystick */
+.touch-controls {
+  display: none;
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  gap: 12px;
+  z-index: 50;
+}
+.touch-btn {
+  width: 52px;
+  height: 52px;
+  background: rgba(255,255,255,.18);
+  border: 2px solid rgba(255,255,255,.4);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background .1s;
+  touch-action: none;
+}
+.touch-btn:active { background: rgba(107,175,58,.5); }
+.touch-row { display: flex; gap: 12px; justify-content: center; }
+@media (max-width: 700px) { .touch-controls { display: flex; flex-direction: column; } }
+
+/* Mode toggle (during sim) */
+.mode-toggle-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+  z-index: 50;
+  transition: all .2s;
+}
+.mode-toggle-btn.to-manual { background: #2196F3; color: #fff; }
+.mode-toggle-btn.to-auto { background: var(--zone); color: #fff; }
+
+/* ─── RESULT SCREEN ─── */
+#result-screen {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 20px 60px;
+}
+.result-hero {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.result-hero .result-icon { font-size: 64px; display: block; margin-bottom: 16px; }
+.result-hero h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+.result-hero p { font-size: 15px; color: var(--muted); }
+
+.score-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.score-card h2 { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: var(--dark); }
+.score-big {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.score-number {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 64px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--zone);
+}
+.score-number.orange { color: #FF8C00; }
+.score-number.red { color: #E53E3E; }
+.score-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+.stat-rows { display: flex; flex-direction: column; gap: 10px; }
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f7f6f3;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.stat-row .stat-name { color: var(--text); display: flex; align-items: center; gap: 8px; }
+.stat-row .stat-val { font-weight: 700; color: var(--dark); font-family: 'Space Grotesk', sans-serif; }
+
+.stamp-area {
+  background: var(--zone-pale);
+  border: 2px dashed var(--zone);
+  border-radius: var(--radius);
+  padding: 28px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.stamp-icon { font-size: 52px; display: block; margin-bottom: 12px; animation: stampPop .4s ease; }
+@keyframes stampPop { 0% { transform: scale(0); } 80% { transform: scale(1.1); } 100% { transform: scale(1); } }
+.stamp-area h3 { font-size: 18px; font-weight: 700; color: var(--zone-dark); margin-bottom: 6px; }
+.stamp-area p { font-size: 13px; color: var(--muted); }
+
+.result-actions { display: flex; gap: 12px; }
+.btn-secondary {
+  flex: 1;
+  padding: 14px;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.btn-secondary:hover { border-color: var(--zone); color: var(--zone-dark); }
+.btn-primary {
+  flex: 1;
+  padding: 14px;
+  background: var(--zone);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: #fff;
+  cursor: pointer;
+  transition: background .2s;
+  box-shadow: 0 4px 14px rgba(107,175,58,.35);
+}
+.btn-primary:hover { background: var(--zone-dark); }
+
+/* Progress bar in HUD */
+.timer-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: #333;
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 80px;
+}
+.timer-bar { height: 100%; background: var(--zone); border-radius: 3px; transition: width .1s linear; }
+
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="title">🚗 자율주행 시뮬레이터</div>
+  <a href="../index.html" class="back-btn">← 대시보드</a>
+  <span class="zone-badge">D존 · 미래직업</span>
+</div>
+
+<!-- ══════════════ INTRO ══════════════ -->
+<div id="intro-screen" class="screen active">
+  <div class="intro-hero">
+    <span class="hero-icon">🤖</span>
+    <h1>자율주행 시뮬레이터</h1>
+    <p>AI가 어떻게 도로를 인식하고 스스로 운전하는지 체험해보세요.<br>직접 운전해서 AI와 비교할 수도 있어요!</p>
+  </div>
+
+  <div class="info-cards">
+    <div class="info-card">
+      <div class="ic-icon">🎯</div>
+      <h3>바운딩 박스</h3>
+      <p>AI가 주변 차량·보행자를 실시간으로 인식하고 라벨링합니다</p>
+    </div>
+    <div class="info-card">
+      <div class="ic-icon">🧠</div>
+      <h3>AI 판단 로그</h3>
+      <p>신호 감지, 장애물 회피 등 AI의 실시간 판단 과정을 확인해요</p>
+    </div>
+    <div class="info-card">
+      <div class="ic-icon">🚦</div>
+      <h3>신호 준수</h3>
+      <p>신호등·보행자·NPC 차량을 피해 안전하게 주행해야 합니다</p>
+    </div>
+    <div class="info-card">
+      <div class="ic-icon">🏆</div>
+      <h3>안전 점수</h3>
+      <p>충돌·신호위반 없이 60초를 완주하면 스탬프를 획득합니다</p>
+    </div>
+  </div>
+
+  <div class="mode-select">
+    <h2>🎮 모드를 선택하세요</h2>
+    <div class="mode-options">
+      <div class="mode-opt selected" id="opt-auto" onclick="selectMode('auto')">
+        <span class="mo-icon">🤖</span>
+        <h3>자율주행 모드</h3>
+        <p>AI가 알아서 운전합니다. AI의 판단 과정을 관찰해보세요.</p>
+      </div>
+      <div class="mode-opt" id="opt-manual" onclick="selectMode('manual')">
+        <span class="mo-icon">🕹️</span>
+        <h3>수동 운전 모드</h3>
+        <p>직접 운전하세요! WASD / 화살표 키 또는 터치 조이스틱</p>
+      </div>
+    </div>
+  </div>
+
+  <button class="start-btn" onclick="startSim()">🚀 시뮬레이션 시작</button>
+</div>
+
+<!-- ══════════════ SIMULATION ══════════════ -->
+<div id="sim-screen" class="screen">
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-item">
+      <span class="hud-label">속도</span>
+      <span class="hud-val green" id="hud-speed">0</span>
+      <span style="color:#666;font-size:12px;">km/h</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">안전점수</span>
+      <span class="hud-val green" id="hud-score">100</span>
+    </div>
+    <div class="hud-item">
+      <span class="hud-label">충돌</span>
+      <span class="hud-val" id="hud-collision">0</span>
+    </div>
+    <div class="hud-item" style="flex:1;gap:8px;">
+      <span class="hud-label" id="hud-time-label">남은 시간</span>
+      <div class="timer-bar-wrap">
+        <div class="timer-bar" id="timer-bar"></div>
+      </div>
+      <span class="hud-val" id="hud-time">60</span>
+    </div>
+    <span class="mode-indicator auto" id="mode-indicator">🤖 자율주행</span>
+  </div>
+
+  <!-- Sim Body -->
+  <div class="sim-body">
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="simCanvas"></canvas>
+      <button class="mode-toggle-btn to-manual" id="mode-toggle-btn" onclick="toggleMode()">
+        수동으로 전환
+      </button>
+      <div class="touch-controls" id="touch-controls">
+        <div class="touch-row">
+          <div class="touch-btn" id="tb-up" ontouchstart="touchKey('up',true)" ontouchend="touchKey('up',false)">▲</div>
+        </div>
+        <div class="touch-row">
+          <div class="touch-btn" id="tb-left" ontouchstart="touchKey('left',true)" ontouchend="touchKey('left',false)">◀</div>
+          <div class="touch-btn" id="tb-down" ontouchstart="touchKey('down',true)" ontouchend="touchKey('down',false)">▼</div>
+          <div class="touch-btn" id="tb-right" ontouchstart="touchKey('right',true)" ontouchend="touchKey('right',false)">▶</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="log-panel">
+      <div class="log-header">
+        <div class="log-dot"></div>
+        AI 판단 로그
+      </div>
+      <div class="log-scroll" id="log-scroll"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ RESULT ══════════════ -->
+<div id="result-screen" class="screen">
+  <div class="result-hero">
+    <span class="result-icon" id="result-icon">🏆</span>
+    <h1 id="result-title">주행 완료!</h1>
+    <p id="result-sub">60초 동안 열심히 달렸어요</p>
+  </div>
+
+  <div class="score-card">
+    <h2>📊 주행 결과</h2>
+    <div class="score-big">
+      <div class="score-number" id="result-score-num">100</div>
+      <div class="score-label">안전 점수 / 100</div>
+    </div>
+    <div class="stat-rows">
+      <div class="stat-row">
+        <span class="stat-name">🚗 주행 모드</span>
+        <span class="stat-val" id="res-mode">자율주행</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">💥 충돌 횟수</span>
+        <span class="stat-val" id="res-collision">0회</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">🚦 신호 위반</span>
+        <span class="stat-val" id="res-violation">0회</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">🛑 긴급 정지</span>
+        <span class="stat-val" id="res-emergency">0회</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-name">✅ 안전 판단</span>
+        <span class="stat-val" id="res-safe-decisions">0회</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stamp-area" id="stamp-area">
+    <span class="stamp-icon" id="stamp-icon">🏅</span>
+    <h3 id="stamp-title">자율주행 체험 완료!</h3>
+    <p id="stamp-desc">자율주행 엔지니어의 세계를 경험했어요</p>
+  </div>
+
+  <div class="result-actions">
+    <button class="btn-secondary" onclick="goIntro()">🔄 다시 하기</button>
+    <button class="btn-primary" onclick="goDashboard()">🏠 대시보드로</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONSTANTS & CONFIG
+// ═══════════════════════════════════════════════
+const W = 600, H = 500;   // logical canvas size
+const ROAD_W = 90;         // half road width (each direction)
+const LANE_W = 45;
+const CENTER_X = W / 2;
+const CENTER_Y = H / 2;
+const INTERSECTION_R = 90;
+const SIM_DURATION = 60;
+
+// Colors
+const C = {
+  asphalt: '#1C1E26',
+  road: '#2C2E36',
+  lane_white: 'rgba(255,255,255,0.7)',
+  lane_yellow: 'rgba(255,220,0,0.85)',
+  sidewalk: '#3A3A4A',
+  crosswalk: 'rgba(255,255,255,0.55)',
+  bbox: '#6BAF3A',
+  bbox_person: '#FFB020',
+  player: '#6BAF3A',
+  player_stroke: '#3d7a1c',
+  npc_blue: '#4A90D9',
+  npc_red: '#E05252',
+  person: '#FFB020',
+  obstacle: '#888',
+  signal_red: '#FF4444',
+  signal_yellow: '#FFC107',
+  signal_green: '#44FF88',
+  signal_off: '#333',
+};
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let canvas, ctx;
+let mode = 'auto';         // 'auto' | 'manual'
+let simRunning = false;
+let animId = null;
+let lastTime = 0;
+let elapsed = 0;
+
+// Player car
+let player = {
+  x: CENTER_X - LANE_W / 2,
+  y: H * 0.72,
+  w: 28, h: 46,
+  angle: 0,          // radians, 0 = up
+  speed: 0,
+  targetSpeed: 0,
+  steer: 0,
+  collisions: 0,
+  violations: 0,
+  emergencies: 0,
+  safeDecisions: 0,
+  score: 100,
+};
+
+let keys = { up: false, down: false, left: false, right: false };
+
+// Traffic signals [x, y, direction-road]
+// Two signals: north approach, south approach
+let signals = [
+  { x: CENTER_X + ROAD_W + 16, y: CENTER_Y - ROAD_W - 16, state: 'red', timer: 0, phase: 0 },
+  { x: CENTER_X - ROAD_W - 16, y: CENTER_Y + ROAD_W + 16, state: 'green', timer: 4, phase: 1 },
+];
+const SIGNAL_CYCLE = 8;   // seconds total (red 4, green 4)
+// Phase 0: red for 4s, yellow for 1s, green for 3s cycle
+// simple: red 4s, green 4s
+
+// NPC cars — route: {type:'ns'|'ew', dir:1|-1}
+let npcs = [];
+let pedestrians = [];
+
+// Stats
+let stats = { collisions: 0, violations: 0, emergencies: 0, safeDecisions: 0 };
+
+// Log
+let logQueue = [];
+
+// Last AI action (for de-dup)
+let lastAILog = '';
+let aiLogTimer = 0;
+
+// Intro selected mode
+let selectedMode = 'auto';
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+function selectMode(m) {
+  selectedMode = m;
+  document.getElementById('opt-auto').classList.toggle('selected', m === 'auto');
+  document.getElementById('opt-manual').classList.toggle('selected', m === 'manual');
+}
+
+function startSim() {
+  mode = selectedMode;
+  showScreen('sim-screen');
+  initCanvas();
+  resetSim();
+  simRunning = true;
+  lastTime = performance.now();
+  animId = requestAnimationFrame(loop);
+  updateModeUI();
+}
+
+function initCanvas() {
+  canvas = document.getElementById('simCanvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+}
+
+function resizeCanvas() {
+  const wrap = document.getElementById('canvas-wrap');
+  const ww = wrap.clientWidth;
+  const wh = wrap.clientHeight;
+  const scale = Math.min(ww / W, wh / H, 1.4);
+  canvas.width = W;
+  canvas.height = H;
+  canvas.style.width = Math.floor(W * scale) + 'px';
+  canvas.style.height = Math.floor(H * scale) + 'px';
+}
+
+function resetSim() {
+  elapsed = 0;
+  player = {
+    x: CENTER_X - LANE_W / 2,
+    y: H * 0.72,
+    w: 28, h: 46,
+    angle: 0,
+    speed: 0,
+    targetSpeed: 0,
+    steer: 0,
+    collisions: 0,
+    violations: 0,
+    emergencies: 0,
+    safeDecisions: 0,
+    score: 100,
+  };
+  stats = { collisions: 0, violations: 0, emergencies: 0, safeDecisions: 0 };
+  keys = { up: false, down: false, left: false, right: false };
+
+  // Reset signals
+  signals[0] = { x: CENTER_X + ROAD_W + 18, y: CENTER_Y - ROAD_W - 18, state: 'red', timer: 0, phase: 0 };
+  signals[1] = { x: CENTER_X - ROAD_W - 18, y: CENTER_Y + ROAD_W + 18, state: 'green', timer: 4, phase: 1 };
+
+  // Spawn NPCs
+  npcs = spawnNPCs();
+  pedestrians = spawnPedestrians();
+
+  logQueue = [];
+  document.getElementById('log-scroll').innerHTML = '';
+  addLog('system', '🔧 시스템 초기화 완료');
+  addLog('system', mode === 'auto' ? '🤖 자율주행 모드 활성화' : '🕹️ 수동 운전 모드 활성화');
+  addLog('info', '📡 센서 스캔 시작...');
+}
+
+function spawnNPCs() {
+  return [
+    // North-South traveling cars
+    { x: CENTER_X - LANE_W * 0.5, y: 30, w: 26, h: 42, vx: 0, vy: 55, route: 'ns', label: 'car', conf: 94 + rnd(5) },
+    { x: CENTER_X + LANE_W * 0.5, y: H - 30, w: 26, h: 42, vx: 0, vy: -50, route: 'ns_r', label: 'car', conf: 91 + rnd(6) },
+    { x: CENTER_X - LANE_W * 0.5, y: -100, w: 26, h: 42, vx: 0, vy: 55, route: 'ns', label: 'car', conf: 88 + rnd(8) },
+    // East-West traveling cars
+    { x: 30, y: CENTER_Y - LANE_W * 0.5, w: 42, h: 26, vx: 60, vy: 0, route: 'ew', label: 'car', conf: 90 + rnd(7) },
+    { x: W - 30, y: CENTER_Y + LANE_W * 0.5, w: 42, h: 26, vx: -55, vy: 0, route: 'ew_r', label: 'car', conf: 93 + rnd(5) },
+  ];
+}
+
+function spawnPedestrians() {
+  return [
+    {
+      x: CENTER_X - ROAD_W - 20, y: CENTER_Y + 10,
+      w: 14, h: 14, vx: 18, vy: 0,
+      route: 'crosswalk_ew', label: 'person', conf: 87 + rnd(9),
+      walkTimer: 0, waitTimer: rnd(3),
+    },
+    {
+      x: CENTER_X + 10, y: CENTER_Y - ROAD_W - 20,
+      w: 14, h: 14, vx: 0, vy: 18,
+      route: 'crosswalk_ns', label: 'person', conf: 82 + rnd(10),
+      walkTimer: 0, waitTimer: rnd(4),
+    },
+    {
+      x: CENTER_X + ROAD_W + 10, y: CENTER_Y - 10,
+      w: 14, h: 14, vx: -16, vy: 0,
+      route: 'crosswalk_ew_r', label: 'person', conf: 85 + rnd(8),
+      walkTimer: 0, waitTimer: rnd(2),
+    },
+  ];
+}
+
+function rnd(n) { return Math.random() * n | 0; }
+
+// ═══════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════
+function loop(ts) {
+  if (!simRunning) return;
+  const dt = Math.min((ts - lastTime) / 1000, 0.05);
+  lastTime = ts;
+  elapsed += dt;
+
+  const remaining = Math.max(0, SIM_DURATION - elapsed);
+
+  update(dt, remaining);
+  draw();
+  updateHUD(remaining);
+
+  if (remaining <= 0) {
+    endSim();
+    return;
+  }
+
+  animId = requestAnimationFrame(loop);
+}
+
+// ═══════════════════════════════════════════════
+//  UPDATE
+// ═══════════════════════════════════════════════
+function update(dt, remaining) {
+  updateSignals(dt);
+  updateNPCs(dt);
+  updatePedestrians(dt);
+
+  if (mode === 'auto') {
+    autodriveAI(dt);
+  } else {
+    manualDrive(dt);
+  }
+
+  // Move player
+  const RAD = player.angle;
+  player.x += Math.sin(RAD) * player.speed * dt;
+  player.y -= Math.cos(RAD) * player.speed * dt;
+
+  // Wrap around screen edges (road loop)
+  if (player.y < -60) player.y = H + 60;
+  if (player.y > H + 60) player.y = -60;
+  if (player.x < -60) player.x = W + 60;
+  if (player.x > W + 60) player.x = -60;
+
+  // Collision detection
+  checkCollisions();
+}
+
+function updateSignals(dt) {
+  signals.forEach((sig, i) => {
+    sig.timer += dt;
+    if (sig.timer >= SIGNAL_CYCLE / 2) {
+      sig.timer = 0;
+      sig.state = sig.state === 'green' ? 'red' : 'green';
+    }
+    // Yellow transition
+    const t = sig.timer;
+    if (sig.state === 'red' && t > (SIGNAL_CYCLE / 2 - 1.5)) {
+      sig.displayState = 'yellow';
+    } else {
+      sig.displayState = sig.state;
+    }
+  });
+}
+
+function updateNPCs(dt) {
+  npcs.forEach(n => {
+    n.x += n.vx * dt;
+    n.y += n.vy * dt;
+    // Wrap
+    if (n.vy > 0 && n.y > H + 60) n.y = -60;
+    if (n.vy < 0 && n.y < -60) n.y = H + 60;
+    if (n.vx > 0 && n.x > W + 60) n.x = -60;
+    if (n.vx < 0 && n.x < -60) n.x = W + 60;
+    // Slow near intersection if signal red
+    // Simple: if approaching intersection on NS, check vertical signal
+    if (Math.abs(n.vy) > 0) {
+      const approachingInter = (n.vy > 0 && n.y > CENTER_Y - 120 && n.y < CENTER_Y - 60)
+                            || (n.vy < 0 && n.y < CENTER_Y + 120 && n.y > CENTER_Y + 60);
+      if (approachingInter) {
+        const relevantSig = signals[0];
+        if (relevantSig.state === 'red') { n._stopped = true; }
+        else { n._stopped = false; }
+      }
+    }
+  });
+}
+
+function updatePedestrians(dt) {
+  pedestrians.forEach(p => {
+    if (p.waitTimer > 0) { p.waitTimer -= dt; return; }
+    p.walkTimer += dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    // Simple bounce
+    if (p.x < 20 || p.x > W - 20) { p.vx *= -1; p.waitTimer = 1.5 + Math.random() * 2; }
+    if (p.y < 20 || p.y > H - 20) { p.vy *= -1; p.waitTimer = 1.5 + Math.random() * 2; }
+  });
+}
+
+// ─── AUTO DRIVE ───
+function autodriveAI(dt) {
+  const px = player.x, py = player.y;
+  aiLogTimer += dt;
+
+  // Default target speed
+  let targetSpd = 55;
+  let decision = null;
+
+  // 1. Red light check — is player approaching intersection?
+  const distToInter = Math.hypot(px - CENTER_X, py - CENTER_Y);
+  const approachingIntersection = distToInter < 130 && distToInter > 40;
+
+  signals.forEach(sig => {
+    if (sig.state === 'red' && approachingIntersection) {
+      targetSpd = 0;
+      decision = { type: 'danger', msg: `🚦 신호 빨강 감지 → 정지` };
+      stats.safeDecisions++;
+    } else if (sig.displayState === 'yellow' && approachingIntersection) {
+      targetSpd = Math.min(targetSpd, 20);
+      decision = { type: 'warn', msg: `🟡 황색 신호 → 감속` };
+    }
+  });
+
+  // 2. Pedestrian check
+  pedestrians.forEach(p => {
+    const dist = Math.hypot(px - p.x, py - p.y);
+    if (dist < 80) {
+      targetSpd = Math.min(targetSpd, 15);
+      if (!decision) decision = { type: 'warn', msg: `🚶 보행자 감지(${dist.toFixed(0)}m) → 감속` };
+      if (dist < 50) {
+        targetSpd = 0;
+        decision = { type: 'danger', msg: `🚶 보행자 근접! → 긴급 정지` };
+        stats.emergencies++;
+        stats.safeDecisions++;
+      }
+    }
+  });
+
+  // 3. NPC check
+  npcs.forEach(n => {
+    const dist = Math.hypot(px - n.x, py - n.y);
+    if (dist < 70) {
+      targetSpd = Math.min(targetSpd, 20);
+      if (!decision) decision = { type: 'warn', msg: `🚗 차량 감지(${dist.toFixed(0)}m) → 감속` };
+      if (dist < 40) {
+        targetSpd = 0;
+        decision = { type: 'danger', msg: `🚗 전방 차량 접근! → 정지` };
+        stats.safeDecisions++;
+      }
+    }
+  });
+
+  // 4. Steering — follow road loop (simple circular path around intersection)
+  const angle = Math.atan2(px - CENTER_X, -(py - CENTER_Y));
+  let desired = angle + Math.PI / 2;  // tangent direction
+  let diff = desired - player.angle;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  player.angle += diff * 3 * dt;
+
+  // Log decision
+  if (decision && aiLogTimer > 0.6) {
+    if (decision.msg !== lastAILog) {
+      addLog(decision.type, `[${elapsed.toFixed(1)}s] ${decision.msg}`);
+      lastAILog = decision.msg;
+    }
+    aiLogTimer = 0;
+  } else if (!decision && aiLogTimer > 3) {
+    const routineMsgs = [
+      '📡 전방 250m 스캔 중...',
+      `⚡ 현재 속도 ${Math.round(player.speed)} km/h 유지`,
+      '✅ 차선 중앙 유지',
+      '🗺️ 경로 최적화 완료',
+    ];
+    addLog('info', `[${elapsed.toFixed(1)}s] ${routineMsgs[rnd(routineMsgs.length)]}`);
+    aiLogTimer = 0;
+  }
+
+  player.targetSpeed = targetSpd;
+  // Smooth acceleration
+  if (player.speed < player.targetSpeed) {
+    player.speed = Math.min(player.speed + 60 * dt, player.targetSpeed);
+  } else {
+    player.speed = Math.max(player.speed - 90 * dt, player.targetSpeed);
+  }
+}
+
+// ─── MANUAL DRIVE ───
+function manualDrive(dt) {
+  const MAX_SPEED = 120;
+  const ACCEL = 80;
+  const BRAKE = 120;
+  const TURN = 2.2;
+
+  if (keys.up) {
+    player.speed = Math.min(player.speed + ACCEL * dt, MAX_SPEED);
+  } else if (keys.down) {
+    player.speed = Math.max(player.speed - BRAKE * dt, -30);
+  } else {
+    if (player.speed > 0) player.speed = Math.max(player.speed - 50 * dt, 0);
+    if (player.speed < 0) player.speed = Math.min(player.speed + 50 * dt, 0);
+  }
+
+  if (keys.left) player.angle -= TURN * dt;
+  if (keys.right) player.angle += TURN * dt;
+
+  // Check signal violation for manual
+  const distToInter = Math.hypot(player.x - CENTER_X, player.y - CENTER_Y);
+  if (distToInter < 50 && Math.abs(player.speed) > 5) {
+    signals.forEach(sig => {
+      if (sig.state === 'red') {
+        // Only penalize once
+        if (!sig._violated) {
+          sig._violated = true;
+          stats.violations++;
+          player.score = Math.max(0, player.score - 15);
+          addLog('danger', `🚨 신호 위반! -15점`);
+          setTimeout(() => { sig._violated = false; }, 3000);
+        }
+      }
+    });
+  } else {
+    signals.forEach(s => s._violated = false);
+  }
+}
+
+function checkCollisions() {
+  const all = [...npcs, ...pedestrians];
+  all.forEach(obj => {
+    const dist = Math.hypot(player.x - obj.x, player.y - obj.y);
+    const minDist = (Math.max(player.w, player.h) / 2) + (Math.max(obj.w, obj.h) / 2) - 4;
+    if (dist < minDist && !obj._hit) {
+      obj._hit = true;
+      stats.collisions++;
+      player.score = Math.max(0, player.score - 20);
+      addLog('danger', `💥 충돌 발생! -20점 (총 ${stats.collisions}회)`);
+      triggerCollisionFX();
+      setTimeout(() => { obj._hit = false; }, 2000);
+    }
+  });
+}
+
+function triggerCollisionFX() {
+  const wrap = document.getElementById('canvas-wrap');
+  wrap.classList.remove('flash', 'shake');
+  void wrap.offsetWidth;
+  wrap.classList.add('flash', 'shake');
+  setTimeout(() => wrap.classList.remove('flash', 'shake'), 400);
+}
+
+// ═══════════════════════════════════════════════
+//  DRAW
+// ═══════════════════════════════════════════════
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  drawRoad();
+  drawSignals();
+  drawNPCs();
+  drawPedestrians();
+  drawPlayer();
+  drawBoundingBoxes();
+}
+
+function drawRoad() {
+  // Background
+  ctx.fillStyle = C.asphalt;
+  ctx.fillRect(0, 0, W, H);
+
+  // Sidewalks
+  ctx.fillStyle = C.sidewalk;
+  // four quadrants
+  ctx.fillRect(0, 0, CENTER_X - ROAD_W, CENTER_Y - ROAD_W);
+  ctx.fillRect(CENTER_X + ROAD_W, 0, W - CENTER_X - ROAD_W, CENTER_Y - ROAD_W);
+  ctx.fillRect(0, CENTER_Y + ROAD_W, CENTER_X - ROAD_W, H - CENTER_Y - ROAD_W);
+  ctx.fillRect(CENTER_X + ROAD_W, CENTER_Y + ROAD_W, W - CENTER_X - ROAD_W, H - CENTER_Y - ROAD_W);
+
+  // Road surface
+  ctx.fillStyle = C.road;
+  // Horizontal road
+  ctx.fillRect(0, CENTER_Y - ROAD_W, W, ROAD_W * 2);
+  // Vertical road
+  ctx.fillRect(CENTER_X - ROAD_W, 0, ROAD_W * 2, H);
+  // Intersection fill
+  ctx.fillRect(CENTER_X - ROAD_W, CENTER_Y - ROAD_W, ROAD_W * 2, ROAD_W * 2);
+
+  // Center lines (yellow dashed)
+  ctx.strokeStyle = C.lane_yellow;
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([14, 10]);
+  // Vertical center
+  ctx.beginPath();
+  ctx.moveTo(CENTER_X, 0);
+  ctx.lineTo(CENTER_X, CENTER_Y - ROAD_W);
+  ctx.moveTo(CENTER_X, CENTER_Y + ROAD_W);
+  ctx.lineTo(CENTER_X, H);
+  ctx.stroke();
+  // Horizontal center
+  ctx.beginPath();
+  ctx.moveTo(0, CENTER_Y);
+  ctx.lineTo(CENTER_X - ROAD_W, CENTER_Y);
+  ctx.moveTo(CENTER_X + ROAD_W, CENTER_Y);
+  ctx.lineTo(W, CENTER_Y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Edge lines (white)
+  ctx.strokeStyle = C.lane_white;
+  ctx.lineWidth = 2;
+  // Vertical road edges
+  ctx.beginPath();
+  ctx.moveTo(CENTER_X - ROAD_W, 0); ctx.lineTo(CENTER_X - ROAD_W, CENTER_Y - ROAD_W);
+  ctx.moveTo(CENTER_X - ROAD_W, CENTER_Y + ROAD_W); ctx.lineTo(CENTER_X - ROAD_W, H);
+  ctx.moveTo(CENTER_X + ROAD_W, 0); ctx.lineTo(CENTER_X + ROAD_W, CENTER_Y - ROAD_W);
+  ctx.moveTo(CENTER_X + ROAD_W, CENTER_Y + ROAD_W); ctx.lineTo(CENTER_X + ROAD_W, H);
+  // Horizontal road edges
+  ctx.moveTo(0, CENTER_Y - ROAD_W); ctx.lineTo(CENTER_X - ROAD_W, CENTER_Y - ROAD_W);
+  ctx.moveTo(CENTER_X + ROAD_W, CENTER_Y - ROAD_W); ctx.lineTo(W, CENTER_Y - ROAD_W);
+  ctx.moveTo(0, CENTER_Y + ROAD_W); ctx.lineTo(CENTER_X - ROAD_W, CENTER_Y + ROAD_W);
+  ctx.moveTo(CENTER_X + ROAD_W, CENTER_Y + ROAD_W); ctx.lineTo(W, CENTER_Y + ROAD_W);
+  ctx.stroke();
+
+  // Crosswalks
+  drawCrosswalk(CENTER_X - ROAD_W, CENTER_Y - ROAD_W - 28, ROAD_W * 2, 16, 'h');
+  drawCrosswalk(CENTER_X - ROAD_W, CENTER_Y + ROAD_W + 12, ROAD_W * 2, 16, 'h');
+  drawCrosswalk(CENTER_X - ROAD_W - 28, CENTER_Y - ROAD_W, 16, ROAD_W * 2, 'v');
+  drawCrosswalk(CENTER_X + ROAD_W + 12, CENTER_Y - ROAD_W, 16, ROAD_W * 2, 'v');
+
+  // "STOP" text hint
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.font = 'bold 11px Space Grotesk, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('STOP', CENTER_X, CENTER_Y - ROAD_W - 6);
+  ctx.fillText('STOP', CENTER_X, CENTER_Y + ROAD_W + 10);
+}
+
+function drawCrosswalk(x, y, w, h, dir) {
+  ctx.fillStyle = C.crosswalk;
+  const stripes = 6;
+  if (dir === 'h') {
+    const sw = w / stripes;
+    for (let i = 0; i < stripes; i += 2) {
+      ctx.fillRect(x + i * sw, y, sw, h);
+    }
+  } else {
+    const sh = h / stripes;
+    for (let i = 0; i < stripes; i += 2) {
+      ctx.fillRect(x, y + i * sh, w, sh);
+    }
+  }
+}
+
+function drawSignals() {
+  signals.forEach(sig => {
+    const s = sig.displayState || sig.state;
+    // Signal pole
+    ctx.fillStyle = '#111';
+    ctx.fillRect(sig.x - 6, sig.y - 18, 12, 36);
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(sig.x - 6, sig.y - 18, 12, 36);
+    // Red
+    ctx.beginPath();
+    ctx.arc(sig.x, sig.y - 10, 5, 0, Math.PI * 2);
+    ctx.fillStyle = s === 'red' ? C.signal_red : C.signal_off;
+    if (s === 'red') { ctx.shadowColor = C.signal_red; ctx.shadowBlur = 8; }
+    ctx.fill(); ctx.shadowBlur = 0;
+    // Yellow
+    ctx.beginPath();
+    ctx.arc(sig.x, sig.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = s === 'yellow' ? C.signal_yellow : C.signal_off;
+    if (s === 'yellow') { ctx.shadowColor = C.signal_yellow; ctx.shadowBlur = 8; }
+    ctx.fill(); ctx.shadowBlur = 0;
+    // Green
+    ctx.beginPath();
+    ctx.arc(sig.x, sig.y + 10, 5, 0, Math.PI * 2);
+    ctx.fillStyle = s === 'green' ? C.signal_green : C.signal_off;
+    if (s === 'green') { ctx.shadowColor = C.signal_green; ctx.shadowBlur = 8; }
+    ctx.fill(); ctx.shadowBlur = 0;
+  });
+}
+
+function drawNPCs() {
+  npcs.forEach(n => {
+    ctx.save();
+    ctx.translate(n.x, n.y);
+    const color = (n.vx !== 0) ? C.npc_blue : C.npc_red;
+    ctx.fillStyle = color;
+    ctx.fillRect(-n.w / 2, -n.h / 2, n.w, n.h);
+    // Windshield
+    ctx.fillStyle = 'rgba(200,230,255,0.5)';
+    if (Math.abs(n.vy) > 0) {
+      ctx.fillRect(-n.w / 2 + 3, -n.h / 2 + 5, n.w - 6, n.h * 0.3);
+    } else {
+      ctx.fillRect(-n.w / 2 + 5, -n.h / 2 + 3, n.w * 0.3, n.h - 6);
+    }
+    ctx.restore();
+  });
+}
+
+function drawPedestrians() {
+  pedestrians.forEach(p => {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    // Body
+    ctx.beginPath();
+    ctx.arc(0, 0, 7, 0, Math.PI * 2);
+    ctx.fillStyle = C.person;
+    ctx.fill();
+    // Head dot
+    ctx.beginPath();
+    ctx.arc(0, -4, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+function drawPlayer() {
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.rotate(player.angle);
+  // Body
+  ctx.fillStyle = C.player;
+  ctx.beginPath();
+  roundRect(ctx, -player.w / 2, -player.h / 2, player.w, player.h, 5);
+  ctx.fill();
+  ctx.strokeStyle = C.player_stroke;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // Windshield
+  ctx.fillStyle = 'rgba(200,255,200,0.6)';
+  ctx.fillRect(-player.w / 2 + 4, -player.h / 2 + 6, player.w - 8, player.h * 0.28);
+  // Headlights
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(-player.w / 2 + 3, -player.h / 2 + 2, 5, 3);
+  ctx.fillRect(player.w / 2 - 8, -player.h / 2 + 2, 5, 3);
+  // "AI" label
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 9px Space Grotesk, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(mode === 'auto' ? 'AI' : 'ME', 0, 4);
+  ctx.restore();
+}
+
+function drawBoundingBoxes() {
+  // Draw bounding boxes for all NPCs and pedestrians
+  const objs = [
+    ...npcs.map(n => ({ ...n, color: C.bbox })),
+    ...pedestrians.map(p => ({ ...p, color: C.bbox_person })),
+  ];
+
+  objs.forEach(obj => {
+    ctx.save();
+    ctx.translate(obj.x, obj.y);
+    ctx.strokeStyle = obj.color;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    const pad = 5;
+    ctx.strokeRect(-obj.w / 2 - pad, -obj.h / 2 - pad, obj.w + pad * 2, obj.h + pad * 2);
+    ctx.setLineDash([]);
+    // Label background
+    const labelX = -obj.w / 2 - pad;
+    const labelY = -obj.h / 2 - pad - 16;
+    const lbl = `${obj.label} ${obj.conf}%`;
+    ctx.font = 'bold 10px Space Grotesk, monospace';
+    const tw = ctx.measureText(lbl).width + 6;
+    ctx.fillStyle = obj.color;
+    ctx.fillRect(labelX, labelY, tw, 14);
+    ctx.fillStyle = '#000';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(lbl, labelX + 3, labelY + 2);
+    ctx.restore();
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// ═══════════════════════════════════════════════
+//  HUD UPDATE
+// ═══════════════════════════════════════════════
+function updateHUD(remaining) {
+  const speedEl = document.getElementById('hud-speed');
+  const spd = Math.abs(Math.round(player.speed));
+  speedEl.textContent = spd;
+  speedEl.className = 'hud-val ' + (spd > 80 ? 'yellow' : 'green');
+
+  const scoreEl = document.getElementById('hud-score');
+  scoreEl.textContent = player.score;
+  scoreEl.className = 'hud-val ' + (player.score >= 70 ? 'green' : player.score >= 40 ? 'yellow' : 'red');
+
+  document.getElementById('hud-collision').textContent = stats.collisions;
+  document.getElementById('hud-time').textContent = Math.ceil(remaining);
+
+  const pct = (remaining / SIM_DURATION) * 100;
+  document.getElementById('timer-bar').style.width = pct + '%';
+  document.getElementById('timer-bar').style.background =
+    pct > 50 ? 'var(--zone)' : pct > 25 ? '#FFC107' : '#FF4444';
+}
+
+// ═══════════════════════════════════════════════
+//  LOG
+// ═══════════════════════════════════════════════
+function addLog(type, msg) {
+  const scroll = document.getElementById('log-scroll');
+  const el = document.createElement('div');
+  el.className = `log-entry ${type}`;
+  el.textContent = msg;
+  scroll.appendChild(el);
+  // Keep last 60 lines
+  while (scroll.children.length > 60) scroll.removeChild(scroll.firstChild);
+  scroll.scrollTop = scroll.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════
+//  MODE TOGGLE
+// ═══════════════════════════════════════════════
+function updateModeUI() {
+  const ind = document.getElementById('mode-indicator');
+  const btn = document.getElementById('mode-toggle-btn');
+  const tc = document.getElementById('touch-controls');
+  if (mode === 'auto') {
+    ind.className = 'mode-indicator auto';
+    ind.textContent = '🤖 자율주행';
+    btn.className = 'mode-toggle-btn to-manual';
+    btn.textContent = '수동으로 전환';
+    tc.style.display = 'none';
+  } else {
+    ind.className = 'mode-indicator manual';
+    ind.textContent = '🕹️ 수동 운전';
+    btn.className = 'mode-toggle-btn to-auto';
+    btn.textContent = '자율주행 전환';
+    // Show touch on mobile
+    if ('ontouchstart' in window) tc.style.display = 'flex';
+  }
+}
+
+function toggleMode() {
+  mode = mode === 'auto' ? 'manual' : 'auto';
+  addLog('system', mode === 'auto' ? '🤖 자율주행 모드 전환' : '🕹️ 수동 운전 모드 전환');
+  updateModeUI();
+}
+
+// ═══════════════════════════════════════════════
+//  KEYBOARD
+// ═══════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (!simRunning || mode !== 'manual') return;
+  if (['ArrowUp','w','W'].includes(e.key)) { keys.up = true; e.preventDefault(); }
+  if (['ArrowDown','s','S'].includes(e.key)) { keys.down = true; e.preventDefault(); }
+  if (['ArrowLeft','a','A'].includes(e.key)) { keys.left = true; e.preventDefault(); }
+  if (['ArrowRight','d','D'].includes(e.key)) { keys.right = true; e.preventDefault(); }
+});
+document.addEventListener('keyup', e => {
+  if (['ArrowUp','w','W'].includes(e.key)) keys.up = false;
+  if (['ArrowDown','s','S'].includes(e.key)) keys.down = false;
+  if (['ArrowLeft','a','A'].includes(e.key)) keys.left = false;
+  if (['ArrowRight','d','D'].includes(e.key)) keys.right = false;
+});
+
+function touchKey(dir, down) {
+  if (mode !== 'manual') return;
+  keys[dir] = down;
+}
+
+// ═══════════════════════════════════════════════
+//  END SIM
+// ═══════════════════════════════════════════════
+function endSim() {
+  simRunning = false;
+  cancelAnimationFrame(animId);
+  saveProgress();
+  showResult();
+}
+
+function showResult() {
+  const score = player.score;
+  const scoreEl = document.getElementById('result-score-num');
+  scoreEl.textContent = score;
+  scoreEl.className = 'score-number' + (score >= 70 ? '' : score >= 40 ? ' orange' : ' red');
+
+  document.getElementById('res-mode').textContent = mode === 'auto' ? '🤖 자율주행' : '🕹️ 수동 운전';
+  document.getElementById('res-collision').textContent = stats.collisions + '회';
+  document.getElementById('res-violation').textContent = stats.violations + '회';
+  document.getElementById('res-emergency').textContent = stats.emergencies + '회';
+  document.getElementById('res-safe-decisions').textContent = stats.safeDecisions + '회';
+
+  let icon, title, sub, stampTitle, stampDesc;
+  if (score >= 85) {
+    icon = '🏆'; title = '완벽한 주행!'; sub = '안전하고 스마트한 운전을 완료했어요!';
+    stampTitle = '자율주행 마스터'; stampDesc = '완벽한 안전 주행을 인정합니다!';
+    document.getElementById('stamp-icon').textContent = '🥇';
+  } else if (score >= 60) {
+    icon = '🎉'; title = '훌륭한 주행!'; sub = '몇 가지 개선으로 더 완벽해질 수 있어요';
+    stampTitle = '자율주행 체험 완료'; stampDesc = '미래 자율주행 엔지니어의 잠재력을 보였어요!';
+    document.getElementById('stamp-icon').textContent = '🥈';
+  } else {
+    icon = '💪'; title = '주행 완료!'; sub = '다시 도전해서 더 높은 점수를 노려보세요!';
+    stampTitle = '자율주행 체험자'; stampDesc = '자율주행의 세계를 경험했어요. 다시 도전!';
+    document.getElementById('stamp-icon').textContent = '🥉';
+  }
+  document.getElementById('result-icon').textContent = icon;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-sub').textContent = sub;
+  document.getElementById('stamp-title').textContent = stampTitle;
+  document.getElementById('stamp-desc').textContent = stampDesc;
+
+  showScreen('result-screen');
+}
+
+function saveProgress() {
+  try {
+    const data = JSON.parse(localStorage.getItem('harness_progress') || '{}');
+    if (!data.completed) data.completed = [];
+    if (!data.completed.includes(12)) data.completed.push(12);
+    data.program_12 = {
+      score: player.score,
+      mode: mode,
+      collisions: stats.collisions,
+      violations: stats.violations,
+      completedAt: new Date().toISOString(),
+    };
+    data.lastVisited = 12;
+    localStorage.setItem('harness_progress', JSON.stringify(data));
+  } catch (e) {}
+}
+
+// ═══════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goIntro() {
+  if (animId) cancelAnimationFrame(animId);
+  simRunning = false;
+  showScreen('intro-screen');
+}
+
+function goDashboard() {
+  window.location.href = '../index.html';
+}
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

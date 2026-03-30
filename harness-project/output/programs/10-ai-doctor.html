@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 의사 체험 · AI Doctor Experience</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --zone-color: #6BAF3A;
+    --zone-light: #F0F8E8;
+    --zone-mid: #C5E2A0;
+    --zone-dark: #4E8A28;
+    --bg: #F7F6F3;
+    --text: #1A1A1A;
+    --text-sub: #6B6B6B;
+    --text-muted: #A0A0A0;
+    --white: #FFFFFF;
+    --border: #E8E6E1;
+    --success: #6BAF3A;
+    --warning: #E8A93A;
+    --danger: #E85A5A;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,.06);
+    --shadow-md: 0 4px 24px rgba(0,0,0,.10);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, #C8C4BC 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Top Bar ── */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--zone-color);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 52px;
+    box-shadow: 0 2px 8px rgba(107,175,58,.30);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-back {
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: .85;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: opacity .15s;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  .topbar-back:hover { opacity: 1; }
+  .topbar-sep { opacity: .4; font-size: 16px; }
+  .topbar-title { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+  .topbar-badge {
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255,255,255,.25);
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: .02em;
+  }
+
+  /* ── Step Indicator ── */
+  .step-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+  }
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    position: relative;
+  }
+  .step-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 1px;
+    background: var(--border);
+  }
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .3s;
+  }
+  .step-num.active { background: var(--zone-color); color: #fff; }
+  .step-num.done { background: #3DAA7C; color: #fff; }
+  .step-label { font-size: 11px; color: var(--text-sub); font-weight: 500; white-space: nowrap; }
+  .step-item.active .step-label { color: var(--zone-color); font-weight: 700; }
+  .step-item.done .step-label { color: #3DAA7C; }
+
+  /* ── Main Layout ── */
+  .main {
+    position: relative;
+    z-index: 1;
+    padding: 24px 16px 80px;
+    max-width: 640px;
+    margin: 0 auto;
+    min-height: calc(100vh - 52px);
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  /* ── Screens ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Screen 1: Intro ── */
+  .intro-header {
+    text-align: center;
+    padding: 28px 0 20px;
+  }
+  .intro-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--zone-light);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    margin: 0 auto 16px;
+    border: 2px solid var(--zone-mid);
+  }
+  .intro-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+  .intro-header p {
+    font-size: 14px;
+    color: var(--text-sub);
+    line-height: 1.7;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--zone-color);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* ── Joint Cards ── */
+  .joint-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .joint-card {
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .joint-card:hover { border-color: var(--zone-color); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+  .joint-card.selected {
+    border-color: var(--zone-color);
+    background: var(--zone-light);
+  }
+  .joint-card.done {
+    border-color: #3DAA7C;
+    background: #F0FBF6;
+  }
+  .joint-card-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+  .joint-card-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .joint-card-desc { font-size: 11px; color: var(--text-sub); line-height: 1.4; }
+  .joint-card-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    display: none;
+  }
+  .joint-card.done .joint-card-badge {
+    display: block;
+    background: #3DAA7C;
+    color: #fff;
+  }
+
+  .rom-info {
+    background: var(--zone-light);
+    border: 1px solid var(--zone-mid);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .rom-info-title { font-size: 12px; font-weight: 700; color: var(--zone-dark); margin-bottom: 8px; }
+  .rom-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-bottom: 4px;
+  }
+  .rom-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── Btn ── */
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+  }
+  .btn-primary {
+    background: var(--zone-color);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--zone-dark); }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--zone-light);
+    color: var(--zone-dark);
+    border: 1.5px solid var(--zone-mid);
+  }
+  .btn-secondary:hover { background: var(--zone-mid); }
+
+  /* ── Screen 2: Measure ── */
+  .cam-wrap {
+    position: relative;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 4/3;
+    margin-bottom: 16px;
+  }
+  #inputVideo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+  #outputCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+  .cam-overlay-ui {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+  }
+  .cam-guide-text {
+    background: rgba(0,0,0,.65);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-align: center;
+    backdrop-filter: blur(4px);
+  }
+  .cam-angle-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  .angle-badge {
+    background: rgba(0,0,0,.75);
+    color: #fff;
+    border-radius: 12px;
+    padding: 10px 16px;
+    text-align: center;
+    backdrop-filter: blur(4px);
+    min-width: 90px;
+  }
+  .angle-badge-label { font-size: 10px; color: rgba(255,255,255,.7); margin-bottom: 2px; }
+  .angle-badge-value { font-size: 28px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; color: #fff; line-height: 1; }
+  .angle-badge-unit { font-size: 12px; color: rgba(255,255,255,.7); }
+  .angle-badge-max { font-size: 11px; color: #6BAF3A; margin-top: 2px; }
+
+  .measure-info-row {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  /* ── Circular Gauge ── */
+  .gauge-wrap {
+    flex: 0 0 140px;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .gauge-svg { width: 100px; height: 100px; }
+
+  .guide-card {
+    flex: 1;
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 16px;
+  }
+  .guide-card-title { font-size: 12px; font-weight: 700; color: var(--zone-dark); margin-bottom: 8px; }
+  .guide-arrow-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .guide-instruction {
+    font-size: 12px;
+    color: var(--text-sub);
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .progress-label { font-size: 13px; font-weight: 600; color: var(--text); flex: 0 0 100px; }
+  .progress-bar-outer {
+    flex: 1;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-bar-inner {
+    height: 100%;
+    background: var(--zone-color);
+    border-radius: 4px;
+    transition: width .3s;
+    width: 0%;
+  }
+  .progress-num { font-size: 12px; font-weight: 700; color: var(--zone-dark); flex: 0 0 30px; text-align: right; }
+
+  /* ── Screen 3: Report ── */
+  .report-header {
+    text-align: center;
+    padding: 20px 0 16px;
+  }
+  .report-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
+  .report-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .report-header p { font-size: 13px; color: var(--text-sub); }
+
+  /* 처방전 스타일 */
+  .prescription-card {
+    background: var(--white);
+    border: 1.5px solid var(--zone-mid);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .prescription-header {
+    background: var(--zone-color);
+    color: #fff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .prescription-header-icon { font-size: 20px; }
+  .prescription-header-title { font-size: 14px; font-weight: 700; }
+  .prescription-body { padding: 20px; }
+
+  .rom-result-row {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--border);
+    gap: 12px;
+  }
+  .rom-result-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .rom-result-joint { flex: 0 0 80px; }
+  .rom-result-joint-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .rom-result-joint-sub { font-size: 11px; color: var(--text-muted); }
+  .rom-result-bar-area { flex: 1; }
+  .rom-bar-label-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .rom-bar-outer {
+    height: 10px;
+    background: var(--border);
+    border-radius: 5px;
+    position: relative;
+    overflow: visible;
+  }
+  .rom-bar-normal {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: #DFF0C8;
+    border-radius: 5px;
+  }
+  .rom-bar-measured {
+    position: absolute;
+    top: -3px;
+    height: 16px;
+    width: 4px;
+    background: var(--zone-color);
+    border-radius: 2px;
+    transform: translateX(-2px);
+    transition: left .8s cubic-bezier(.4,0,.2,1);
+  }
+  .rom-result-right { flex: 0 0 120px; text-align: right; }
+  .rom-angle-val { font-size: 22px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; color: var(--text); line-height: 1; }
+  .rom-angle-unit { font-size: 11px; color: var(--text-muted); }
+  .verdict-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 10px;
+    margin-top: 4px;
+  }
+  .verdict-normal { background: #DFF0C8; color: var(--zone-dark); }
+  .verdict-mild { background: #FEF3CC; color: #B87B00; }
+  .verdict-warning { background: #FFE5E5; color: #C0392B; }
+
+  /* 재활 운동 추천 */
+  .rehab-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .rehab-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    box-shadow: var(--shadow);
+  }
+  .rehab-emoji { font-size: 28px; flex-shrink: 0; }
+  .rehab-content {}
+  .rehab-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .rehab-desc { font-size: 12px; color: var(--text-sub); line-height: 1.5; }
+  .rehab-joint-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--zone-light);
+    color: var(--zone-dark);
+    padding: 2px 7px;
+    border-radius: 8px;
+    margin-top: 6px;
+  }
+
+  /* Stamp */
+  .stamp-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 16px;
+    border: 2px dashed var(--zone-mid);
+  }
+  .stamp-icon { font-size: 52px; margin-bottom: 8px; }
+  .stamp-title { font-size: 16px; font-weight: 700; color: var(--zone-dark); margin-bottom: 4px; }
+  .stamp-subtitle { font-size: 13px; color: var(--text-sub); }
+
+  .cam-status-bar {
+    background: var(--zone-dark);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .no-cam-msg {
+    display: none;
+    background: #FFF8E1;
+    border: 1px solid var(--warning);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #7A5C00;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .timer-ring-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .timer-ring-svg { width: 60px; height: 60px; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn .4s ease both; }
+
+  @keyframes pulse-ring {
+    0% { transform: scale(.95); opacity: 1; }
+    70% { transform: scale(1.05); opacity: .7; }
+    100% { transform: scale(.95); opacity: 1; }
+  }
+  .pulse { animation: pulse-ring 1.5s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<!-- ── Top Bar ── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="topbar-back" onclick="goToDashboard()">← 대시보드</button>
+    <span class="topbar-sep">|</span>
+    <span class="topbar-title">🩺 AI 의사 체험</span>
+  </div>
+  <span class="topbar-badge">D존 · 미래직업</span>
+</div>
+
+<!-- ── Main ── -->
+<main class="main">
+
+  <!-- ══ Screen 1: Intro ══ -->
+  <div id="screen-intro" class="screen active">
+    <div class="intro-header fade-in">
+      <div class="intro-icon">🩺</div>
+      <h1>AI 관절 ROM 검사</h1>
+      <p>AI 카메라로 관절 가동 범위(ROM)를 측정하고<br>진단 리포트를 받아보세요</p>
+    </div>
+
+    <div class="card fade-in">
+      <div class="section-label">검사 부위 선택</div>
+      <div class="joint-grid">
+        <div class="joint-card selected" id="jcard-shoulder" onclick="selectJoint('shoulder')">
+          <span class="joint-card-icon">💪</span>
+          <div class="joint-card-name">어깨</div>
+          <div class="joint-card-desc">외전<br>(Abduction)</div>
+          <span class="joint-card-badge">✓ 완료</span>
+        </div>
+        <div class="joint-card" id="jcard-knee" onclick="selectJoint('knee')">
+          <span class="joint-card-icon">🦵</span>
+          <div class="joint-card-name">무릎</div>
+          <div class="joint-card-desc">굴곡<br>(Flexion)</div>
+          <span class="joint-card-badge">✓ 완료</span>
+        </div>
+        <div class="joint-card" id="jcard-elbow" onclick="selectJoint('elbow')">
+          <span class="joint-card-icon">🦾</span>
+          <div class="joint-card-name">팔꿈치</div>
+          <div class="joint-card-desc">굴곡<br>(Flexion)</div>
+          <span class="joint-card-badge">✓ 완료</span>
+        </div>
+      </div>
+
+      <div class="rom-info">
+        <div class="rom-info-title">📋 정상 ROM 기준표</div>
+        <div class="rom-row"><div class="rom-dot" style="background:#6BAF3A"></div>정상 범위</div>
+        <div class="rom-row"><div class="rom-dot" style="background:#E8A93A"></div>경미한 제한 (의사 상담 권장)</div>
+        <div class="rom-row"><div class="rom-dot" style="background:#E85A5A"></div>주의 필요 (전문 검사 권장)</div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-start-measure" onclick="startMeasure()">
+        📸 카메라로 측정 시작
+      </button>
+    </div>
+
+    <div class="card fade-in" style="animation-delay:.1s">
+      <div class="section-label">이렇게 진행돼요</div>
+      <div style="display:grid;gap:10px;">
+        <div style="display:flex;align-items:center;gap:12px;font-size:13px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--zone-color);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">1</div>
+          <span>관절 부위를 선택하고 카메라 앞에 서세요</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:13px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--zone-color);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">2</div>
+          <span>가이드에 따라 관절을 최대한 움직여주세요</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:13px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--zone-color);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">3</div>
+          <span>5초간 최대 가동 범위를 AI가 자동 기록해요</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:13px;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--zone-color);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">4</div>
+          <span>AI 진단 리포트 + 재활 운동을 추천받아요</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Screen 2: Measure ══ -->
+  <div id="screen-measure" class="screen">
+    <div class="card fade-in" style="padding:16px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div style="font-size:22px;" id="measure-joint-icon">💪</div>
+        <div>
+          <div style="font-size:16px;font-weight:700;" id="measure-joint-name">어깨 ROM 측정</div>
+          <div style="font-size:12px;color:var(--text-sub);" id="measure-joint-sub">외전 (Abduction)</div>
+        </div>
+        <div style="margin-left:auto;font-size:12px;font-weight:600;color:var(--zone-dark);background:var(--zone-light);padding:4px 10px;border-radius:8px;" id="measure-status-badge">대기 중</div>
+      </div>
+
+      <div class="no-cam-msg" id="no-cam-msg">
+        ⚠️ 카메라를 감지하지 못했습니다. 브라우저 카메라 권한을 허용해주세요.
+      </div>
+
+      <div class="cam-wrap">
+        <video id="inputVideo" playsinline></video>
+        <canvas id="outputCanvas"></canvas>
+        <div class="cam-overlay-ui">
+          <div class="cam-guide-text" id="cam-guide-text">카메라를 준비 중입니다...</div>
+          <div class="cam-angle-display">
+            <div class="angle-badge">
+              <div class="angle-badge-label">현재 각도</div>
+              <div class="angle-badge-value" id="live-angle">--</div>
+              <div class="angle-badge-unit">°</div>
+            </div>
+            <div class="angle-badge">
+              <div class="angle-badge-label">최대 기록</div>
+              <div class="angle-badge-value" id="max-angle">--</div>
+              <div class="angle-badge-unit">°</div>
+              <div class="angle-badge-max" id="max-angle-verdict"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="measure-info-row">
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 100 100" id="angle-gauge-svg">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#E8E6E1" stroke-width="10"/>
+            <circle id="gauge-arc" cx="50" cy="50" r="40" fill="none" stroke="#6BAF3A" stroke-width="10"
+              stroke-dasharray="251.2" stroke-dashoffset="251.2"
+              stroke-linecap="round"
+              transform="rotate(-90 50 50)"
+              style="transition: stroke-dashoffset .3s ease;"/>
+            <text x="50" y="46" text-anchor="middle" font-size="18" font-weight="700" fill="#1A1A1A" font-family="Space Grotesk, sans-serif" id="gauge-text">0°</text>
+            <text x="50" y="60" text-anchor="middle" font-size="9" fill="#6B6B6B" id="gauge-sub">현재</text>
+          </svg>
+        </div>
+        <div class="guide-card">
+          <div class="guide-card-title" id="guide-title">가이드</div>
+          <div class="guide-arrow-wrap">
+            <svg width="80" height="60" id="guide-svg" viewBox="0 0 80 60">
+              <!-- shoulder guide -->
+              <g id="guide-shoulder">
+                <line x1="40" y1="50" x2="40" y2="15" stroke="#6BAF3A" stroke-width="2.5" stroke-dasharray="4,3"/>
+                <line x1="40" y1="50" x2="70" y2="50" stroke="#1A1A1A" stroke-width="2.5"/>
+                <path d="M40 15 L36 23 M40 15 L44 23" stroke="#6BAF3A" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M30 50 A10 10 0 0 1 40 40" stroke="#E8A93A" stroke-width="1.5" fill="none" stroke-dasharray="3,2"/>
+                <text x="52" y="44" font-size="9" fill="#E8A93A" font-family="Space Grotesk">ROM</text>
+              </g>
+              <!-- knee guide -->
+              <g id="guide-knee" display="none">
+                <line x1="40" y1="10" x2="40" y2="40" stroke="#1A1A1A" stroke-width="2.5"/>
+                <line x1="40" y1="40" x2="65" y2="55" stroke="#6BAF3A" stroke-width="2.5" stroke-dasharray="4,3"/>
+                <path d="M65 55 L57 52 M65 55 L62 47" stroke="#6BAF3A" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M40 40 Q50 40 50 48" stroke="#E8A93A" stroke-width="1.5" fill="none" stroke-dasharray="3,2"/>
+                <text x="52" y="43" font-size="9" fill="#E8A93A" font-family="Space Grotesk">ROM</text>
+              </g>
+              <!-- elbow guide -->
+              <g id="guide-elbow" display="none">
+                <line x1="20" y1="50" x2="40" y2="50" stroke="#1A1A1A" stroke-width="2.5"/>
+                <line x1="40" y1="50" x2="55" y2="18" stroke="#6BAF3A" stroke-width="2.5" stroke-dasharray="4,3"/>
+                <path d="M55 18 L50 26 M55 18 L60 25" stroke="#6BAF3A" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M40 50 Q48 50 46 42" stroke="#E8A93A" stroke-width="1.5" fill="none" stroke-dasharray="3,2"/>
+                <text x="50" y="46" font-size="9" fill="#E8A93A" font-family="Space Grotesk">ROM</text>
+              </g>
+            </svg>
+          </div>
+          <div class="guide-instruction" id="guide-instruction">팔을 천천히 옆으로 올려주세요</div>
+        </div>
+      </div>
+
+      <!-- Timer ring -->
+      <div style="display:flex;align-items:center;gap:14px;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:12px;">
+        <div class="timer-ring-wrap" style="margin:0;flex-shrink:0;">
+          <svg class="timer-ring-svg" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="24" fill="none" stroke="#E8E6E1" stroke-width="5"/>
+            <circle id="timer-arc" cx="30" cy="30" r="24" fill="none" stroke="#6BAF3A" stroke-width="5"
+              stroke-dasharray="150.8" stroke-dashoffset="150.8"
+              stroke-linecap="round"
+              transform="rotate(-90 30 30)"
+              style="transition: stroke-dashoffset .4s linear;"/>
+            <text x="30" y="35" text-anchor="middle" font-size="16" font-weight="700" fill="#1A1A1A" font-family="Space Grotesk, sans-serif" id="timer-text">5</text>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);" id="timer-status">측정 준비 중</div>
+          <div style="font-size:12px;color:var(--text-sub);" id="timer-desc">포즈가 인식되면 자동으로 측정이 시작됩니다</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-record" onclick="recordResult()" disabled>
+        ✅ 이 각도로 기록하기
+      </button>
+      <button class="btn btn-secondary" style="margin-top:8px;" onclick="goToIntro()">← 관절 선택으로 돌아가기</button>
+    </div>
+  </div>
+
+  <!-- ══ Screen 3: Report ══ -->
+  <div id="screen-report" class="screen">
+    <div class="report-header fade-in">
+      <div class="report-icon">📋</div>
+      <h2>AI 진단 리포트</h2>
+      <p id="report-subtitle">측정 완료 · 3개 관절 분석 결과</p>
+    </div>
+
+    <div class="prescription-card fade-in">
+      <div class="prescription-header">
+        <span class="prescription-header-icon">🩺</span>
+        <span class="prescription-header-title">관절 ROM 측정 결과</span>
+      </div>
+      <div class="prescription-body" id="rom-result-list">
+        <!-- generated by JS -->
+      </div>
+    </div>
+
+    <div class="card fade-in" style="animation-delay:.1s;">
+      <div class="section-label">💊 재활 운동 추천</div>
+      <div class="rehab-grid" id="rehab-list">
+        <!-- generated by JS -->
+      </div>
+    </div>
+
+    <div class="stamp-card fade-in" style="animation-delay:.2s;">
+      <div class="stamp-icon">🏅</div>
+      <div class="stamp-title">AI 의사 체험 완료!</div>
+      <div class="stamp-subtitle">관절 ROM 검사를 마쳤습니다. 스탬프를 획득했어요!</div>
+    </div>
+
+    <button class="btn btn-primary fade-in" style="animation-delay:.3s;" onclick="resetAll()">🔄 다시 측정하기</button>
+    <button class="btn btn-secondary" style="margin-top:8px;" onclick="goToDashboard()">← 대시보드로 돌아가기</button>
+  </div>
+
+</main>
+
+<!-- ── Step Bar ── -->
+<div class="step-bar">
+  <div class="step-item" id="step1">
+    <div class="step-num active" id="step1-num">1</div>
+    <div class="step-label">관절 선택</div>
+  </div>
+  <div class="step-item" id="step2">
+    <div class="step-num" id="step2-num">2</div>
+    <div class="step-label">ROM 측정</div>
+  </div>
+  <div class="step-item" id="step3">
+    <div class="step-num" id="step3-num">3</div>
+    <div class="step-label">진단 리포트</div>
+  </div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────
+const JOINTS = {
+  shoulder: {
+    name: '어깨 ROM 측정',
+    icon: '💪',
+    sub: '외전 (Abduction)',
+    normalMin: 150, normalMax: 180,
+    mildMin: 120, mildMax: 150,
+    warnMax: 120,
+    guideTitle: '어깨 외전 동작',
+    guideInstruction: '팔을 몸 옆에서 천천히 위로 올려주세요 (최대한 높이)',
+    guideSvg: 'shoulder',
+  },
+  knee: {
+    name: '무릎 ROM 측정',
+    icon: '🦵',
+    sub: '굴곡 (Flexion)',
+    normalMin: 130, normalMax: 150,
+    mildMin: 100, mildMax: 130,
+    warnMax: 100,
+    guideTitle: '무릎 굴곡 동작',
+    guideInstruction: '의자 없이 무릎을 최대한 굽혀주세요',
+    guideSvg: 'knee',
+  },
+  elbow: {
+    name: '팔꿈치 ROM 측정',
+    icon: '🦾',
+    sub: '굴곡 (Flexion)',
+    normalMin: 140, normalMax: 160,
+    mildMin: 110, mildMax: 140,
+    warnMax: 110,
+    guideTitle: '팔꿈치 굴곡 동작',
+    guideInstruction: '팔을 쭉 펴다가 천천히 최대한 접어주세요',
+    guideSvg: 'elbow',
+  }
+};
+
+const REHAB_DB = {
+  shoulder: [
+    { emoji: '🔵', name: '벽 크롤 운동', desc: '벽에 손끝을 짚고 천천히 손가락을 위로 올려 어깨를 늘려줍니다. 10회 반복.', joint: '어깨' },
+    { emoji: '🟡', name: '수건 스트레칭', desc: '수건 양끝을 잡고 등 뒤에서 당겨 어깨 가동범위를 확장합니다. 30초 유지.', joint: '어깨' },
+    { emoji: '🟢', name: '진자 운동', desc: '상체를 앞으로 숙이고 팔을 자연스럽게 늘어뜨려 원을 그리듯 흔듭니다.', joint: '어깨' },
+  ],
+  knee: [
+    { emoji: '🔴', name: '앉아서 무릎 굽히기', desc: '의자 끝에 앉아 발꿈치를 의자 아래로 밀어 무릎 굴곡 범위를 늘립니다. 20회.', joint: '무릎' },
+    { emoji: '🟠', name: '누워서 뒤꿈치 당기기', desc: '바닥에 엎드려 발목을 잡고 뒤꿈치를 엉덩이 쪽으로 당겨 30초 유지합니다.', joint: '무릎' },
+    { emoji: '🟤', name: '스탭박스 굴곡 운동', desc: '낮은 계단을 이용해 한쪽 발로 올라갔다 내려오는 동작을 반복합니다.', joint: '무릎' },
+  ],
+  elbow: [
+    { emoji: '🟣', name: '팔꿈치 굴곡 스트레칭', desc: '반대 손으로 손목을 잡고 천천히 굴곡 방향으로 눌러 30초 유지합니다.', joint: '팔꿈치' },
+    { emoji: '🔵', name: '손목 회전 운동', desc: '팔꿈치를 고정하고 손바닥을 위아래로 번갈아 돌리는 운동을 10회씩 합니다.', joint: '팔꿈치' },
+    { emoji: '🟡', name: '저항 밴드 굴곡', desc: '저항 밴드를 밟고 손잡이를 잡아 팔꿈치를 굽히는 동작으로 근력을 강화합니다.', joint: '팔꿈치' },
+  ],
+};
+
+// ── State ──────────────────────────────────────────────────
+let selectedJoint = 'shoulder';
+let results = {};
+let measureComplete = false;
+let currentMaxAngle = 0;
+let currentAngle = 0;
+let timerInterval = null;
+let measureTimerStarted = false;
+let measureCountdown = 5;
+let poseReady = false;
+
+// MediaPipe
+let pose = null;
+let camera = null;
+let videoEl = null;
+let canvasEl = null;
+let canvasCtx = null;
+
+// ── Utils ──────────────────────────────────────────────────
+function rad2deg(r) { return r * 180 / Math.PI; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+function getVerdict(joint, angle) {
+  const j = JOINTS[joint];
+  if (angle >= j.normalMin) return 'normal';
+  if (angle >= j.mildMin) return 'mild';
+  return 'warning';
+}
+
+function verdictLabel(v) {
+  if (v === 'normal') return '정상';
+  if (v === 'mild') return '경미한 제한';
+  return '주의 필요';
+}
+
+function verdictClass(v) {
+  if (v === 'normal') return 'verdict-normal';
+  if (v === 'mild') return 'verdict-mild';
+  return 'verdict-warning';
+}
+
+// ── Calculate angles from landmarks ───────────────────────
+function calcShoulderAbduction(lm) {
+  // Use right side: shoulder(12), elbow(14), hip(24)
+  const shoulder = lm[12], elbow = lm[14], hip = lm[24];
+  if (!shoulder || !elbow || !hip) return null;
+  // vector from shoulder down (to hip) and shoulder to elbow
+  const vDown = { x: hip.x - shoulder.x, y: hip.y - shoulder.y };
+  const vArm = { x: elbow.x - shoulder.x, y: elbow.y - shoulder.y };
+  const dot = vDown.x * vArm.x + vDown.y * vArm.y;
+  const magA = Math.sqrt(vDown.x**2 + vDown.y**2);
+  const magB = Math.sqrt(vArm.x**2 + vArm.y**2);
+  if (magA < 0.001 || magB < 0.001) return null;
+  const angle = rad2deg(Math.acos(clamp(dot / (magA * magB), -1, 1)));
+  return clamp(angle, 0, 180);
+}
+
+function calcKneeFlexion(lm) {
+  // right knee: hip(24), knee(26), ankle(28)
+  const hip = lm[24], knee = lm[26], ankle = lm[28];
+  if (!hip || !knee || !ankle) return null;
+  const v1 = { x: hip.x - knee.x, y: hip.y - knee.y };
+  const v2 = { x: ankle.x - knee.x, y: ankle.y - knee.y };
+  const dot = v1.x * v2.x + v1.y * v2.y;
+  const mag1 = Math.sqrt(v1.x**2 + v1.y**2);
+  const mag2 = Math.sqrt(v2.x**2 + v2.y**2);
+  if (mag1 < 0.001 || mag2 < 0.001) return null;
+  const angle = rad2deg(Math.acos(clamp(dot / (mag1 * mag2), -1, 1)));
+  return clamp(angle, 0, 180);
+}
+
+function calcElbowFlexion(lm) {
+  // right elbow: shoulder(12), elbow(14), wrist(16)
+  const shoulder = lm[12], elbow = lm[14], wrist = lm[16];
+  if (!shoulder || !elbow || !wrist) return null;
+  const v1 = { x: shoulder.x - elbow.x, y: shoulder.y - elbow.y };
+  const v2 = { x: wrist.x - elbow.x, y: wrist.y - elbow.y };
+  const dot = v1.x * v2.x + v1.y * v2.y;
+  const mag1 = Math.sqrt(v1.x**2 + v1.y**2);
+  const mag2 = Math.sqrt(v2.x**2 + v2.y**2);
+  if (mag1 < 0.001 || mag2 < 0.001) return null;
+  const angle = rad2deg(Math.acos(clamp(dot / (mag1 * mag2), -1, 1)));
+  return clamp(angle, 0, 180);
+}
+
+function computeAngle(landmarks) {
+  if (selectedJoint === 'shoulder') return calcShoulderAbduction(landmarks);
+  if (selectedJoint === 'knee') return calcKneeFlexion(landmarks);
+  if (selectedJoint === 'elbow') return calcElbowFlexion(landmarks);
+  return null;
+}
+
+// ── Gauge ──────────────────────────────────────────────────
+function updateGauge(angle) {
+  const arc = document.getElementById('gauge-arc');
+  const txt = document.getElementById('gauge-text');
+  const sub = document.getElementById('gauge-sub');
+  const circumference = 251.2;
+  const frac = clamp(angle / 180, 0, 1);
+  arc.style.strokeDashoffset = circumference * (1 - frac);
+  const v = getVerdict(selectedJoint, angle);
+  arc.style.stroke = v === 'normal' ? '#6BAF3A' : v === 'mild' ? '#E8A93A' : '#E85A5A';
+  txt.textContent = Math.round(angle) + '°';
+}
+
+function updateTimerArc(remaining) {
+  const arc = document.getElementById('timer-arc');
+  const txt = document.getElementById('timer-text');
+  const circumference = 150.8;
+  const frac = remaining / 5;
+  arc.style.strokeDashoffset = circumference * (1 - frac);
+  txt.textContent = Math.ceil(remaining);
+}
+
+// ── Pose Results ───────────────────────────────────────────
+function onPoseResults(results) {
+  if (!canvasEl) return;
+  canvasCtx.save();
+  canvasCtx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+  canvasCtx.drawImage(results.image, 0, 0, canvasEl.width, canvasEl.height);
+
+  if (results.poseLandmarks) {
+    // Draw skeleton
+    window.drawConnectors && drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS,
+      { color: 'rgba(107,175,58,0.7)', lineWidth: 2 });
+    window.drawLandmarks && drawLandmarks(canvasCtx, results.poseLandmarks,
+      { color: 'rgba(107,175,58,0.9)', lineWidth: 1, radius: 3 });
+
+    const angle = computeAngle(results.poseLandmarks);
+    if (angle !== null) {
+      poseReady = true;
+      currentAngle = angle;
+      if (angle > currentMaxAngle) currentMaxAngle = angle;
+
+      // Update UI
+      document.getElementById('live-angle').textContent = Math.round(angle);
+      document.getElementById('max-angle').textContent = Math.round(currentMaxAngle);
+      updateGauge(angle);
+
+      const v = getVerdict(selectedJoint, currentMaxAngle);
+      document.getElementById('max-angle-verdict').textContent = verdictLabel(v);
+      document.getElementById('max-angle-verdict').style.color =
+        v === 'normal' ? '#6BAF3A' : v === 'mild' ? '#E8A93A' : '#E85A5A';
+
+      if (!measureTimerStarted) {
+        startMeasureTimer();
+      }
+    }
+  } else {
+    poseReady = false;
+  }
+  canvasCtx.restore();
+}
+
+// ── Measure timer ──────────────────────────────────────────
+function startMeasureTimer() {
+  if (measureTimerStarted) return;
+  measureTimerStarted = true;
+  measureCountdown = 5;
+  document.getElementById('timer-status').textContent = '측정 진행 중!';
+  document.getElementById('timer-desc').textContent = '최대 각도를 유지해주세요';
+  document.getElementById('measure-status-badge').textContent = '측정 중';
+  document.getElementById('cam-guide-text').textContent = '잘하고 있어요! 최대한 더 올려주세요 💪';
+
+  let elapsed = 0;
+  const step = 100;
+  timerInterval = setInterval(() => {
+    elapsed += step / 1000;
+    const remaining = Math.max(0, 5 - elapsed);
+    updateTimerArc(remaining);
+    document.getElementById('timer-text') && (document.getElementById('timer-text').textContent = Math.ceil(remaining));
+
+    if (elapsed >= 5) {
+      clearInterval(timerInterval);
+      finishMeasure();
+    }
+  }, step);
+}
+
+function finishMeasure() {
+  document.getElementById('timer-status').textContent = '측정 완료!';
+  document.getElementById('timer-desc').textContent = '최대 가동 범위가 기록되었습니다';
+  document.getElementById('measure-status-badge').textContent = '완료 ✓';
+  document.getElementById('cam-guide-text').textContent = '측정 완료! 아래 버튼을 눌러 기록하세요 ✅';
+  document.getElementById('btn-record').disabled = false;
+  updateTimerArc(5);
+}
+
+// ── Navigation ─────────────────────────────────────────────
+function setStep(n) {
+  [1,2,3].forEach(i => {
+    const item = document.getElementById('step'+i);
+    const num = document.getElementById('step'+i+'-num');
+    item.classList.remove('active','done');
+    num.classList.remove('active','done');
+    if (i < n) { item.classList.add('done'); num.classList.add('done'); }
+    if (i === n) { item.classList.add('active'); num.classList.add('active'); }
+  });
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+
+function goToDashboard() {
+  stopCamera();
+  window.location.href = '../index.html';
+}
+
+function goToIntro() {
+  stopCamera();
+  showScreen('intro');
+  setStep(1);
+}
+
+function selectJoint(j) {
+  selectedJoint = j;
+  document.querySelectorAll('.joint-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('jcard-'+j).classList.add('selected');
+}
+
+// ── Start Measure ──────────────────────────────────────────
+function startMeasure() {
+  currentMaxAngle = 0;
+  currentAngle = 0;
+  measureTimerStarted = false;
+  poseReady = false;
+  if (timerInterval) clearInterval(timerInterval);
+
+  const jd = JOINTS[selectedJoint];
+  document.getElementById('measure-joint-icon').textContent = jd.icon;
+  document.getElementById('measure-joint-name').textContent = jd.name;
+  document.getElementById('measure-joint-sub').textContent = jd.sub;
+  document.getElementById('guide-title').textContent = jd.guideTitle;
+  document.getElementById('guide-instruction').textContent = jd.guideInstruction;
+  document.getElementById('measure-status-badge').textContent = '대기 중';
+  document.getElementById('btn-record').disabled = true;
+  document.getElementById('timer-status').textContent = '측정 준비 중';
+  document.getElementById('timer-desc').textContent = '포즈가 인식되면 자동으로 측정이 시작됩니다';
+  document.getElementById('live-angle').textContent = '--';
+  document.getElementById('max-angle').textContent = '--';
+  document.getElementById('max-angle-verdict').textContent = '';
+  document.getElementById('cam-guide-text').textContent = '카메라 앞에 서주세요...';
+  updateTimerArc(0);
+  updateGauge(0);
+
+  // Guide SVG
+  ['shoulder','knee','elbow'].forEach(g => {
+    const el = document.getElementById('guide-'+g);
+    if (el) el.setAttribute('display', g === jd.guideSvg ? '' : 'none');
+  });
+
+  showScreen('measure');
+  setStep(2);
+  initCamera();
+}
+
+// ── Camera / MediaPipe ─────────────────────────────────────
+function initCamera() {
+  videoEl = document.getElementById('inputVideo');
+  canvasEl = document.getElementById('outputCanvas');
+  canvasCtx = canvasEl.getContext('2d');
+
+  if (!window.Pose) {
+    document.getElementById('no-cam-msg').style.display = 'block';
+    document.getElementById('cam-guide-text').textContent = '⚠️ MediaPipe 로드 실패. 데모 모드로 전환합니다.';
+    runDemoMode();
+    return;
+  }
+
+  pose = new Pose({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+  });
+  pose.setOptions({
+    modelComplexity: 1,
+    smoothLandmarks: true,
+    enableSegmentation: false,
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+  });
+  pose.onResults(onPoseResults);
+
+  navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false })
+    .then(stream => {
+      videoEl.srcObject = stream;
+      videoEl.onloadedmetadata = () => {
+        videoEl.play();
+        canvasEl.width = videoEl.videoWidth || 640;
+        canvasEl.height = videoEl.videoHeight || 480;
+        document.getElementById('cam-guide-text').textContent = '몸 전체가 보이도록 서주세요';
+        requestAnimationFrame(processFrame);
+      };
+    })
+    .catch(err => {
+      console.warn('Camera error:', err);
+      document.getElementById('no-cam-msg').style.display = 'block';
+      document.getElementById('cam-guide-text').textContent = '⚠️ 카메라를 사용할 수 없어 데모 모드로 실행합니다.';
+      runDemoMode();
+    });
+}
+
+async function processFrame() {
+  if (!videoEl || videoEl.readyState < 2) {
+    requestAnimationFrame(processFrame);
+    return;
+  }
+  if (!document.getElementById('screen-measure').classList.contains('active')) return;
+  try {
+    await pose.send({ image: videoEl });
+  } catch(e) {}
+  requestAnimationFrame(processFrame);
+}
+
+function stopCamera() {
+  if (timerInterval) clearInterval(timerInterval);
+  if (videoEl && videoEl.srcObject) {
+    videoEl.srcObject.getTracks().forEach(t => t.stop());
+    videoEl.srcObject = null;
+  }
+  if (pose) { try { pose.close(); } catch(e){} pose = null; }
+}
+
+// ── Demo Mode (no camera) ──────────────────────────────────
+let demoRaf = null;
+function runDemoMode() {
+  let t = 0;
+  const jd = JOINTS[selectedJoint];
+  const target = jd.normalMin + Math.random() * (jd.normalMax - jd.normalMin) * 0.9;
+
+  if (canvasEl) {
+    canvasCtx.fillStyle = '#1A1A1A';
+    canvasCtx.fillRect(0, 0, canvasEl.width || 640, canvasEl.height || 480);
+    canvasCtx.fillStyle = 'rgba(107,175,58,0.2)';
+    canvasCtx.fillRect(0, 0, canvasEl.width || 640, canvasEl.height || 480);
+    canvasCtx.fillStyle = '#6BAF3A';
+    canvasCtx.font = 'bold 18px Space Grotesk';
+    canvasCtx.textAlign = 'center';
+    canvasCtx.fillText('데모 모드', (canvasEl.width||640)/2, (canvasEl.height||480)/2 - 10);
+    canvasCtx.fillStyle = 'rgba(255,255,255,0.6)';
+    canvasCtx.font = '13px Noto Sans KR';
+    canvasCtx.fillText('카메라 없이 시뮬레이션 실행 중', (canvasEl.width||640)/2, (canvasEl.height||480)/2 + 20);
+  }
+
+  function tick() {
+    t += 0.04;
+    const angle = Math.min(target, target * (1 - Math.exp(-t * 0.4)) + Math.random() * 3 - 1.5);
+    const clamped = clamp(angle, 0, 180);
+    currentAngle = clamped;
+    if (clamped > currentMaxAngle) currentMaxAngle = clamped;
+
+    document.getElementById('live-angle').textContent = Math.round(clamped);
+    document.getElementById('max-angle').textContent = Math.round(currentMaxAngle);
+    updateGauge(clamped);
+
+    const v = getVerdict(selectedJoint, currentMaxAngle);
+    document.getElementById('max-angle-verdict').textContent = verdictLabel(v);
+    document.getElementById('max-angle-verdict').style.color =
+      v === 'normal' ? '#6BAF3A' : v === 'mild' ? '#E8A93A' : '#E85A5A';
+
+    if (!measureTimerStarted && t > 0.5) startMeasureTimer();
+
+    if (document.getElementById('screen-measure').classList.contains('active')) {
+      demoRaf = requestAnimationFrame(tick);
+    }
+  }
+  demoRaf = requestAnimationFrame(tick);
+}
+
+// ── Record Result ──────────────────────────────────────────
+function recordResult() {
+  if (demoRaf) { cancelAnimationFrame(demoRaf); demoRaf = null; }
+  stopCamera();
+
+  results[selectedJoint] = {
+    angle: Math.round(currentMaxAngle),
+    verdict: getVerdict(selectedJoint, currentMaxAngle),
+  };
+
+  // Mark card as done
+  document.getElementById('jcard-'+selectedJoint).classList.add('done');
+
+  // Check if all 3 done
+  const measured = Object.keys(results).length;
+  if (measured >= 3) {
+    showReport();
+  } else {
+    goToIntro();
+  }
+}
+
+// ── Report ─────────────────────────────────────────────────
+function showReport() {
+  showScreen('report');
+  setStep(3);
+
+  const measuredJoints = Object.keys(results);
+  const subtitle = `${measuredJoints.length}개 관절 측정 완료`;
+  document.getElementById('report-subtitle').textContent = subtitle;
+
+  // ROM result list
+  const listEl = document.getElementById('rom-result-list');
+  listEl.innerHTML = '';
+
+  const jKeys = ['shoulder','knee','elbow'];
+  jKeys.forEach(key => {
+    const r = results[key];
+    const jd = JOINTS[key];
+    if (!r) return;
+    const maxAngle = jd.normalMax;
+    const normalStart = jd.normalMin / maxAngle * 100;
+    const measuredPct = clamp(r.angle / maxAngle * 100, 0, 100);
+    const normalWidth = (jd.normalMax - jd.normalMin) / maxAngle * 100;
+
+    const row = document.createElement('div');
+    row.className = 'rom-result-row';
+    row.innerHTML = `
+      <div class="rom-result-joint">
+        <div class="rom-result-joint-name">${jd.icon} ${key === 'shoulder' ? '어깨' : key === 'knee' ? '무릎' : '팔꿈치'}</div>
+        <div class="rom-result-joint-sub">${key === 'shoulder' ? '외전' : '굴곡'}</div>
+      </div>
+      <div class="rom-result-bar-area">
+        <div class="rom-bar-label-row">
+          <span>0°</span>
+          <span>정상 ${jd.normalMin}-${jd.normalMax}°</span>
+          <span>${jd.normalMax}°</span>
+        </div>
+        <div class="rom-bar-outer">
+          <div class="rom-bar-normal" style="left:${normalStart}%;width:${normalWidth}%;"></div>
+          <div class="rom-bar-measured" id="bar-${key}" style="left:0%;"></div>
+        </div>
+      </div>
+      <div class="rom-result-right">
+        <div class="rom-angle-val">${r.angle}</div>
+        <div class="rom-angle-unit">도(°)</div>
+        <span class="verdict-badge ${verdictClass(r.verdict)}">${verdictLabel(r.verdict)}</span>
+      </div>
+    `;
+    listEl.appendChild(row);
+
+    // animate bar
+    setTimeout(() => {
+      const barEl = document.getElementById('bar-'+key);
+      if (barEl) barEl.style.left = measuredPct + '%';
+    }, 300);
+  });
+
+  // Rehab recommendations - pick worst verdict joints first
+  const sorted = Object.entries(results).sort((a, b) => {
+    const order = { warning: 0, mild: 1, normal: 2 };
+    return order[a[1].verdict] - order[b[1].verdict];
+  });
+
+  const rehabEl = document.getElementById('rehab-list');
+  rehabEl.innerHTML = '';
+  const recommended = [];
+  sorted.forEach(([joint]) => {
+    REHAB_DB[joint].forEach(ex => recommended.push(ex));
+  });
+  // pick top 3
+  recommended.slice(0, 3).forEach(ex => {
+    const card = document.createElement('div');
+    card.className = 'rehab-card';
+    card.innerHTML = `
+      <div class="rehab-emoji">${ex.emoji}</div>
+      <div class="rehab-content">
+        <div class="rehab-name">${ex.name}</div>
+        <div class="rehab-desc">${ex.desc}</div>
+        <span class="rehab-joint-tag">💪 ${ex.joint}</span>
+      </div>
+    `;
+    rehabEl.appendChild(card);
+  });
+
+  // Save stamp
+  saveStamp();
+}
+
+// ── Stamp / localStorage ───────────────────────────────────
+function saveStamp() {
+  try {
+    const stamps = JSON.parse(localStorage.getItem('harness_stamps') || '{}');
+    stamps['10'] = { ts: Date.now(), results };
+    localStorage.setItem('harness_stamps', JSON.stringify(stamps));
+  } catch(e) {}
+}
+
+// ── Reset ──────────────────────────────────────────────────
+function resetAll() {
+  results = {};
+  currentMaxAngle = 0;
+  measureTimerStarted = false;
+  ['shoulder','knee','elbow'].forEach(j => {
+    const c = document.getElementById('jcard-'+j);
+    if (c) c.classList.remove('done','selected');
+  });
+  selectJoint('shoulder');
+  showScreen('intro');
+  setStep(1);
+}
+
+// ── Init ───────────────────────────────────────────────────
+(function init() {
+  setStep(1);
+  selectJoint('shoulder');
+})();
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

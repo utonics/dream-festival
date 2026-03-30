@@ -1,0 +1,15 @@
+{
+  "name": "dreamfest-server",
+  "version": "1.0.0",
+  "description": "꿈-드림 페스티벌 미래기술존 실시간 동기화 서버",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js --dev"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.16.0",
+    "cors": "^2.8.5"
+  }
+}

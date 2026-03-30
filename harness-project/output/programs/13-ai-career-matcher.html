@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 직업 매칭 · AI Career Matcher</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --zone: #8B6FC0;
+  --zone-dark: #7259A8;
+  --zone-light: #D4C9EC;
+  --zone-pale: #F0EBF9;
+  --bg: #F7F6FB;
+  --dark: #1A1A2E;
+  --white: #FFFFFF;
+  --text: #2D2D3A;
+  --muted: #8A8A9A;
+  --border: #E2DEF0;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(139,111,192,.08);
+  --shadow-md: 0 4px 24px rgba(139,111,192,.18);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  background-image: radial-gradient(circle, #D8D2EE 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── TOP BAR ─── */
+#topbar {
+  background: var(--zone);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 16px rgba(139,111,192,.4);
+}
+#topbar .title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  background: rgba(255,255,255,.22);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: background .2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.back-btn:hover { background: rgba(255,255,255,.38); }
+.zone-badge {
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: .5px;
+}
+
+/* ─── WRAPPER ─── */
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+/* ─── SCREENS ─── */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ─── INTRO ─── */
+#intro-screen {
+  text-align: center;
+  padding-top: 40px;
+}
+.intro-hero {
+  font-size: 80px;
+  line-height: 1;
+  margin-bottom: 16px;
+  animation: floatBrain 3s ease-in-out infinite;
+  display: block;
+}
+@keyframes floatBrain {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.intro-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+.intro-sub {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+.intro-sub strong { color: var(--zone); }
+.dimension-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 32px;
+}
+.dimension-item {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  box-shadow: var(--shadow);
+}
+.dimension-item .dim-icon { font-size: 22px; }
+.dimension-item .dim-name { font-size: 13px; font-weight: 700; color: var(--dark); }
+.dimension-item .dim-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.btn-start {
+  width: 100%;
+  background: linear-gradient(135deg, var(--zone), var(--zone-dark));
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 18px 32px;
+  font-size: 17px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(139,111,192,.4);
+  transition: transform .2s, box-shadow .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.btn-start:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(139,111,192,.5); }
+.btn-start:active { transform: translateY(0); }
+.info-chips {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.chip {
+  background: var(--zone-pale);
+  color: var(--zone-dark);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--zone-light);
+}
+
+/* ─── QUIZ ─── */
+#quiz-screen { padding-top: 24px; }
+.quiz-header {
+  margin-bottom: 20px;
+}
+.quiz-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.quiz-progress-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--zone);
+}
+.quiz-progress-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--zone-light);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--zone), #B09FD8);
+  border-radius: 10px;
+  transition: width .4s ease;
+}
+.question-card {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 28px 24px 24px;
+  box-shadow: var(--shadow-md);
+  border: 1.5px solid var(--border);
+  margin-bottom: 16px;
+  min-height: 200px;
+  position: relative;
+  overflow: hidden;
+}
+.question-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--zone), #B09FD8);
+}
+.question-dim-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--zone-pale);
+  color: var(--zone-dark);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+  border: 1.5px solid var(--zone-light);
+}
+.question-text {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--dark);
+  line-height: 1.5;
+}
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.option-btn {
+  width: 100%;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--text);
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.option-btn:hover {
+  border-color: var(--zone);
+  background: var(--zone-pale);
+  color: var(--zone-dark);
+  transform: translateX(4px);
+}
+.option-btn.selected {
+  border-color: var(--zone);
+  background: linear-gradient(135deg, var(--zone-pale), #EAE5F8);
+  color: var(--zone-dark);
+  font-weight: 700;
+}
+.option-letter {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--zone-light);
+  color: var(--zone-dark);
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  transition: all .2s;
+}
+.option-btn.selected .option-letter,
+.option-btn:hover .option-letter {
+  background: var(--zone);
+  color: #fff;
+}
+.quiz-nav {
+  display: flex;
+  gap: 10px;
+}
+.btn-prev {
+  flex: 1;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-prev:hover:not(:disabled) { border-color: var(--zone); color: var(--zone); }
+.btn-prev:disabled { opacity: .35; cursor: not-allowed; }
+.btn-next {
+  flex: 3;
+  background: linear-gradient(135deg, var(--zone), var(--zone-dark));
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-next:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(139,111,192,.4); }
+.btn-next:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ─── LOADING ─── */
+#loading-screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  text-align: center;
+  padding-top: 40px;
+}
+#loading-screen.active { display: flex; }
+.loading-brain {
+  font-size: 72px;
+  animation: spinBrain 1.5s linear infinite;
+  margin-bottom: 24px;
+  display: block;
+  filter: drop-shadow(0 4px 16px rgba(139,111,192,.5));
+}
+@keyframes spinBrain {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(10deg) scale(1.05); }
+  50% { transform: rotate(0deg) scale(1); }
+  75% { transform: rotate(-10deg) scale(1.05); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+.loading-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+.loading-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+.loading-dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.loading-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--zone);
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+.loading-dot:nth-child(2) { animation-delay: .2s; background: #A98FD4; }
+.loading-dot:nth-child(3) { animation-delay: .4s; background: var(--zone-light); }
+@keyframes dotPulse {
+  0%,80%,100% { transform: scale(.6); opacity: .5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+.loading-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 300px;
+}
+.loading-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--white);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all .4s;
+}
+.loading-step.visible { opacity: 1; transform: translateY(0); }
+.loading-step.done { color: var(--zone-dark); border-color: var(--zone-light); background: var(--zone-pale); }
+.loading-step-icon { font-size: 16px; }
+
+/* ─── RESULT ─── */
+#result-screen { padding-top: 24px; }
+.result-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.result-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+.result-sub { font-size: 14px; color: var(--muted); }
+
+/* Radar */
+.radar-section {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  border: 1.5px solid var(--border);
+  margin-bottom: 20px;
+  text-align: center;
+}
+.radar-section h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+#radarChart {
+  display: block;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+/* Dimension bars */
+.dim-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+.dim-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dim-bar-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  width: 70px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.dim-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--zone-light);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.dim-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--zone), #B09FD8);
+  border-radius: 10px;
+  transition: width 1s ease .3s;
+}
+.dim-bar-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--zone-dark);
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Top 3 */
+.top3-section { margin-bottom: 20px; }
+.top3-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.career-card-1st {
+  background: linear-gradient(135deg, #F0EBF9, #E8E0F5, #DDD4F0);
+  border: 2px solid var(--zone-light);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 28px rgba(139,111,192,.2);
+  position: relative;
+  overflow: hidden;
+}
+.career-card-1st::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(139,111,192,.15), transparent);
+  border-radius: 50%;
+}
+.career-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--zone);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.career-top-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.career-emoji {
+  font-size: 42px;
+  line-height: 1;
+}
+.career-info { flex: 1; }
+.career-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 2px;
+}
+.career-name-ko {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--zone);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 12px;
+}
+.match-badge span { font-size: 12px; font-weight: 600; opacity: .85; }
+.career-desc {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+.career-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.career-detail-item {
+  background: rgba(255,255,255,.7);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(139,111,192,.15);
+}
+.career-detail-item .detail-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--zone-dark);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 4px;
+}
+.career-detail-item .detail-val {
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 500;
+  line-height: 1.4;
+}
+.salary-badge {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--zone-dark);
+}
+
+/* 2nd, 3rd cards */
+.career-cards-minor {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.career-card-minor {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  transition: all .2s;
+  cursor: pointer;
+}
+.career-card-minor:hover {
+  border-color: var(--zone-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.career-card-minor .minor-rank {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.career-card-minor .minor-emoji { font-size: 28px; margin-bottom: 6px; display: block; }
+.career-card-minor .minor-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 2px;
+  line-height: 1.3;
+}
+.career-card-minor .minor-name-ko {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.career-card-minor .minor-match {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--zone);
+}
+.career-card-minor .minor-desc {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+/* Stamp + actions */
+.result-actions {
+  background: var(--white);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  border: 1.5px solid var(--border);
+  margin-bottom: 20px;
+  text-align: center;
+}
+.stamp-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.stamp-icon {
+  font-size: 48px;
+  animation: stampBounce 2s ease-in-out infinite;
+}
+@keyframes stampBounce {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+.stamp-text { text-align: left; }
+.stamp-text .st-title { font-weight: 700; font-size: 15px; color: var(--dark); }
+.stamp-text .st-sub { font-size: 12px; color: var(--muted); }
+.action-btns { display: flex; gap: 10px; }
+.btn-action {
+  flex: 1;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Noto Sans KR', sans-serif;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+}
+.btn-save {
+  background: linear-gradient(135deg, var(--zone), var(--zone-dark));
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(139,111,192,.35);
+}
+.btn-save:hover { transform: translateY(-1px); }
+.btn-retry {
+  background: var(--zone-pale);
+  color: var(--zone-dark);
+  border: 2px solid var(--zone-light);
+}
+.btn-retry:hover { background: var(--zone-light); }
+
+/* ─── PARTICLES ─── */
+#particles {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 999;
+  overflow: hidden;
+}
+.particle {
+  position: absolute;
+  font-size: 20px;
+  animation: particleFall linear forwards;
+  opacity: 0;
+}
+@keyframes particleFall {
+  0% { transform: translateY(-40px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* ─── TOAST ─── */
+#toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--dark);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 1000;
+  opacity: 0;
+  transition: all .3s;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─── RESPONSIVE ─── */
+@media (min-width: 480px) {
+  #app { padding: 0 24px 60px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <button class="back-btn" onclick="goBack()">← 대시보드</button>
+  <div class="title">🎯 AI 직업 매칭</div>
+  <div class="zone-badge">E존</div>
+</div>
+
+<!-- PARTICLES -->
+<div id="particles"></div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- SCREEN: INTRO -->
+  <div id="intro-screen" class="screen active">
+    <span class="intro-hero">🧠</span>
+    <div class="intro-title">AI 직업 매칭</div>
+    <p class="intro-sub">
+      <strong>10가지 질문</strong>에 답하면<br>
+      AI가 너에게 딱 맞는 미래 직업을 찾아줄게!<br>
+      총 <strong>20개 AI·IT 직업</strong> 중 TOP 3 추천
+    </p>
+    <div class="info-chips">
+      <span class="chip">📝 10문항</span>
+      <span class="chip">⏱ 약 2분</span>
+      <span class="chip">🏆 TOP 3 추천</span>
+      <span class="chip">📊 레이더 차트</span>
+    </div>
+    <div class="dimension-grid">
+      <div class="dimension-item">
+        <span class="dim-icon">🔢</span>
+        <div>
+          <div class="dim-name">논리적 사고</div>
+          <div class="dim-desc">문제 해결 능력</div>
+        </div>
+      </div>
+      <div class="dimension-item">
+        <span class="dim-icon">💡</span>
+        <div>
+          <div class="dim-name">창의성</div>
+          <div class="dim-desc">아이디어 발상</div>
+        </div>
+      </div>
+      <div class="dimension-item">
+        <span class="dim-icon">💬</span>
+        <div>
+          <div class="dim-name">소통 능력</div>
+          <div class="dim-desc">협업·발표 능력</div>
+        </div>
+      </div>
+      <div class="dimension-item">
+        <span class="dim-icon">⚙️</span>
+        <div>
+          <div class="dim-name">기술 관심도</div>
+          <div class="dim-desc">새 기술 탐구</div>
+        </div>
+      </div>
+      <div class="dimension-item">
+        <span class="dim-icon">📊</span>
+        <div>
+          <div class="dim-name">분석력</div>
+          <div class="dim-desc">데이터·패턴</div>
+        </div>
+      </div>
+      <div class="dimension-item">
+        <span class="dim-icon">👑</span>
+        <div>
+          <div class="dim-name">리더십</div>
+          <div class="dim-desc">방향 제시·결정</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-start" onclick="startQuiz()">
+      🚀 적성 검사 시작하기
+    </button>
+  </div>
+
+  <!-- SCREEN: QUIZ -->
+  <div id="quiz-screen" class="screen">
+    <div class="quiz-header">
+      <div class="quiz-progress-info">
+        <span class="quiz-progress-label" id="progressLabel">문항 1 / 10</span>
+        <span class="quiz-progress-num" id="dimLabel">🔢 논리적 사고</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:10%"></div>
+      </div>
+    </div>
+    <div class="question-card">
+      <div class="question-dim-tag" id="questionDimTag">🔢 논리적 사고</div>
+      <div class="question-text" id="questionText">문항 로딩 중...</div>
+    </div>
+    <div class="options-list" id="optionsList"></div>
+    <div style="height:12px"></div>
+    <div class="quiz-nav">
+      <button class="btn-prev" id="btnPrev" onclick="prevQuestion()" disabled>← 이전</button>
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()" disabled>다음 →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: LOADING -->
+  <div id="loading-screen" class="screen">
+    <span class="loading-brain">🧠</span>
+    <div class="loading-title">AI가 분석하고 있어요...</div>
+    <div class="loading-sub">너의 적성 프로필을 계산 중이야!</div>
+    <div class="loading-dots">
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+      <div class="loading-dot"></div>
+    </div>
+    <div class="loading-steps">
+      <div class="loading-step" id="ls1">
+        <span class="loading-step-icon">🔍</span>
+        <span>응답 데이터 수집 완료</span>
+      </div>
+      <div class="loading-step" id="ls2">
+        <span class="loading-step-icon">📊</span>
+        <span>6가지 적성 차원 계산 중...</span>
+      </div>
+      <div class="loading-step" id="ls3">
+        <span class="loading-step-icon">🤖</span>
+        <span>20개 직업과 매칭 중...</span>
+      </div>
+      <div class="loading-step" id="ls4">
+        <span class="loading-step-icon">🎯</span>
+        <span>TOP 3 직업 선정 완료!</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: RESULT -->
+  <div id="result-screen" class="screen">
+    <div class="result-header">
+      <div class="result-title">🎉 나의 직업 매칭 결과</div>
+      <div class="result-sub" id="resultSub">AI가 분석한 나의 적성 프로필이야!</div>
+    </div>
+
+    <!-- Radar Chart -->
+    <div class="radar-section">
+      <h3>나의 적성 프로필</h3>
+      <svg id="radarChart" width="260" height="260" viewBox="0 0 260 260"></svg>
+      <div class="dim-bars" id="dimBars"></div>
+    </div>
+
+    <!-- Top 3 -->
+    <div class="top3-section">
+      <div class="top3-title">🏆 추천 직업 TOP 3</div>
+      <div id="card1st"></div>
+      <div class="career-cards-minor" id="cardsMinor"></div>
+    </div>
+
+    <!-- Actions -->
+    <div class="result-actions">
+      <div class="stamp-row">
+        <span class="stamp-icon">🎫</span>
+        <div class="stamp-text">
+          <div class="st-title">E존 스탬프 획득!</div>
+          <div class="st-sub">AI 직업 매칭 완료 인증 도장</div>
+        </div>
+      </div>
+      <div class="action-btns">
+        <button class="btn-action btn-save" onclick="saveResult()">💾 결과 저장</button>
+        <button class="btn-action btn-retry" onclick="retryQuiz()">🔄 다시 하기</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* ───────────────────────────────────────────
+   DATA
+─────────────────────────────────────────── */
+// Dimensions: [logic, creativity, communication, tech, analysis, leadership]
+const DIMS = ['논리', '창의', '소통', '기술', '분석', '리더십'];
+const DIM_ICONS = ['🔢','💡','💬','⚙️','📊','👑'];
+
+const QUESTIONS = [
+  {
+    text: "복잡한 수학 문제나 논리 퍼즐을 풀 때 나는...",
+    dim: 0, dimName: "논리적 사고",
+    options: [
+      { text: "정말 재미있어! 끝까지 풀어내야 해", score: 5 },
+      { text: "조금 어렵지만 도전해볼 만해", score: 4 },
+      { text: "그냥 보통이야, 억지로 하면 풀 수 있어", score: 3 },
+      { text: "어렵고 지루하게 느껴져", score: 2 },
+      { text: "전혀 흥미가 없어, 빨리 끝내고 싶어", score: 1 }
+    ]
+  },
+  {
+    text: "새로운 아이디어를 떠올리는 것은 나에게...",
+    dim: 1, dimName: "창의성",
+    options: [
+      { text: "자연스럽게 쏟아져나와, 오히려 너무 많아서 문제야", score: 5 },
+      { text: "꽤 잘 떠오르는 편이야", score: 4 },
+      { text: "가끔 좋은 아이디어가 생각나", score: 3 },
+      { text: "많이 생각해야 하나씩 나와", score: 2 },
+      { text: "남들 아이디어 듣는 게 더 편해", score: 1 }
+    ]
+  },
+  {
+    text: "팀 프로젝트에서 내가 가장 잘하는 역할은...",
+    dim: 2, dimName: "소통 능력",
+    options: [
+      { text: "팀원들 의견을 모으고 중재하는 역할", score: 5 },
+      { text: "발표나 외부 소통 담당", score: 4 },
+      { text: "아이디어 제안 및 토론", score: 3 },
+      { text: "주어진 작업 묵묵히 완료", score: 2 },
+      { text: "혼자 맡은 부분만 해결", score: 1 }
+    ]
+  },
+  {
+    text: "새로운 기기나 앱을 처음 접할 때 나는...",
+    dim: 3, dimName: "기술 관심도",
+    options: [
+      { text: "설명서 없이 모든 기능을 탐색해봐", score: 5 },
+      { text: "흥미롭게 이것저것 눌러봐", score: 4 },
+      { text: "필요한 기능만 빠르게 파악해", score: 3 },
+      { text: "기본 기능만 쓰고 나머지는 그냥 둬", score: 2 },
+      { text: "익숙해질 때까지 최소한만 써", score: 1 }
+    ]
+  },
+  {
+    text: "숫자나 데이터, 통계 자료를 볼 때 나는...",
+    dim: 4, dimName: "분석력",
+    options: [
+      { text: "패턴과 인사이트가 보여서 흥미로워", score: 5 },
+      { text: "꼼꼼히 분석하는 편이야", score: 4 },
+      { text: "중요한 부분만 집중해서 봐", score: 3 },
+      { text: "핵심 결론만 확인해", score: 2 },
+      { text: "되도록 피하고 싶어", score: 1 }
+    ]
+  },
+  {
+    text: "그룹 활동이나 토론에서 나는 보통...",
+    dim: 5, dimName: "리더십",
+    options: [
+      { text: "자연스럽게 방향을 제시하고 이끌게 돼", score: 5 },
+      { text: "의견이 충돌하면 중재하고 결정해줘", score: 4 },
+      { text: "활발하게 참여하지만 따라가는 편이야", score: 3 },
+      { text: "조용히 내 역할에만 집중해", score: 2 },
+      { text: "리드보다 지원 역할이 편해", score: 1 }
+    ]
+  },
+  {
+    text: "오류가 발생한 코드나 시스템을 디버깅할 때...",
+    dim: 0, dimName: "논리적 사고",
+    options: [
+      { text: "원인을 추적하는 과정이 오히려 즐거워", score: 5 },
+      { text: "체계적으로 문제를 좁혀나갈 수 있어", score: 4 },
+      { text: "시간이 걸려도 결국 찾아내", score: 3 },
+      { text: "도움을 받아야 해결할 수 있어", score: 2 },
+      { text: "너무 복잡해서 포기하고 싶어", score: 1 }
+    ]
+  },
+  {
+    text: "아트, 음악, 글쓰기 등 창작 활동을 할 때...",
+    dim: 1, dimName: "창의성",
+    options: [
+      { text: "나만의 스타일로 독창적으로 표현해", score: 5 },
+      { text: "기존 것을 참고해서 새롭게 만들어", score: 4 },
+      { text: "따라 하면서도 조금씩 변형해봐", score: 3 },
+      { text: "정해진 틀 안에서 만드는 게 편해", score: 2 },
+      { text: "창작보다 결과물 감상이 더 좋아", score: 1 }
+    ]
+  },
+  {
+    text: "복잡한 개념이나 기술을 다른 사람에게 설명할 때...",
+    dim: 2, dimName: "소통 능력",
+    options: [
+      { text: "비유와 예시로 쉽게 풀어주는 걸 잘해", score: 5 },
+      { text: "상대 수준에 맞춰 조절하며 설명해", score: 4 },
+      { text: "이해할 때까지 반복해서 설명해줘", score: 3 },
+      { text: "설명이 서툴러서 도표나 그림으로 보여줘", score: 2 },
+      { text: "설명보다 직접 해보게 하는 편이야", score: 1 }
+    ]
+  },
+  {
+    text: "미래의 나에게 가장 어울리는 모습은...",
+    dim: 5, dimName: "리더십",
+    options: [
+      { text: "팀을 이끌며 큰 프로젝트를 완성하는 리더", score: 5 },
+      { text: "전문성으로 조직을 성장시키는 기술 전문가", score: 4 },
+      { text: "창의적 아이디어로 문제를 해결하는 혁신가", score: 3 },
+      { text: "꼼꼼한 분석으로 최적 솔루션을 찾는 분석가", score: 4 },
+      { text: "뛰어난 소통으로 연결하는 커뮤니케이터", score: 3 }
+    ]
+  }
+];
+
+// 20 careers: [logic, creativity, communication, tech, analysis, leadership]
+const CAREERS = [
+  { emoji: "🤖", name: "AI Engineer", nameKo: "AI 엔지니어",
+    desc: "인공지능 시스템을 설계하고 구현하는 전문가",
+    weights: [5, 3, 2, 5, 4, 2],
+    skills: "파이썬, 딥러닝, TensorFlow, 수학/통계",
+    majors: "컴퓨터공학, AI학과, 수학",
+    salary: "5,000 ~ 1억 2천만원" },
+  { emoji: "📊", name: "Data Scientist", nameKo: "데이터 과학자",
+    desc: "데이터에서 패턴을 발견하고 가치를 창출하는 전문가",
+    weights: [4, 3, 2, 4, 5, 2],
+    skills: "R/Python, 통계, 머신러닝, 시각화",
+    majors: "통계학, 수학, 컴퓨터공학",
+    salary: "4,500 ~ 1억원" },
+  { emoji: "💻", name: "Full-Stack Dev", nameKo: "풀스택 개발자",
+    desc: "프론트엔드부터 백엔드까지 전체 서비스를 개발하는 개발자",
+    weights: [4, 3, 2, 5, 3, 2],
+    skills: "JavaScript, React, Node.js, DB",
+    majors: "컴퓨터공학, 소프트웨어공학",
+    salary: "4,000 ~ 9,000만원" },
+  { emoji: "🎨", name: "UX Designer", nameKo: "UX 디자이너",
+    desc: "사용자 경험을 연구하고 직관적인 서비스를 설계하는 전문가",
+    weights: [2, 5, 4, 3, 3, 2],
+    skills: "Figma, 사용자 리서치, 프로토타이핑",
+    majors: "디자인학, 산업공학, 심리학",
+    salary: "3,500 ~ 8,000만원" },
+  { emoji: "🔒", name: "Cybersecurity", nameKo: "사이버보안 전문가",
+    desc: "시스템과 데이터를 해킹 및 위협으로부터 보호하는 전문가",
+    weights: [5, 2, 2, 5, 5, 2],
+    skills: "네트워크 보안, 침투 테스트, 암호화",
+    majors: "정보보안학, 컴퓨터공학",
+    salary: "4,500 ~ 1억원" },
+  { emoji: "🦾", name: "Robot Engineer", nameKo: "로봇 엔지니어",
+    desc: "자동화 로봇 및 시스템을 설계·개발하는 공학자",
+    weights: [5, 4, 2, 5, 4, 2],
+    skills: "ROS, C++, 기계공학, 임베디드",
+    majors: "로봇공학, 기계공학, 전기전자",
+    salary: "4,000 ~ 9,000만원" },
+  { emoji: "🎮", name: "Game Developer", nameKo: "게임 개발자",
+    desc: "재미있는 게임을 기획하고 개발하는 크리에이터",
+    weights: [4, 5, 2, 5, 3, 2],
+    skills: "Unity, C#, 게임 디자인, 그래픽스",
+    majors: "게임공학, 컴퓨터공학, 디자인",
+    salary: "3,500 ~ 8,500만원" },
+  { emoji: "☁️", name: "Cloud Architect", nameKo: "클라우드 아키텍트",
+    desc: "기업의 클라우드 인프라를 설계하고 최적화하는 전문가",
+    weights: [5, 3, 3, 5, 4, 4],
+    skills: "AWS/Azure, Kubernetes, 네트워크",
+    majors: "컴퓨터공학, 정보통신공학",
+    salary: "5,500 ~ 1억 2천만원" },
+  { emoji: "⚖️", name: "AI Ethicist", nameKo: "AI 윤리학자",
+    desc: "AI 기술의 윤리적 사용과 정책을 연구하는 전문가",
+    weights: [3, 4, 5, 3, 4, 4],
+    skills: "철학, 법학, AI 기초, 정책 분석",
+    majors: "철학, 법학, AI학, 사회과학",
+    salary: "4,000 ~ 9,000만원" },
+  { emoji: "📱", name: "Digital Marketer", nameKo: "디지털 마케터",
+    desc: "온라인 채널로 브랜드를 성장시키는 마케팅 전문가",
+    weights: [2, 5, 5, 3, 4, 3],
+    skills: "SNS 마케팅, SEO, 데이터 분석, 콘텐츠",
+    majors: "경영학, 마케팅, 커뮤니케이션",
+    salary: "3,000 ~ 7,000만원" },
+  { emoji: "⛓️", name: "Blockchain Dev", nameKo: "블록체인 개발자",
+    desc: "탈중앙화 시스템과 스마트 컨트랙트를 개발하는 전문가",
+    weights: [5, 3, 2, 5, 4, 2],
+    skills: "Solidity, 암호화, 분산 시스템",
+    majors: "컴퓨터공학, 수학, 금융공학",
+    salary: "4,500 ~ 1억 2천만원" },
+  { emoji: "🥽", name: "VR/AR Developer", nameKo: "VR/AR 개발자",
+    desc: "가상·증강 현실 경험을 제작하는 개발자",
+    weights: [4, 5, 2, 5, 3, 2],
+    skills: "Unity, Unreal, 3D 모델링, XR SDK",
+    majors: "컴퓨터공학, 디자인, 게임공학",
+    salary: "4,000 ~ 9,000만원" },
+  { emoji: "🧬", name: "ML Engineer", nameKo: "머신러닝 엔지니어",
+    desc: "머신러닝 모델을 프로덕션 환경에 배포하는 전문가",
+    weights: [5, 3, 2, 5, 5, 2],
+    skills: "MLOps, PyTorch, 피처 엔지니어링",
+    majors: "컴퓨터공학, 통계학, AI학과",
+    salary: "5,000 ~ 1억 2천만원" },
+  { emoji: "🚀", name: "DevOps Engineer", nameKo: "DevOps 엔지니어",
+    desc: "개발과 운영을 연결하고 자동화 파이프라인을 구축하는 전문가",
+    weights: [4, 2, 3, 5, 4, 3],
+    skills: "CI/CD, Docker, Linux, 모니터링",
+    majors: "컴퓨터공학, 정보통신",
+    salary: "4,500 ~ 1억원" },
+  { emoji: "🧫", name: "Bioinformatics", nameKo: "바이오인포매틱스",
+    desc: "생명공학 데이터를 분석하는 융합 전문가",
+    weights: [5, 3, 2, 4, 5, 2],
+    skills: "Python/R, 생물학, 통계 분석, 유전체학",
+    majors: "생명공학, 수학, 컴퓨터공학",
+    salary: "4,000 ~ 9,500만원" },
+  { emoji: "🤝", name: "IT Consultant", nameKo: "IT 컨설턴트",
+    desc: "기업의 IT 전략과 디지털 전환을 이끄는 전문 컨설턴트",
+    weights: [3, 4, 5, 4, 4, 5],
+    skills: "비즈니스 분석, 프레젠테이션, IT 전반",
+    majors: "경영학, 컴퓨터공학, MIS",
+    salary: "5,000 ~ 1억 5천만원" },
+  { emoji: "🗂️", name: "Product Manager", nameKo: "프로덕트 매니저",
+    desc: "제품 비전을 정의하고 개발팀과 협력해 완성시키는 PM",
+    weights: [3, 4, 5, 3, 4, 5],
+    skills: "로드맵 기획, 데이터 분석, 커뮤니케이션",
+    majors: "경영학, 컴퓨터공학, 디자인",
+    salary: "4,500 ~ 1억 2천만원" },
+  { emoji: "✍️", name: "Tech Writer", nameKo: "기술 작가",
+    desc: "복잡한 기술을 명확한 문서와 콘텐츠로 전달하는 전문가",
+    weights: [3, 5, 5, 3, 3, 2],
+    skills: "기술 문서, 콘텐츠 작성, UI 카피",
+    majors: "국어국문, 컴퓨터공학, 커뮤니케이션",
+    salary: "3,000 ~ 7,000만원" },
+  { emoji: "🗄️", name: "Data Engineer", nameKo: "데이터 엔지니어",
+    desc: "대규모 데이터 파이프라인과 인프라를 구축하는 전문가",
+    weights: [5, 2, 2, 5, 5, 2],
+    skills: "Spark, SQL, Kafka, 클라우드 DW",
+    majors: "컴퓨터공학, 통계학",
+    salary: "4,500 ~ 1억 1천만원" },
+  { emoji: "📡", name: "IoT Specialist", nameKo: "IoT 전문가",
+    desc: "사물인터넷 시스템을 설계·구축하는 전문가",
+    weights: [4, 4, 2, 5, 4, 2],
+    skills: "임베디드, MQTT, 통신 프로토콜, 센서",
+    majors: "전기전자, 컴퓨터공학, 통신공학",
+    salary: "4,000 ~ 9,000만원" }
+];
+
+/* ───────────────────────────────────────────
+   STATE
+─────────────────────────────────────────── */
+let currentQ = 0;
+let answers = new Array(10).fill(null);
+let dimScores = [0, 0, 0, 0, 0, 0]; // [logic, creativity, comm, tech, analysis, leadership]
+let topCareers = [];
+
+/* ───────────────────────────────────────────
+   NAVIGATION
+─────────────────────────────────────────── */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() {
+  if (window.history.length > 1) {
+    history.back();
+  } else {
+    window.location.href = '../index.html';
+  }
+}
+
+/* ───────────────────────────────────────────
+   QUIZ
+─────────────────────────────────────────── */
+function startQuiz() {
+  currentQ = 0;
+  answers = new Array(10).fill(null);
+  renderQuestion();
+  showScreen('quiz-screen');
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[currentQ];
+  const pct = ((currentQ + 1) / 10) * 100;
+
+  document.getElementById('progressLabel').textContent = `문항 ${currentQ + 1} / 10`;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('dimLabel').textContent = DIM_ICONS[q.dim] + ' ' + q.dimName;
+  document.getElementById('questionDimTag').textContent = DIM_ICONS[q.dim] + ' ' + q.dimName;
+  document.getElementById('questionText').textContent = q.text;
+
+  const opts = document.getElementById('optionsList');
+  opts.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D', 'E'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn' + (answers[currentQ] === i ? ' selected' : '');
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt.text}</span>`;
+    btn.onclick = () => selectOption(i);
+    opts.appendChild(btn);
+  });
+
+  document.getElementById('btnPrev').disabled = currentQ === 0;
+  document.getElementById('btnNext').disabled = answers[currentQ] === null;
+  document.getElementById('btnNext').textContent = currentQ === 9 ? '결과 보기 🎯' : '다음 →';
+}
+
+function selectOption(idx) {
+  answers[currentQ] = idx;
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === idx);
+  });
+  document.getElementById('btnNext').disabled = false;
+}
+
+function nextQuestion() {
+  if (answers[currentQ] === null) return;
+  if (currentQ < 9) {
+    currentQ++;
+    renderQuestion();
+  } else {
+    runAnalysis();
+  }
+}
+
+function prevQuestion() {
+  if (currentQ > 0) {
+    currentQ--;
+    renderQuestion();
+  }
+}
+
+function retryQuiz() {
+  startQuiz();
+}
+
+/* ───────────────────────────────────────────
+   ANALYSIS
+─────────────────────────────────────────── */
+function runAnalysis() {
+  showScreen('loading-screen');
+
+  // Compute dimension scores
+  dimScores = [0, 0, 0, 0, 0, 0];
+  const dimCount = [0, 0, 0, 0, 0, 0];
+
+  QUESTIONS.forEach((q, qi) => {
+    const ansIdx = answers[qi];
+    if (ansIdx !== null) {
+      dimScores[q.dim] += q.options[ansIdx].score;
+      dimCount[q.dim]++;
+    }
+  });
+
+  // Normalize to 0–100
+  dimScores = dimScores.map((s, i) => {
+    const cnt = dimCount[i] || 1;
+    return Math.round((s / (cnt * 5)) * 100);
+  });
+
+  // Match careers
+  const scored = CAREERS.map(career => {
+    let total = 0;
+    let maxPossible = 0;
+    career.weights.forEach((w, i) => {
+      total += w * dimScores[i];
+      maxPossible += w * 100;
+    });
+    const matchPct = Math.round((total / maxPossible) * 100);
+    return { ...career, matchPct };
+  });
+
+  scored.sort((a, b) => b.matchPct - a.matchPct);
+  topCareers = scored.slice(0, 3);
+
+  // Animate loading steps
+  const steps = ['ls1', 'ls2', 'ls3', 'ls4'];
+  steps.forEach((id, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      el.classList.add('visible');
+      setTimeout(() => el.classList.add('done'), 200);
+    }, i * 600 + 300);
+  });
+
+  setTimeout(() => {
+    buildResult();
+    showScreen('result-screen');
+    launchParticles();
+    saveToLocalStorage();
+  }, 3200);
+}
+
+/* ───────────────────────────────────────────
+   RESULT RENDERING
+─────────────────────────────────────────── */
+function buildResult() {
+  document.getElementById('resultSub').textContent =
+    `${topCareers[0].nameKo} 매칭도 ${topCareers[0].matchPct}% · AI가 분석한 나의 적성!`;
+
+  drawRadar();
+  buildDimBars();
+  buildTop3();
+}
+
+function drawRadar() {
+  const svg = document.getElementById('radarChart');
+  svg.innerHTML = '';
+  const cx = 130, cy = 130, R = 95;
+  const n = 6;
+  const angles = Array.from({ length: n }, (_, i) => (i * 2 * Math.PI / n) - Math.PI / 2);
+  const labelOffset = 18;
+
+  // Grid rings
+  [0.25, 0.5, 0.75, 1].forEach(frac => {
+    const pts = angles.map(a => [
+      cx + frac * R * Math.cos(a),
+      cy + frac * R * Math.sin(a)
+    ]);
+    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points', pts.map(p => p.join(',')).join(' '));
+    poly.setAttribute('fill', frac === 1 ? 'rgba(139,111,192,.04)' : 'none');
+    poly.setAttribute('stroke', 'rgba(139,111,192,.18)');
+    poly.setAttribute('stroke-width', frac === 1 ? '1.5' : '1');
+    svg.appendChild(poly);
+  });
+
+  // Axis lines
+  angles.forEach(a => {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+    line.setAttribute('x2', cx + R * Math.cos(a));
+    line.setAttribute('y2', cy + R * Math.sin(a));
+    line.setAttribute('stroke', 'rgba(139,111,192,.22)');
+    line.setAttribute('stroke-width', '1');
+    svg.appendChild(line);
+  });
+
+  // Data polygon
+  const dataPts = angles.map((a, i) => [
+    cx + (dimScores[i] / 100) * R * Math.cos(a),
+    cy + (dimScores[i] / 100) * R * Math.sin(a)
+  ]);
+  const dataPoly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  dataPoly.setAttribute('points', dataPts.map(p => p.join(',')).join(' '));
+  dataPoly.setAttribute('fill', 'rgba(139,111,192,.28)');
+  dataPoly.setAttribute('stroke', '#8B6FC0');
+  dataPoly.setAttribute('stroke-width', '2.5');
+  svg.appendChild(dataPoly);
+
+  // Data dots
+  dataPts.forEach((pt) => {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', pt[0]);
+    circle.setAttribute('cy', pt[1]);
+    circle.setAttribute('r', '4');
+    circle.setAttribute('fill', '#8B6FC0');
+    circle.setAttribute('stroke', '#fff');
+    circle.setAttribute('stroke-width', '2');
+    svg.appendChild(circle);
+  });
+
+  // Labels
+  angles.forEach((a, i) => {
+    const lx = cx + (R + labelOffset) * Math.cos(a);
+    const ly = cy + (R + labelOffset) * Math.sin(a);
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', lx);
+    text.setAttribute('y', ly + 4);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('font-size', '11');
+    text.setAttribute('font-weight', '700');
+    text.setAttribute('fill', '#7259A8');
+    text.setAttribute('font-family', 'Noto Sans KR, sans-serif');
+    text.textContent = DIM_ICONS[i] + ' ' + DIMS[i];
+    svg.appendChild(text);
+  });
+}
+
+function buildDimBars() {
+  const container = document.getElementById('dimBars');
+  container.innerHTML = '';
+  DIMS.forEach((dim, i) => {
+    const row = document.createElement('div');
+    row.className = 'dim-bar-row';
+    row.innerHTML = `
+      <div class="dim-bar-label">${DIM_ICONS[i]} ${dim}</div>
+      <div class="dim-bar-track">
+        <div class="dim-bar-fill" style="width:0%" data-target="${dimScores[i]}"></div>
+      </div>
+      <div class="dim-bar-val">${dimScores[i]}</div>
+    `;
+    container.appendChild(row);
+  });
+  // Animate bars
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.dim-bar-fill').forEach(bar => {
+      bar.style.width = bar.dataset.target + '%';
+    });
+  });
+}
+
+function buildTop3() {
+  // 1st place
+  const c1 = topCareers[0];
+  document.getElementById('card1st').innerHTML = `
+    <div class="career-card-1st">
+      <div class="career-rank-badge">🥇 1위 추천</div>
+      <div class="career-top-row">
+        <div class="career-emoji">${c1.emoji}</div>
+        <div class="career-info">
+          <div class="career-name">${c1.name}</div>
+          <div class="career-name-ko">${c1.nameKo}</div>
+          <div class="match-badge">${c1.matchPct}%<span>매칭도</span></div>
+        </div>
+      </div>
+      <div class="career-desc">${c1.desc}</div>
+      <div class="career-detail-grid">
+        <div class="career-detail-item">
+          <div class="detail-label">필요 역량</div>
+          <div class="detail-val">${c1.skills}</div>
+        </div>
+        <div class="career-detail-item">
+          <div class="detail-label">추천 학과</div>
+          <div class="detail-val">${c1.majors}</div>
+        </div>
+        <div class="career-detail-item" style="grid-column:1/-1">
+          <div class="detail-label">연봉 범위</div>
+          <div class="detail-val salary-badge">💰 ${c1.salary}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 2nd, 3rd
+  const minorHTML = topCareers.slice(1).map((c, i) => `
+    <div class="career-card-minor">
+      <div class="minor-rank">${i === 0 ? '🥈 2위' : '🥉 3위'}</div>
+      <span class="minor-emoji">${c.emoji}</span>
+      <div class="minor-name">${c.name}</div>
+      <div class="minor-name-ko">${c.nameKo}</div>
+      <div class="minor-match">${c.matchPct}%</div>
+      <div class="minor-desc">${c.desc}</div>
+    </div>
+  `).join('');
+  document.getElementById('cardsMinor').innerHTML = minorHTML;
+}
+
+/* ───────────────────────────────────────────
+   PARTICLES
+─────────────────────────────────────────── */
+function launchParticles() {
+  const container = document.getElementById('particles');
+  container.innerHTML = '';
+  const emojis = ['⭐', '✨', '🌟', '💫', '🎯', '🎉', '🎊', '💜', '🔮'];
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.top = '-40px';
+    p.style.fontSize = (14 + Math.random() * 14) + 'px';
+    const dur = 2.5 + Math.random() * 2;
+    p.style.animationDuration = dur + 's';
+    p.style.animationDelay = Math.random() * 1.5 + 's';
+    container.appendChild(p);
+    setTimeout(() => p.remove(), (dur + 1.5) * 1000);
+  }
+}
+
+/* ───────────────────────────────────────────
+   LOCAL STORAGE
+─────────────────────────────────────────── */
+const PROGRAM_ID = 13;
+
+function saveToLocalStorage() {
+  try {
+    const programs = JSON.parse(localStorage.getItem('visitedPrograms') || '[]');
+    if (!programs.includes(PROGRAM_ID)) programs.push(PROGRAM_ID);
+    localStorage.setItem('visitedPrograms', JSON.stringify(programs));
+
+    const stamps = JSON.parse(localStorage.getItem('stamps') || '{}');
+    stamps[PROGRAM_ID] = {
+      id: PROGRAM_ID,
+      name: 'AI 직업 매칭',
+      earnedAt: new Date().toISOString(),
+      result: {
+        topCareer: topCareers[0]?.nameKo,
+        matchPct: topCareers[0]?.matchPct,
+        dimScores
+      }
+    };
+    localStorage.setItem('stamps', JSON.stringify(stamps));
+  } catch (e) {}
+}
+
+function saveResult() {
+  saveToLocalStorage();
+  showToast('💾 결과가 저장되었어요! 스탬프도 획득했어요 🎫');
+}
+
+/* ───────────────────────────────────────────
+   TOAST
+─────────────────────────────────────────── */
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ───────────────────────────────────────────
+   INIT
+─────────────────────────────────────────── */
+(function init() {
+  // Check if already completed
+  try {
+    const stamps = JSON.parse(localStorage.getItem('stamps') || '{}');
+    if (stamps[PROGRAM_ID]?.result) {
+      const prev = stamps[PROGRAM_ID].result;
+      // Restore and show result
+      if (prev.dimScores) {
+        dimScores = prev.dimScores;
+        // Reconstruct topCareers
+        const scored = CAREERS.map(career => {
+          let total = 0, maxPossible = 0;
+          career.weights.forEach((w, i) => {
+            total += w * dimScores[i];
+            maxPossible += w * 100;
+          });
+          return { ...career, matchPct: Math.round((total / maxPossible) * 100) };
+        });
+        scored.sort((a, b) => b.matchPct - a.matchPct);
+        topCareers = scored.slice(0, 3);
+        buildResult();
+        showScreen('result-screen');
+        return;
+      }
+    }
+  } catch (e) {}
+  showScreen('intro-screen');
+})();
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

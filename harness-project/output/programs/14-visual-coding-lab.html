@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>비주얼 코딩 체험 · Visual Coding Lab</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --zone: #8B6FC0;
+  --zone-dark: #6E52A8;
+  --zone-light: #C9B8E8;
+  --zone-pale: #F3EFF9;
+  --bg: #F7F6F3;
+  --dark: #1A1A1A;
+  --white: #FFFFFF;
+  --text: #2D2D2D;
+  --muted: #8A8A8A;
+  --border: #E2E0DA;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,.07);
+  --shadow-md: 0 4px 24px rgba(0,0,0,.12);
+  --terminal-bg: #0D1117;
+  --terminal-text: #C9D1D9;
+  --terminal-green: #39FF14;
+  --block-move: #3B82F6;
+  --block-move-dark: #2563EB;
+  --block-turn: #22C55E;
+  --block-turn-dark: #16A34A;
+  --block-repeat: #F97316;
+  --block-repeat-dark: #EA580C;
+  --block-if: #A855F7;
+  --block-if-dark: #9333EA;
+  --block-var: #EF4444;
+  --block-var-dark: #DC2626;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  background-image: radial-gradient(circle, #D0CEC9 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── TOP BAR ─── */
+#topbar {
+  background: var(--zone);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 16px rgba(139,111,192,.45);
+}
+#topbar .title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  background: rgba(255,255,255,.22);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: background .2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.back-btn:hover { background: rgba(255,255,255,.38); }
+.zone-badge {
+  background: rgba(255,255,255,.22);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ─── MAIN ─── */
+#main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+/* ─── SECTION TITLE ─── */
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* ─── MISSION SELECT ─── */
+#mission-select {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.mission-card {
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  cursor: pointer;
+  transition: border-color .18s, box-shadow .18s, transform .18s;
+  position: relative;
+  overflow: hidden;
+}
+.mission-card:hover {
+  border-color: var(--zone-light);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.mission-card.active {
+  border-color: var(--zone);
+  box-shadow: 0 0 0 3px rgba(139,111,192,.2);
+}
+.mission-card .mc-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+.mission-card .mc-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+.mission-card .mc-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.mission-card .mc-diff {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.star { font-size: 13px; }
+.star.on { color: #F5C400; }
+.star.off { color: #D4D0C8; }
+.mc-diff-label {
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 4px;
+  color: var(--muted);
+}
+.mc-cleared {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: #22C55E;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ─── CODING AREA ─── */
+#coding-area {
+  display: grid;
+  grid-template-columns: 200px 1fr 280px;
+  gap: 14px;
+  min-height: 480px;
+}
+
+/* PALETTE */
+#palette {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  box-shadow: var(--shadow);
+}
+#palette h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 12px;
+}
+.palette-group { margin-bottom: 14px; }
+.palette-group-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  padding-left: 2px;
+}
+
+/* ─── BLOCKS ─── */
+.block {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: grab;
+  margin-bottom: 5px;
+  user-select: none;
+  transition: transform .1s, box-shadow .1s;
+  color: #fff;
+  position: relative;
+}
+.block:active { cursor: grabbing; transform: scale(.97); }
+.block:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+
+.block-move   { background: var(--block-move);   box-shadow: 0 3px 0 var(--block-move-dark); }
+.block-turn   { background: var(--block-turn);   box-shadow: 0 3px 0 var(--block-turn-dark); }
+.block-repeat { background: var(--block-repeat); box-shadow: 0 3px 0 var(--block-repeat-dark); }
+.block-if     { background: var(--block-if);     box-shadow: 0 3px 0 var(--block-if-dark); }
+.block-var    { background: var(--block-var);    box-shadow: 0 3px 0 var(--block-var-dark); }
+
+.block .block-icon { font-size: 14px; flex-shrink: 0; }
+.block input[type=number] {
+  width: 38px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(255,255,255,.3);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+}
+.block input[type=number]::-webkit-inner-spin-button { opacity: .5; }
+.block select {
+  padding: 2px 4px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(255,255,255,.3);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+}
+.block select option { color: #333; background: #fff; }
+.block .del-btn {
+  margin-left: auto;
+  background: rgba(0,0,0,.2);
+  border: none;
+  color: rgba(255,255,255,.8);
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.block .del-btn:hover { background: rgba(0,0,0,.4); color: #fff; }
+
+/* WORKSPACE */
+#workspace-wrap {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+#workspace-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#workspace-header h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+#workspace {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background-image:
+    linear-gradient(rgba(139,111,192,.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139,111,192,.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+  min-height: 380px;
+  position: relative;
+}
+#workspace.drag-over {
+  background-color: var(--zone-pale);
+}
+#ws-placeholder {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  text-align: center;
+  color: var(--muted);
+  pointer-events: none;
+}
+#ws-placeholder .ph-icon { font-size: 36px; margin-bottom: 8px; opacity: .4; }
+#ws-placeholder p { font-size: 13px; opacity: .6; }
+#ws-blocks { display: flex; flex-direction: column; gap: 5px; }
+
+/* ACTION BUTTONS */
+#action-bar {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  background: #FAFAF8;
+}
+.action-btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: filter .15s, transform .1s;
+}
+.action-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.action-btn:active { transform: scale(.97); }
+.btn-run {
+  background: var(--zone);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--zone-dark);
+}
+.btn-reset {
+  background: #E2E0DA;
+  color: var(--text);
+}
+.btn-code {
+  background: var(--terminal-bg);
+  color: var(--terminal-green);
+  margin-left: auto;
+}
+
+/* RESULT PANEL */
+#result-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#canvas-wrap {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+#canvas-wrap h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+}
+#result-canvas {
+  display: block;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--border);
+  width: 100%;
+}
+#mission-status {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+}
+#mission-status h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+}
+.goal-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 6px;
+  color: var(--muted);
+}
+.goal-item .goal-check {
+  flex-shrink: 0;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  margin-top: 1px;
+  transition: background .2s, border-color .2s;
+}
+.goal-item.met .goal-check {
+  background: #22C55E;
+  border-color: #22C55E;
+  color: #fff;
+}
+.goal-item.met { color: var(--text); }
+
+/* SCORE BAR */
+#score-bar {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.score-item { display: flex; flex-direction: column; align-items: center; }
+.score-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--zone);
+}
+.score-label { font-size: 11px; color: var(--muted); font-weight: 600; }
+.score-divider { width: 1px; height: 36px; background: var(--border); }
+
+/* CODE VIEW MODAL */
+#code-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0,0,0,.55);
+  align-items: center;
+  justify-content: center;
+}
+#code-modal.show { display: flex; }
+#code-modal-inner {
+  background: var(--terminal-bg);
+  border-radius: 14px;
+  width: 560px;
+  max-width: 95vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,.5);
+  overflow: hidden;
+}
+#code-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #21262D;
+}
+#code-modal-header .modal-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--terminal-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.modal-dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-red { background: #FF5F57; }
+.dot-yellow { background: #FEBC2E; }
+.dot-green { background: #28C840; }
+#code-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+#code-close:hover { color: #fff; }
+#code-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--terminal-text);
+  white-space: pre-wrap;
+}
+.code-keyword { color: #FF79C6; }
+.code-num { color: #BD93F9; }
+.code-comment { color: #6272A4; }
+.code-fn { color: #50FA7B; }
+.code-str { color: #F1FA8C; }
+
+/* SUCCESS OVERLAY */
+#success-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: rgba(0,0,0,.6);
+  align-items: center;
+  justify-content: center;
+}
+#success-overlay.show { display: flex; }
+#success-inner {
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px 48px;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.35);
+  animation: popIn .35s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn {
+  from { opacity:0; transform: scale(.6); }
+  to   { opacity:1; transform: scale(1); }
+}
+#success-inner .s-icon { font-size: 64px; margin-bottom: 12px; display: block; }
+#success-inner h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--zone);
+  margin-bottom: 6px;
+}
+#success-inner p { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+.s-stamp {
+  background: var(--zone-pale);
+  border: 2px dashed var(--zone-light);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 20px;
+}
+.s-stamp-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--zone);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+#success-next {
+  background: var(--zone);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 28px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter .15s;
+}
+#success-next:hover { filter: brightness(1.1); }
+
+/* LED CANVAS */
+#led-grid-wrap { display: flex; justify-content: center; }
+#led-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 10px;
+  background: #111;
+  border-radius: 8px;
+  width: 100%;
+  aspect-ratio: 1;
+}
+.led-cell {
+  border-radius: 2px;
+  background: #222;
+  aspect-ratio: 1;
+  transition: background .15s;
+}
+.led-cell.on { background: #FFD700; box-shadow: 0 0 6px #FFD70088; }
+.led-cell.red-on { background: #FF4444; box-shadow: 0 0 6px #FF444488; }
+.led-cell.blue-on { background: #4488FF; box-shadow: 0 0 6px #4488FF88; }
+.led-cell.green-on { background: #44FF44; box-shadow: 0 0 6px #44FF4488; }
+
+/* COUNTER CANVAS */
+#counter-scene {
+  padding: 10px;
+  background: #F0F4FF;
+  border-radius: 8px;
+  min-height: 180px;
+  position: relative;
+  overflow: hidden;
+}
+.obj-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  position: absolute;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  transition: all .3s;
+}
+
+#counter-results {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.count-chip {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* RESPONSIVE */
+@media (max-width: 800px) {
+  #coding-area {
+    grid-template-columns: 1fr;
+  }
+  #mission-select { grid-template-columns: 1fr; }
+  #result-panel { order: -1; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <a href="../index.html" class="back-btn">← 대시보드</a>
+    <span class="zone-badge">E존 · 미래기술 진로상담</span>
+  </div>
+  <div class="title">🧩 비주얼 코딩 체험</div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span id="topbar-cleared" style="color:rgba(255,255,255,.8);font-size:13px;font-weight:600;"></span>
+  </div>
+</div>
+
+<div id="main">
+
+  <!-- SCORE BAR -->
+  <div id="score-bar">
+    <div class="score-item">
+      <span class="score-val" id="stat-cleared">0</span>
+      <span class="score-label">클리어 미션</span>
+    </div>
+    <div class="score-divider"></div>
+    <div class="score-item">
+      <span class="score-val" id="stat-lines">0</span>
+      <span class="score-label">코드 블록</span>
+    </div>
+    <div class="score-divider"></div>
+    <div class="score-item">
+      <span class="score-val" id="stat-runs">0</span>
+      <span class="score-label">실행 횟수</span>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:6px;" id="stamp-row"></div>
+  </div>
+
+  <!-- MISSION SELECT -->
+  <p class="section-title">미션 선택</p>
+  <div id="mission-select">
+    <div class="mission-card active" data-mission="0" onclick="selectMission(0)">
+      <span class="mc-icon">🐢</span>
+      <div class="mc-title">거북이 그래픽</div>
+      <div class="mc-desc">명령 블록으로 거북이를 움직여 정사각형을 그려보세요.</div>
+      <div class="mc-diff">
+        <span class="star on">★</span><span class="star off">★</span><span class="star off">★</span>
+        <span class="mc-diff-label">초급</span>
+      </div>
+      <span class="mc-cleared" id="clear-0" style="display:none">✓ 클리어</span>
+    </div>
+    <div class="mission-card" data-mission="1" onclick="selectMission(1)">
+      <span class="mc-icon">💡</span>
+      <div class="mc-title">LED 매트릭스</div>
+      <div class="mc-desc">8×8 LED 격자에 반복문으로 체커보드 패턴을 그려보세요.</div>
+      <div class="mc-diff">
+        <span class="star on">★</span><span class="star on">★</span><span class="star off">★</span>
+        <span class="mc-diff-label">중급</span>
+      </div>
+      <span class="mc-cleared" id="clear-1" style="display:none">✓ 클리어</span>
+    </div>
+    <div class="mission-card" data-mission="2" onclick="selectMission(2)">
+      <span class="mc-icon">🔭</span>
+      <div class="mc-title">물체 카운터</div>
+      <div class="mc-desc">시뮬레이션 카메라에서 빨간 물체의 개수를 세어보세요.</div>
+      <div class="mc-diff">
+        <span class="star on">★</span><span class="star on">★</span><span class="star on">★</span>
+        <span class="mc-diff-label">고급</span>
+      </div>
+      <span class="mc-cleared" id="clear-2" style="display:none">✓ 클리어</span>
+    </div>
+  </div>
+
+  <!-- CODING AREA -->
+  <p class="section-title">코딩 환경</p>
+  <div id="coding-area">
+
+    <!-- PALETTE -->
+    <div id="palette">
+      <h3>블록 팔레트</h3>
+
+      <div class="palette-group" id="pg-move">
+        <div class="palette-group-label">🔵 이동</div>
+        <div class="block block-move" draggable="true" data-type="forward" data-steps="50">
+          <span class="block-icon">↑</span> 앞으로
+          <input type="number" value="50" min="10" max="200" step="10" data-param="steps" onclick="event.stopPropagation()">
+        </div>
+        <div class="block block-move" draggable="true" data-type="backward" data-steps="50">
+          <span class="block-icon">↓</span> 뒤로
+          <input type="number" value="50" min="10" max="200" step="10" data-param="steps" onclick="event.stopPropagation()">
+        </div>
+      </div>
+
+      <div class="palette-group" id="pg-turn">
+        <div class="palette-group-label">🟢 회전</div>
+        <div class="block block-turn" draggable="true" data-type="left" data-angle="90">
+          <span class="block-icon">↺</span> 좌회전
+          <input type="number" value="90" min="15" max="360" step="15" data-param="angle" onclick="event.stopPropagation()">°
+        </div>
+        <div class="block block-turn" draggable="true" data-type="right" data-angle="90">
+          <span class="block-icon">↻</span> 우회전
+          <input type="number" value="90" min="15" max="360" step="15" data-param="angle" onclick="event.stopPropagation()">°
+        </div>
+      </div>
+
+      <div class="palette-group" id="pg-repeat">
+        <div class="palette-group-label">🟠 반복</div>
+        <div class="block block-repeat" draggable="true" data-type="repeat" data-count="4">
+          <span class="block-icon">🔁</span> 반복
+          <input type="number" value="4" min="1" max="20" data-param="count" onclick="event.stopPropagation()">회
+        </div>
+      </div>
+
+      <div class="palette-group" id="pg-cond">
+        <div class="palette-group-label">🟣 조건</div>
+        <div class="block block-if" draggable="true" data-type="if_color" data-color="red">
+          <span class="block-icon">❓</span> 색상이
+          <select data-param="color" onclick="event.stopPropagation()">
+            <option value="red">빨강</option>
+            <option value="blue">파랑</option>
+            <option value="green">초록</option>
+          </select>
+          이면
+        </div>
+        <div class="block block-if" draggable="true" data-type="if_led" data-row="0">
+          <span class="block-icon">💡</span> LED 행
+          <input type="number" value="0" min="0" max="7" data-param="row" onclick="event.stopPropagation()">켜기
+        </div>
+      </div>
+
+      <div class="palette-group" id="pg-var">
+        <div class="palette-group-label">🔴 변수</div>
+        <div class="block block-var" draggable="true" data-type="count_add">
+          <span class="block-icon">＋</span> 카운트 +1
+        </div>
+        <div class="block block-var" draggable="true" data-type="count_reset">
+          <span class="block-icon">↺</span> 카운트 리셋
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKSPACE -->
+    <div id="workspace-wrap">
+      <div id="workspace-header">
+        <h3>워크스페이스</h3>
+        <span style="font-size:11px;color:var(--muted)">블록을 드래그해서 여기에 놓으세요</span>
+      </div>
+      <div id="workspace"
+        ondragover="onWsDragOver(event)"
+        ondrop="onWsDrop(event)"
+        ondragleave="onWsDragLeave(event)">
+        <div id="ws-placeholder">
+          <div class="ph-icon">🧩</div>
+          <p>블록을 여기에 드래그하세요</p>
+        </div>
+        <div id="ws-blocks"></div>
+      </div>
+      <div id="action-bar">
+        <button class="action-btn btn-run" onclick="runProgram()">▶ 실행</button>
+        <button class="action-btn btn-reset" onclick="resetWorkspace()">🗑 초기화</button>
+        <button class="action-btn btn-code" onclick="showCode()">📄 코드 보기</button>
+      </div>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div id="result-panel">
+      <div id="canvas-wrap">
+        <h3 id="canvas-title">실행 결과</h3>
+        <!-- mission 0: turtle canvas -->
+        <div id="turtle-view">
+          <canvas id="result-canvas" width="252" height="200"></canvas>
+        </div>
+        <!-- mission 1: led grid -->
+        <div id="led-view" style="display:none;">
+          <div id="led-grid-wrap">
+            <div id="led-grid"></div>
+          </div>
+        </div>
+        <!-- mission 2: counter scene -->
+        <div id="counter-view" style="display:none;">
+          <div id="counter-scene"></div>
+          <div id="counter-results"></div>
+        </div>
+      </div>
+      <div id="mission-status">
+        <h3>미션 목표</h3>
+        <div id="goal-list"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CODE MODAL -->
+<div id="code-modal">
+  <div id="code-modal-inner">
+    <div id="code-modal-header">
+      <div class="modal-title">
+        <span class="modal-dot dot-red"></span>
+        <span class="modal-dot dot-yellow"></span>
+        <span class="modal-dot dot-green"></span>
+        &nbsp;generated_code.js
+      </div>
+      <button id="code-close" onclick="closeCode()">×</button>
+    </div>
+    <div id="code-content"></div>
+  </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div id="success-overlay">
+  <div id="success-inner">
+    <span class="s-icon">🎉</span>
+    <h2>미션 클리어!</h2>
+    <p id="success-msg">정사각형을 완성했어요!</p>
+    <div class="s-stamp">
+      <div class="s-stamp-text" id="stamp-text">🏅 코딩 초급 마스터</div>
+    </div>
+    <button id="success-next" onclick="closeSuccess()">계속하기 →</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+const PROG_ID = 14;
+let currentMission = 0;
+let wsBlocks = [];   // array of block data objects
+let runCount = 0;
+let cleared = [false, false, false];
+let turtleState = {};
+
+const MISSIONS = [
+  {
+    title: '거북이 그래픽',
+    goals: [
+      { id:'square', text:'정사각형 그리기 (4변, 각 90°)' }
+    ],
+    stamp: '🐢 거북이 코딩 입문',
+    successMsg: '4번 앞으로 이동하고 90° 회전해서 정사각형을 완성했어요!'
+  },
+  {
+    title: 'LED 매트릭스',
+    goals: [
+      { id:'checkerboard', text:'체커보드 패턴 표시 (짝수행/홀수행 교차)' }
+    ],
+    stamp: '💡 LED 프로그래밍',
+    successMsg: '반복문과 조건문으로 체커보드 LED 패턴을 만들었어요!'
+  },
+  {
+    title: '물체 카운터',
+    goals: [
+      { id:'count_red', text:'빨간 물체 개수 정확히 세기' }
+    ],
+    stamp: '🔭 AI 비전 카운터',
+    successMsg: '변수와 조건문으로 빨간 물체를 정확히 세었어요!'
+  }
+];
+
+/* ════════════════════════════════════════
+   LOCAL STORAGE
+════════════════════════════════════════ */
+function saveState() {
+  const data = {
+    cleared,
+    runCount,
+    wsBlocks: JSON.stringify(wsBlocks)
+  };
+  localStorage.setItem(`prog_${PROG_ID}`, JSON.stringify(data));
+  // dashboard hook
+  const all = JSON.parse(localStorage.getItem('harness_progress') || '{}');
+  all[PROG_ID] = {
+    cleared: cleared.filter(Boolean).length,
+    total: 3,
+    runs: runCount,
+    updatedAt: Date.now()
+  };
+  localStorage.setItem('harness_progress', JSON.stringify(all));
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(`prog_${PROG_ID}`);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    cleared = data.cleared || [false,false,false];
+    runCount = data.runCount || 0;
+  } catch(e) {}
+}
+
+/* ════════════════════════════════════════
+   MISSION SELECT
+════════════════════════════════════════ */
+function selectMission(idx) {
+  currentMission = idx;
+  document.querySelectorAll('.mission-card').forEach((c,i) => {
+    c.classList.toggle('active', i === idx);
+  });
+  updateGoalList();
+  updateResultView();
+  resetWorkspace();
+  updateStats();
+}
+
+function updateGoalList() {
+  const gl = document.getElementById('goal-list');
+  gl.innerHTML = '';
+  MISSIONS[currentMission].goals.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'goal-item';
+    div.id = 'goal-' + g.id;
+    div.innerHTML = `<div class="goal-check">✓</div><span>${g.text}</span>`;
+    gl.appendChild(div);
+  });
+}
+
+function updateResultView() {
+  document.getElementById('turtle-view').style.display  = currentMission === 0 ? 'block' : 'none';
+  document.getElementById('led-view').style.display     = currentMission === 1 ? 'block' : 'none';
+  document.getElementById('counter-view').style.display = currentMission === 2 ? 'block' : 'none';
+  if (currentMission === 0) clearTurtleCanvas();
+  if (currentMission === 1) initLED();
+  if (currentMission === 2) initCounter();
+}
+
+/* ════════════════════════════════════════
+   BLOCK SYSTEM
+════════════════════════════════════════ */
+let dragSrc = null; // 'palette' or idx in ws
+
+// Palette drag start
+document.getElementById('palette').addEventListener('dragstart', e => {
+  const blk = e.target.closest('.block');
+  if (!blk) return;
+  dragSrc = 'palette';
+  const data = gatherBlockData(blk);
+  e.dataTransfer.setData('text/plain', JSON.stringify(data));
+  e.dataTransfer.effectAllowed = 'copy';
+});
+
+function gatherBlockData(el) {
+  const type = el.dataset.type;
+  const obj = { type, id: Date.now() + Math.random() };
+  el.querySelectorAll('input[data-param], select[data-param]').forEach(inp => {
+    obj[inp.dataset.param] = inp.type === 'number' ? Number(inp.value) : inp.value;
+  });
+  return obj;
+}
+
+function onWsDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  document.getElementById('workspace').classList.add('drag-over');
+}
+function onWsDragLeave(e) {
+  document.getElementById('workspace').classList.remove('drag-over');
+}
+function onWsDrop(e) {
+  e.preventDefault();
+  document.getElementById('workspace').classList.remove('drag-over');
+  let raw;
+  try { raw = JSON.parse(e.dataTransfer.getData('text/plain')); } catch(err) { return; }
+  if (!raw || !raw.type) return;
+  raw.id = Date.now() + Math.random();
+  wsBlocks.push(raw);
+  renderWorkspace();
+}
+
+function renderWorkspace() {
+  const container = document.getElementById('ws-blocks');
+  const ph = document.getElementById('ws-placeholder');
+  ph.style.display = wsBlocks.length ? 'none' : 'block';
+  container.innerHTML = '';
+  wsBlocks.forEach((blk, idx) => {
+    container.appendChild(buildWSBlock(blk, idx));
+  });
+  updateStats();
+}
+
+function buildWSBlock(blk, idx) {
+  const typeClass = {
+    forward:'block-move', backward:'block-move',
+    left:'block-turn', right:'block-turn',
+    repeat:'block-repeat',
+    if_color:'block-if', if_led:'block-if',
+    count_add:'block-var', count_reset:'block-var'
+  }[blk.type] || 'block-move';
+
+  const labels = {
+    forward:'↑ 앞으로', backward:'↓ 뒤로',
+    left:'↺ 좌회전', right:'↻ 우회전',
+    repeat:'🔁 반복', if_color:'❓ 색상 조건',
+    if_led:'💡 LED 행 켜기',
+    count_add:'＋ 카운트 +1', count_reset:'↺ 카운트 리셋'
+  };
+
+  const div = document.createElement('div');
+  div.className = `block ${typeClass}`;
+  div.style.cursor = 'default';
+
+  let inner = `<span class="block-icon" style="font-size:14px">${labels[blk.type] || blk.type}</span>`;
+
+  if (blk.type === 'forward' || blk.type === 'backward') {
+    inner += ` <input type="number" value="${blk.steps||50}" min="10" max="200" step="10"
+      onchange="updateBlockParam(${idx},'steps',+this.value)"
+      onclick="event.stopPropagation()" style="width:40px;">`;
+  }
+  if (blk.type === 'left' || blk.type === 'right') {
+    inner += ` <input type="number" value="${blk.angle||90}" min="15" max="360" step="15"
+      onchange="updateBlockParam(${idx},'angle',+this.value)"
+      onclick="event.stopPropagation()" style="width:38px;">°`;
+  }
+  if (blk.type === 'repeat') {
+    inner += ` <input type="number" value="${blk.count||4}" min="1" max="20"
+      onchange="updateBlockParam(${idx},'count',+this.value)"
+      onclick="event.stopPropagation()" style="width:34px;">회`;
+  }
+  if (blk.type === 'if_color') {
+    const opts = ['red','blue','green'].map(c =>
+      `<option value="${c}" ${blk.color===c?'selected':''}>${c==='red'?'빨강':c==='blue'?'파랑':'초록'}</option>`).join('');
+    inner += ` <select onchange="updateBlockParam(${idx},'color',this.value)"
+      onclick="event.stopPropagation()">${opts}</select> 이면`;
+  }
+  if (blk.type === 'if_led') {
+    inner += ` <input type="number" value="${blk.row||0}" min="0" max="7"
+      onchange="updateBlockParam(${idx},'row',+this.value)"
+      onclick="event.stopPropagation()" style="width:30px;">행 켜기`;
+  }
+
+  inner += `<button class="del-btn" onclick="deleteBlock(${idx})">✕</button>`;
+  div.innerHTML = inner;
+  return div;
+}
+
+function updateBlockParam(idx, param, val) {
+  if (wsBlocks[idx]) wsBlocks[idx][param] = val;
+}
+
+function deleteBlock(idx) {
+  wsBlocks.splice(idx, 1);
+  renderWorkspace();
+}
+
+function resetWorkspace() {
+  wsBlocks = [];
+  renderWorkspace();
+  if (currentMission === 0) clearTurtleCanvas();
+  if (currentMission === 1) initLED();
+  if (currentMission === 2) initCounter();
+  clearGoalHighlights();
+}
+
+function clearGoalHighlights() {
+  document.querySelectorAll('.goal-item').forEach(g => g.classList.remove('met'));
+}
+
+/* ════════════════════════════════════════
+   MISSION 0: TURTLE
+════════════════════════════════════════ */
+const TW = 252, TH = 200;
+function clearTurtleCanvas() {
+  const canvas = document.getElementById('result-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, TW, TH);
+  ctx.fillStyle = '#FAFAF8';
+  ctx.fillRect(0, 0, TW, TH);
+  // grid
+  ctx.strokeStyle = '#E8E6E0';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < TW; x += 20) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,TH); ctx.stroke(); }
+  for (let y = 0; y < TH; y += 20) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(TW,y); ctx.stroke(); }
+}
+
+function drawTurtle(ctx, x, y, angle) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle * Math.PI / 180);
+  ctx.font = '18px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🐢', 0, 0);
+  ctx.restore();
+}
+
+async function runTurtle() {
+  clearTurtleCanvas();
+  const canvas = document.getElementById('result-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.strokeStyle = '#8B6FC0';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+
+  let x = TW/2, y = TH/2, angle = -90;
+  const log = { moves:[], turns:[] };
+
+  // expand repeats
+  const expanded = expandBlocks(wsBlocks);
+
+  for (const blk of expanded) {
+    if (blk.type === 'forward') {
+      const steps = blk.steps || 50;
+      const rad = angle * Math.PI / 180;
+      const nx = x + Math.cos(rad) * steps;
+      const ny = y + Math.sin(rad) * steps;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+      x = nx; y = ny;
+      log.moves.push(steps);
+    } else if (blk.type === 'backward') {
+      const steps = blk.steps || 50;
+      const rad = angle * Math.PI / 180;
+      const nx = x - Math.cos(rad) * steps;
+      const ny = y - Math.sin(rad) * steps;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(nx, ny);
+      ctx.stroke();
+      x = nx; y = ny;
+      log.moves.push(-steps);
+    } else if (blk.type === 'left') {
+      angle -= (blk.angle || 90);
+      log.turns.push(-(blk.angle||90));
+    } else if (blk.type === 'right') {
+      angle += (blk.angle || 90);
+      log.turns.push(blk.angle||90);
+    }
+    clearTurtleCanvas();
+    // redraw path
+    ctx.strokeStyle = '#8B6FC0';
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+  }
+  // final full draw
+  drawTurtle(ctx, x, y, angle);
+
+  // check mission: square = 4 forward equal + 4 turns of 90
+  const isSquare = checkSquareMission(expanded);
+  return isSquare;
+}
+
+function checkSquareMission(blocks) {
+  // need exactly 4 forward steps of same length, 4 turns of 90
+  const fwds = blocks.filter(b => b.type === 'forward');
+  const turns = blocks.filter(b => b.type === 'left' || b.type === 'right');
+  if (fwds.length < 4) return false;
+  if (turns.length < 4) return false;
+  const stepVal = fwds[0].steps;
+  const allSameStep = fwds.every(f => f.steps === stepVal);
+  const all90 = turns.every(t => (t.angle || 90) === 90);
+  return allSameStep && all90 && fwds.length === 4 && turns.length === 4;
+}
+
+/* ════════════════════════════════════════
+   MISSION 1: LED
+════════════════════════════════════════ */
+let ledState = Array(8).fill(null).map(() => Array(8).fill(false));
+
+function initLED() {
+  ledState = Array(8).fill(null).map(() => Array(8).fill(false));
+  const grid = document.getElementById('led-grid');
+  grid.innerHTML = '';
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'led-cell';
+      cell.id = `led-${r}-${c}`;
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function runLED() {
+  initLED();
+  const expanded = expandBlocks(wsBlocks);
+  let checkerCount = 0;
+  let rowsLit = new Set();
+
+  for (const blk of expanded) {
+    if (blk.type === 'if_led') {
+      const row = blk.row || 0;
+      rowsLit.add(row);
+      // light that row alternating
+      for (let c = 0; c < 8; c++) {
+        const shouldLit = (row + c) % 2 === 0;
+        if (shouldLit) {
+          ledState[row][c] = true;
+          const cell = document.getElementById(`led-${row}-${c}`);
+          if (cell) cell.classList.add('on');
+        }
+      }
+    }
+    if (blk.type === 'forward') {
+      // use forward as generic LED row fill for flexibility
+      const row = Math.min(7, Math.floor((blk.steps||50)/30));
+      for (let c = 0; c < 8; c++) {
+        const shouldLit = (row + c) % 2 === 0;
+        if (shouldLit) {
+          ledState[row][c] = true;
+          const cell = document.getElementById(`led-${row}-${c}`);
+          if (cell) cell.classList.add('on');
+        }
+      }
+    }
+  }
+
+  // check checkerboard: at least 4 rows lit in checker pattern
+  let litTotal = 0;
+  let checkerOK = 0;
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      if (ledState[r][c]) litTotal++;
+    }
+  }
+
+  // simpler check: if repeat block with count >= 8 + if_led block present
+  const repeatBlk = wsBlocks.find(b => b.type === 'repeat');
+  const hasIfLed  = wsBlocks.find(b => b.type === 'if_led');
+  return repeatBlk && hasIfLed && (repeatBlk.count || 4) >= 4 && litTotal >= 16;
+}
+
+/* ════════════════════════════════════════
+   MISSION 2: COUNTER
+════════════════════════════════════════ */
+const COUNTER_OBJECTS = [
+  {color:'red',  x:30,  y:30},
+  {color:'blue', x:90,  y:50},
+  {color:'red',  x:150, x:150, y:20},
+  {color:'green',x:200, y:60},
+  {color:'red',  x:60,  y:100},
+  {color:'blue', x:180, y:110},
+  {color:'red',  x:120, y:80},
+];
+// fix duplicate x property above
+COUNTER_OBJECTS[2].x = 150;
+
+const TARGET_RED = COUNTER_OBJECTS.filter(o=>o.color==='red').length; // 4
+
+function initCounter() {
+  const scene = document.getElementById('counter-scene');
+  scene.innerHTML = '';
+  COUNTER_OBJECTS.forEach((obj, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'obj-dot';
+    const colors = { red:'#EF4444', blue:'#3B82F6', green:'#22C55E' };
+    dot.style.background = colors[obj.color];
+    dot.style.left = obj.x + 'px';
+    dot.style.top  = obj.y + 'px';
+    dot.id = `obj-${i}`;
+    scene.appendChild(dot);
+  });
+  document.getElementById('counter-results').innerHTML = '';
+}
+
+function runCounter() {
+  initCounter();
+  const expanded = expandBlocks(wsBlocks);
+
+  let count = 0;
+  let targetColor = 'red';
+  const highlightedIdx = [];
+
+  // find if_color block to get target color
+  const colorBlk = wsBlocks.find(b => b.type === 'if_color');
+  if (colorBlk) targetColor = colorBlk.color || 'red';
+
+  // simulate: count_add per object that matches
+  for (const blk of expanded) {
+    if (blk.type === 'count_reset') count = 0;
+    if (blk.type === 'count_add') {
+      // count objects of targetColor
+      const matching = COUNTER_OBJECTS.filter(o => o.color === targetColor);
+      count = matching.length;
+      matching.forEach((obj, i) => {
+        const dotEl = document.getElementById(`obj-${COUNTER_OBJECTS.indexOf(obj)}`);
+        if (dotEl) {
+          dotEl.style.transform = 'scale(1.3)';
+          dotEl.innerHTML = '✓';
+          dotEl.style.fontSize = '11px';
+          dotEl.style.fontWeight = '700';
+        }
+      });
+    }
+  }
+
+  // display results
+  const res = document.getElementById('counter-results');
+  const colorMap = { red:'#EF4444', blue:'#3B82F6', green:'#22C55E' };
+  const labelMap = { red:'빨강', blue:'파랑', green:'초록' };
+  const chip = document.createElement('div');
+  chip.className = 'count-chip';
+  chip.style.background = colorMap[targetColor] + '22';
+  chip.style.color = colorMap[targetColor];
+  chip.innerHTML = `<span>${labelMap[targetColor]} 물체</span><strong>${count}개</strong>`;
+  res.appendChild(chip);
+
+  // success if counted red correctly
+  const hasCountAdd = wsBlocks.find(b => b.type === 'count_add');
+  const hasIfColor  = wsBlocks.find(b => b.type === 'if_color');
+  return hasCountAdd && hasIfColor && targetColor === 'red' && count === TARGET_RED;
+}
+
+/* ════════════════════════════════════════
+   BLOCK EXPAND (unroll repeats)
+════════════════════════════════════════ */
+function expandBlocks(blocks) {
+  const result = [];
+  let i = 0;
+  while (i < blocks.length) {
+    const blk = blocks[i];
+    if (blk.type === 'repeat') {
+      const count = blk.count || 4;
+      // gather next blocks until next repeat or end (simple: take rest)
+      const inner = blocks.slice(i+1);
+      for (let r = 0; r < count; r++) {
+        inner.forEach(b => result.push({...b, id: b.id + r}));
+      }
+      break; // repeat wraps everything after
+    } else {
+      result.push(blk);
+    }
+    i++;
+  }
+  return result;
+}
+
+/* ════════════════════════════════════════
+   RUN PROGRAM
+════════════════════════════════════════ */
+async function runProgram() {
+  if (wsBlocks.length === 0) {
+    showToast('블록을 먼저 추가하세요!');
+    return;
+  }
+  runCount++;
+  updateStats();
+  saveState();
+
+  let success = false;
+  if (currentMission === 0) {
+    success = await runTurtle();
+    if (success) markGoal('square');
+  } else if (currentMission === 1) {
+    success = runLED();
+    if (success) markGoal('checkerboard');
+  } else if (currentMission === 2) {
+    success = runCounter();
+    if (success) markGoal('count_red');
+  }
+
+  if (success && !cleared[currentMission]) {
+    cleared[currentMission] = true;
+    saveState();
+    updateClearedBadges();
+    updateStats();
+    setTimeout(() => showSuccess(), 600);
+  }
+}
+
+function markGoal(id) {
+  const el = document.getElementById('goal-' + id);
+  if (el) el.classList.add('met');
+}
+
+/* ════════════════════════════════════════
+   SUCCESS
+════════════════════════════════════════ */
+function showSuccess() {
+  const m = MISSIONS[currentMission];
+  document.getElementById('success-msg').textContent = m.successMsg;
+  document.getElementById('stamp-text').textContent = m.stamp;
+  document.getElementById('success-overlay').classList.add('show');
+}
+function closeSuccess() {
+  document.getElementById('success-overlay').classList.remove('show');
+}
+
+/* ════════════════════════════════════════
+   CODE VIEW
+════════════════════════════════════════ */
+function showCode() {
+  const code = generateCode(wsBlocks);
+  document.getElementById('code-content').innerHTML = code;
+  document.getElementById('code-modal').classList.add('show');
+}
+function closeCode() {
+  document.getElementById('code-modal').classList.remove('show');
+}
+
+function generateCode(blocks) {
+  if (blocks.length === 0) return '<span class="code-comment">// 블록을 추가하면 코드가 여기에 표시됩니다</span>';
+
+  const lines = [];
+  lines.push(`<span class="code-comment">// 🧩 비주얼 코딩 체험 - 생성된 코드</span>`);
+  lines.push(`<span class="code-comment">// 미션: ${MISSIONS[currentMission].title}</span>`);
+  lines.push('');
+
+  if (currentMission === 0) {
+    lines.push(`<span class="code-keyword">function</span> <span class="code-fn">runProgram</span>() {`);
+    lines.push(`  <span class="code-keyword">const</span> turtle = <span class="code-keyword">new</span> <span class="code-fn">Turtle</span>(<span class="code-num">126</span>, <span class="code-num">100</span>);`);
+    lines.push('');
+    blocks.forEach(blk => {
+      if (blk.type === 'forward')  lines.push(`  turtle.<span class="code-fn">forward</span>(<span class="code-num">${blk.steps||50}</span>);`);
+      if (blk.type === 'backward') lines.push(`  turtle.<span class="code-fn">backward</span>(<span class="code-num">${blk.steps||50}</span>);`);
+      if (blk.type === 'left')     lines.push(`  turtle.<span class="code-fn">left</span>(<span class="code-num">${blk.angle||90}</span>);`);
+      if (blk.type === 'right')    lines.push(`  turtle.<span class="code-fn">right</span>(<span class="code-num">${blk.angle||90}</span>);`);
+      if (blk.type === 'repeat') {
+        lines.push('');
+        lines.push(`  <span class="code-keyword">for</span> (<span class="code-keyword">let</span> i = <span class="code-num">0</span>; i &lt; <span class="code-num">${blk.count||4}</span>; i++) {`);
+        lines.push(`    <span class="code-comment">// 반복 내용</span>`);
+        lines.push(`  }`);
+      }
+    });
+    lines.push(`}`);
+  } else if (currentMission === 1) {
+    lines.push(`<span class="code-keyword">function</span> <span class="code-fn">runLED</span>() {`);
+    lines.push(`  <span class="code-keyword">const</span> led = <span class="code-keyword">new</span> <span class="code-fn">LEDMatrix</span>(<span class="code-num">8</span>, <span class="code-num">8</span>);`);
+    lines.push('');
+    blocks.forEach(blk => {
+      if (blk.type === 'repeat') {
+        lines.push(`  <span class="code-keyword">for</span> (<span class="code-keyword">let</span> row = <span class="code-num">0</span>; row &lt; <span class="code-num">${blk.count||4}</span>; row++) {`);
+      }
+      if (blk.type === 'if_led') {
+        lines.push(`    <span class="code-keyword">for</span> (<span class="code-keyword">let</span> col = <span class="code-num">0</span>; col &lt; <span class="code-num">8</span>; col++) {`);
+        lines.push(`      <span class="code-keyword">if</span> ((row + col) % <span class="code-num">2</span> === <span class="code-num">0</span>) {`);
+        lines.push(`        led.<span class="code-fn">setPixel</span>(row, col, <span class="code-str">'on'</span>);`);
+        lines.push(`      }`);
+        lines.push(`    }`);
+        lines.push(`  }`);
+      }
+    });
+    lines.push(`}`);
+  } else if (currentMission === 2) {
+    lines.push(`<span class="code-keyword">function</span> <span class="code-fn">countObjects</span>(objects) {`);
+    lines.push(`  <span class="code-keyword">let</span> count = <span class="code-num">0</span>;`);
+    lines.push('');
+    lines.push(`  <span class="code-keyword">for</span> (<span class="code-keyword">const</span> obj <span class="code-keyword">of</span> objects) {`);
+    blocks.forEach(blk => {
+      if (blk.type === 'count_reset') lines.push(`    count = <span class="code-num">0</span>;`);
+      if (blk.type === 'if_color')   lines.push(`    <span class="code-keyword">if</span> (obj.color === <span class="code-str">'${blk.color||'red'}'</span>) {`);
+      if (blk.type === 'count_add')  lines.push(`      count++; <span class="code-comment">// 조건 맞으면 카운트 증가</span>`);
+    });
+    const hasIf = blocks.find(b=>b.type==='if_color');
+    if (hasIf) lines.push(`    }`);
+    lines.push(`  }`);
+    lines.push('');
+    lines.push(`  <span class="code-keyword">return</span> count;`);
+    lines.push(`}`);
+  }
+
+  lines.push('');
+  lines.push(`<span class="code-comment">// 블록 수: ${blocks.length}개</span>`);
+  return lines.join('\n');
+}
+
+/* ════════════════════════════════════════
+   STATS & BADGES
+════════════════════════════════════════ */
+function updateStats() {
+  const cl = cleared.filter(Boolean).length;
+  document.getElementById('stat-cleared').textContent = cl;
+  document.getElementById('stat-lines').textContent = wsBlocks.length;
+  document.getElementById('stat-runs').textContent = runCount;
+  document.getElementById('topbar-cleared').textContent = `${cl}/3 클리어`;
+  updateStamps();
+}
+
+function updateClearedBadges() {
+  cleared.forEach((c, i) => {
+    const el = document.getElementById(`clear-${i}`);
+    if (el) el.style.display = c ? 'block' : 'none';
+  });
+}
+
+function updateStamps() {
+  const row = document.getElementById('stamp-row');
+  row.innerHTML = '';
+  cleared.forEach((c, i) => {
+    if (c) {
+      const sp = document.createElement('span');
+      sp.style.cssText = 'font-size:22px;cursor:default;';
+      sp.title = MISSIONS[i].stamp;
+      sp.textContent = ['🐢','💡','🔭'][i];
+      row.appendChild(sp);
+    }
+  });
+}
+
+/* ════════════════════════════════════════
+   TOAST
+════════════════════════════════════════ */
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = `position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+    background:#333;color:#fff;padding:10px 20px;border-radius:20px;
+    font-size:13px;font-weight:600;z-index:500;opacity:1;transition:opacity .4s;
+    font-family:'Space Grotesk',sans-serif;`;
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),400); }, 2000);
+}
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+function init() {
+  loadState();
+  updateGoalList();
+  updateResultView();
+  updateStats();
+  updateClearedBadges();
+  clearTurtleCanvas();
+  initLED();
+  initCounter();
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

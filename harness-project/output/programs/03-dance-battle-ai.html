@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>댄스 AI 챌린지</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --coral: #E8705A;
+    --coral-dark: #C9503A;
+    --coral-light: #F5A090;
+    --bg: #F7F6F3;
+    --dark: #1A1A1A;
+    --white: #FFFFFF;
+    --text: #2D2D2D;
+    --muted: #8A8A8A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image: radial-gradient(circle, #D0CEC9 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* ─── TOP BAR ─── */
+  #topbar {
+    background: var(--coral);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(232,112,90,0.3);
+  }
+  #topbar .title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: 20px;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+  #topbar .back-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s;
+  }
+  #topbar .back-btn:hover { background: rgba(255,255,255,0.35); }
+  #topbar .zone-badge {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* ─── SCREENS ─── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ─── SONG SELECT ─── */
+  #screen-select {
+    padding: 32px 24px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  #screen-select h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  #screen-select .subtitle {
+    color: var(--muted);
+    margin-bottom: 32px;
+    font-size: 15px;
+  }
+  .song-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .song-card {
+    border-radius: 20px;
+    padding: 28px 24px;
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s;
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .song-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.18); }
+  .song-card:active { transform: scale(0.97); }
+  .song-card.song-1 { background: linear-gradient(135deg, #E8705A 0%, #FF9A6C 100%); }
+  .song-card.song-2 { background: linear-gradient(135deg, #7C5CFC 0%, #C77DFF 100%); }
+  .song-card.song-3 { background: linear-gradient(135deg, #0EA5E9 0%, #38EFC4 100%); }
+  .song-card .emoji {
+    font-size: 56px;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    opacity: 0.85;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+  }
+  .song-card .song-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .song-card .song-meta {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.9;
+  }
+  .song-card .diff-badge {
+    background: rgba(255,255,255,0.25);
+    padding: 2px 8px;
+    border-radius: 8px;
+  }
+
+  /* ─── COUNTDOWN ─── */
+  #screen-countdown {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 56px);
+    gap: 24px;
+    background: var(--dark);
+  }
+  #screen-countdown .msg {
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+    opacity: 0.8;
+  }
+  #screen-countdown .count-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 120px;
+    font-weight: 800;
+    color: var(--coral);
+    line-height: 1;
+    animation: countPop 0.6s ease;
+  }
+  @keyframes countPop {
+    0% { transform: scale(1.6); opacity: 0; }
+    60% { transform: scale(0.95); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ─── DANCE SCREEN ─── */
+  #screen-dance {
+    background: var(--dark);
+    min-height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+  }
+
+  /* Score bar row */
+  .score-bar-row {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(0,0,0,0.5);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .score-display {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--coral);
+    min-width: 100px;
+  }
+  .score-label { font-size: 11px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px; }
+  .score-progress-wrap {
+    flex: 1;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .score-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--coral), #FF9A6C);
+    width: 0%;
+    transition: width 0.4s ease;
+    border-radius: 4px;
+  }
+  .combo-display {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #FFD700;
+    min-width: 80px;
+    text-align: right;
+  }
+  .timer-display {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* Dance area */
+  .dance-area {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 12px;
+    position: relative;
+  }
+
+  .pose-panel {
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    background: #111;
+    aspect-ratio: 4/3;
+  }
+  .pose-panel .panel-label {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    z-index: 5;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* Reference skeleton */
+  #ref-svg-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  #ref-svg {
+    width: 100%;
+    height: 100%;
+  }
+  .skel-bone {
+    stroke: #E8705A;
+    stroke-width: 4;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 6px rgba(232,112,90,0.7));
+  }
+  .skel-joint {
+    fill: #fff;
+    filter: drop-shadow(0 0 4px rgba(255,255,255,0.5));
+  }
+
+  /* Webcam */
+  #webcam-wrap {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: #000;
+  }
+  #video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+  #pose-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    transform: scaleX(-1);
+  }
+
+  /* Beat pulse overlay */
+  .beat-flash {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.1s;
+    background: radial-gradient(circle at center, rgba(232,112,90,0.25) 0%, transparent 70%);
+  }
+  .beat-flash.on { opacity: 1; }
+
+  /* Judgment text */
+  #judgment-display {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    pointer-events: none;
+    z-index: 60;
+    text-shadow: 0 0 20px currentColor;
+    opacity: 0;
+  }
+  #judgment-display.show {
+    animation: judgmentPop 1.2s ease forwards;
+  }
+  #judgment-display.PERFECT { color: #FFD700; }
+  #judgment-display.GREAT { color: #7CFC00; }
+  #judgment-display.GOOD { color: #00BFFF; }
+  #judgment-display.MISS { color: #FF6B6B; }
+
+  @keyframes judgmentPop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    15% { opacity: 1; transform: translate(-50%, -60%) scale(1.1); }
+    50% { opacity: 1; transform: translate(-50%, -65%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -75%) scale(0.9); }
+  }
+
+  /* Keyframe progress row */
+  .keyframe-row {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+    background: rgba(0,0,0,0.4);
+  }
+  .kf-dot {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.15);
+    transition: background 0.2s;
+  }
+  .kf-dot.done { background: var(--coral); }
+  .kf-dot.active { background: #FFD700; animation: dotPulse 0.5s ease infinite alternate; }
+  @keyframes dotPulse { from { opacity: 0.6; } to { opacity: 1; } }
+
+  /* ─── RESULT SCREEN ─── */
+  #screen-result {
+    padding: 32px 24px;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .result-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .result-grade {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 80px;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--coral), #FF9A6C);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+    animation: gradeReveal 0.6s ease;
+  }
+  @keyframes gradeReveal {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .result-score {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--text);
+  }
+  .result-score span { font-size: 20px; color: var(--muted); }
+  .result-song-name {
+    font-size: 16px;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .judgment-history {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .jh-item {
+    text-align: center;
+  }
+  .jh-count {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .jh-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .jh-PERFECT .jh-count, .jh-PERFECT .jh-label { color: #D4A800; }
+  .jh-GREAT .jh-count, .jh-GREAT .jh-label { color: #3A8A00; }
+  .jh-GOOD .jh-count, .jh-GOOD .jh-label { color: #0070AA; }
+  .jh-MISS .jh-count, .jh-MISS .jh-label { color: #CC2200; }
+
+  .stamp-box {
+    background: linear-gradient(135deg, #FFF8E1, #FFF3CD);
+    border: 2px dashed #FFB800;
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #8A6800;
+  }
+  .stamp-box .stamp-emoji { font-size: 32px; }
+
+  .result-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .btn-register {
+    background: var(--coral);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    width: 100%;
+  }
+  .btn-register:hover { background: var(--coral-dark); transform: translateY(-1px); }
+  .btn-retry {
+    background: #fff;
+    color: var(--text);
+    border: 2px solid #E0DDD8;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .btn-retry:hover { border-color: var(--coral); color: var(--coral); }
+
+  /* Nick modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px 28px;
+    max-width: 360px;
+    width: 90%;
+    text-align: center;
+  }
+  .modal-box h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .modal-box p { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .modal-box input {
+    width: 100%;
+    border: 2px solid #E0DDD8;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 14px;
+  }
+  .modal-box input:focus { border-color: var(--coral); }
+  .modal-box .btn-confirm {
+    background: var(--coral);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .modal-box .btn-confirm:hover { background: var(--coral-dark); }
+
+  /* Camera permission error */
+  #camera-error {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: #111;
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding: 24px;
+    z-index: 10;
+  }
+  #camera-error.show { display: flex; }
+  #camera-error .err-icon { font-size: 48px; }
+  #camera-error p { font-size: 14px; opacity: 0.7; }
+
+  /* ─── LEADERBOARD ─── */
+  #screen-leaderboard {
+    padding: 24px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  #screen-leaderboard h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 20px;
+  }
+  .lb-table {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
+  .lb-row {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid #F0EEEB;
+    gap: 12px;
+    transition: background 0.15s;
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-row.new-entry { background: #FFF5F3; }
+  .lb-rank {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    min-width: 30px;
+    color: var(--muted);
+  }
+  .lb-row:nth-child(1) .lb-rank { color: #FFB800; }
+  .lb-row:nth-child(2) .lb-rank { color: #A0A0A0; }
+  .lb-row:nth-child(3) .lb-rank { color: #C07840; }
+  .lb-nick { flex: 1; font-weight: 600; }
+  .lb-score { font-family: 'Space Grotesk', sans-serif; font-weight: 800; color: var(--coral); }
+  .lb-new-badge {
+    background: var(--coral);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+  .btn-back-lb {
+    width: 100%;
+    background: var(--coral);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-back-lb:hover { background: var(--coral-dark); }
+
+  /* Mobile responsive */
+  @media (max-width: 600px) {
+    .dance-area {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+    }
+    .pose-panel { aspect-ratio: 4/3; }
+    #screen-select { padding: 20px 16px; }
+    #screen-select h2 { font-size: 22px; }
+    .song-grid { grid-template-columns: 1fr; }
+    #judgment-display { font-size: 36px; }
+    .result-grade { font-size: 60px; }
+    .result-score { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <button class="back-btn" onclick="goBack()">← 대시보드</button>
+  <span class="title">💃 댄스 AI 챌린지</span>
+  <span class="zone-badge">A존</span>
+</div>
+
+<!-- BEAT FLASH OVERLAY -->
+<div class="beat-flash" id="beat-flash"></div>
+
+<!-- JUDGMENT DISPLAY -->
+<div id="judgment-display"></div>
+
+<!-- ── SCREEN: SONG SELECT ── -->
+<div id="screen-select" class="screen active">
+  <h2>곡을 선택하세요</h2>
+  <p class="subtitle">AI가 당신의 댄스 실력을 분석합니다. 30초 챌린지!</p>
+  <div class="song-grid">
+    <div class="song-card song-1" onclick="selectSong(0)">
+      <span class="emoji">⚡</span>
+      <div class="song-name">에너지 웨이브</div>
+      <div class="song-meta">
+        <span class="diff-badge">★★☆ 보통</span>
+        <span>120 BPM</span>
+      </div>
+    </div>
+    <div class="song-card song-2" onclick="selectSong(1)">
+      <span class="emoji">🌙</span>
+      <div class="song-name">드림 스테이지</div>
+      <div class="song-meta">
+        <span class="diff-badge">★☆☆ 쉬움</span>
+        <span>100 BPM</span>
+      </div>
+    </div>
+    <div class="song-card song-3" onclick="selectSong(2)">
+      <span class="emoji">💥</span>
+      <div class="song-name">비트 블라스터</div>
+      <div class="song-meta">
+        <span class="diff-badge">★★★ 어려움</span>
+        <span>140 BPM</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCREEN: COUNTDOWN ── -->
+<div id="screen-countdown" class="screen">
+  <p class="msg">카메라 앞에 서주세요</p>
+  <div class="count-num" id="count-num">3</div>
+</div>
+
+<!-- ── SCREEN: DANCE ── -->
+<div id="screen-dance" class="screen">
+  <div class="score-bar-row">
+    <div>
+      <div class="score-label">SCORE</div>
+      <div class="score-display" id="score-disp">0</div>
+    </div>
+    <div class="score-progress-wrap">
+      <div class="score-progress-bar" id="score-prog"></div>
+    </div>
+    <div>
+      <div class="score-label" style="text-align:right">COMBO</div>
+      <div class="combo-display" id="combo-disp">0🔥</div>
+    </div>
+    <div class="timer-display" id="timer-disp">30</div>
+  </div>
+
+  <div class="keyframe-row" id="kf-row"></div>
+
+  <div class="dance-area">
+    <!-- Reference Pose Panel -->
+    <div class="pose-panel">
+      <div class="panel-label">기준 포즈</div>
+      <div id="ref-svg-container">
+        <svg id="ref-svg" viewBox="0 0 320 360" xmlns="http://www.w3.org/2000/svg">
+          <rect width="320" height="360" fill="#111"/>
+          <!-- skeleton drawn by JS -->
+        </svg>
+      </div>
+    </div>
+
+    <!-- Webcam Panel -->
+    <div class="pose-panel">
+      <div class="panel-label">내 동작</div>
+      <div id="webcam-wrap">
+        <video id="video" playsinline autoplay muted></video>
+        <canvas id="pose-canvas"></canvas>
+        <div id="camera-error">
+          <span class="err-icon">📷</span>
+          <strong>카메라를 사용할 수 없습니다</strong>
+          <p>카메라 권한을 허용하거나,<br>지원 브라우저(Chrome)를 사용해주세요.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SCREEN: RESULT ── -->
+<div id="screen-result" class="screen">
+  <div class="result-header">
+    <div class="result-grade" id="res-grade">S</div>
+    <div class="result-score"><span id="res-score">0</span> <span>/ 10000</span></div>
+    <div class="result-song-name" id="res-song"></div>
+  </div>
+
+  <div class="judgment-history">
+    <div class="jh-item jh-PERFECT">
+      <div class="jh-count" id="res-perfect">0</div>
+      <div class="jh-label">Perfect</div>
+    </div>
+    <div class="jh-item jh-GREAT">
+      <div class="jh-count" id="res-great">0</div>
+      <div class="jh-label">Great</div>
+    </div>
+    <div class="jh-item jh-GOOD">
+      <div class="jh-count" id="res-good">0</div>
+      <div class="jh-label">Good</div>
+    </div>
+    <div class="jh-item jh-MISS">
+      <div class="jh-count" id="res-miss">0</div>
+      <div class="jh-label">Miss</div>
+    </div>
+  </div>
+
+  <div class="stamp-box" id="stamp-box" style="display:none">
+    <div class="stamp-emoji">🎫</div>
+    <div style="margin-top:6px">스탬프를 획득했습니다!</div>
+  </div>
+
+  <div class="result-actions">
+    <button class="btn-register" onclick="openNickModal()">🏆 랭킹 등록하기</button>
+    <button class="btn-retry" onclick="backToSelect()">🔄 다시 도전</button>
+  </div>
+</div>
+
+<!-- ── SCREEN: LEADERBOARD ── -->
+<div id="screen-leaderboard" class="screen">
+  <h2>🏆 리더보드</h2>
+  <div class="lb-table" id="lb-table"></div>
+  <button class="btn-back-lb" onclick="backToSelect()">다시 도전하기</button>
+</div>
+
+<!-- NICK MODAL -->
+<div class="modal-overlay" id="nick-modal">
+  <div class="modal-box">
+    <h3>닉네임 입력</h3>
+    <p>리더보드에 등록할 이름을 입력하세요</p>
+    <input type="text" id="nick-input" maxlength="12" placeholder="닉네임 (최대 12자)">
+    <button class="btn-confirm" onclick="confirmNick()">등록 완료!</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  SONG DATA
+// ═══════════════════════════════════════════════
+const SONGS = [
+  { name: '에너지 웨이브', bpm: 120, diff: '보통', emoji: '⚡', color: '#E8705A' },
+  { name: '드림 스테이지', bpm: 100, diff: '쉬움', emoji: '🌙', color: '#7C5CFC' },
+  { name: '비트 블라스터', bpm: 140, diff: '어려움', emoji: '💥', color: '#0EA5E9' },
+];
+
+// ═══════════════════════════════════════════════
+//  KEYFRAMES  (MediaPipe 33 landmarks, x/y normalized 0~1)
+//  Defined as {x,y}[] of 17 key joints only; rest filled with neutral
+//  Joint indices used (MediaPipe):
+//   0:nose 11:leftShoulder 12:rightShoulder
+//   13:leftElbow 14:rightElbow 15:leftWrist 16:rightWrist
+//   23:leftHip 24:rightHip 25:leftKnee 26:rightKnee
+//   27:leftAnkle 28:rightAnkle
+// ═══════════════════════════════════════════════
+
+function makeNeutral() {
+  // 33 landmarks neutral standing pose
+  const pts = [];
+  for (let i = 0; i < 33; i++) pts.push({ x: 0.5, y: 0.5 });
+  // nose
+  pts[0]  = { x: 0.50, y: 0.12 };
+  // shoulders
+  pts[11] = { x: 0.38, y: 0.28 }; pts[12] = { x: 0.62, y: 0.28 };
+  // elbows
+  pts[13] = { x: 0.28, y: 0.42 }; pts[14] = { x: 0.72, y: 0.42 };
+  // wrists
+  pts[15] = { x: 0.24, y: 0.56 }; pts[16] = { x: 0.76, y: 0.56 };
+  // hips
+  pts[23] = { x: 0.40, y: 0.58 }; pts[24] = { x: 0.60, y: 0.58 };
+  // knees
+  pts[25] = { x: 0.38, y: 0.76 }; pts[26] = { x: 0.62, y: 0.76 };
+  // ankles
+  pts[27] = { x: 0.37, y: 0.94 }; pts[28] = { x: 0.63, y: 0.94 };
+  return pts;
+}
+
+function makePose(overrides) {
+  const p = makeNeutral();
+  for (const [idx, val] of Object.entries(overrides)) {
+    p[parseInt(idx)] = val;
+  }
+  return p;
+}
+
+// Song 0: 에너지 웨이브 – 10 keyframes
+const KF_0 = [
+  makePose({ 15:{x:0.18,y:0.28}, 16:{x:0.82,y:0.28}, 13:{x:0.20,y:0.38}, 14:{x:0.80,y:0.38} }), // arms wide up
+  makePose({ 15:{x:0.50,y:0.08}, 16:{x:0.50,y:0.08}, 13:{x:0.44,y:0.20}, 14:{x:0.56,y:0.20} }), // arms overhead together
+  makePose({ 15:{x:0.18,y:0.50}, 16:{x:0.82,y:0.50}, 25:{x:0.36,y:0.70}, 26:{x:0.64,y:0.70} }), // T-pose
+  makePose({ 15:{x:0.60,y:0.30}, 16:{x:0.60,y:0.65}, 13:{x:0.55,y:0.38}, 14:{x:0.70,y:0.50} }), // right arm up, left down
+  makePose({ 15:{x:0.40,y:0.65}, 16:{x:0.40,y:0.30}, 13:{x:0.30,y:0.50}, 14:{x:0.45,y:0.38} }), // mirror
+  makePose({ 15:{x:0.24,y:0.28}, 16:{x:0.76,y:0.28}, 25:{x:0.34,y:0.72}, 26:{x:0.66,y:0.72}, 27:{x:0.32,y:0.90}, 28:{x:0.68,y:0.90} }), // wide stance arms up
+  makePose({ 0:{x:0.50,y:0.10}, 15:{x:0.50,y:0.05}, 16:{x:0.50,y:0.05}, 13:{x:0.46,y:0.18}, 14:{x:0.54,y:0.18} }), // hands above head
+  makePose({ 15:{x:0.28,y:0.60}, 16:{x:0.72,y:0.60}, 13:{x:0.30,y:0.48}, 14:{x:0.70,y:0.48}, 25:{x:0.38,y:0.78}, 26:{x:0.62,y:0.78} }), // squat arms low
+  makePose({ 15:{x:0.18,y:0.20}, 16:{x:0.82,y:0.20}, 13:{x:0.22,y:0.32}, 14:{x:0.78,y:0.32} }), // jump arms very wide
+  makePose({}), // neutral
+];
+
+// Song 1: 드림 스테이지 – 8 keyframes (slow, gentle)
+const KF_1 = [
+  makePose({ 15:{x:0.30,y:0.40}, 16:{x:0.72,y:0.28} }), // gentle sway right arm up
+  makePose({ 15:{x:0.28,y:0.28}, 16:{x:0.70,y:0.40} }), // gentle sway left arm up
+  makePose({ 15:{x:0.50,y:0.14}, 16:{x:0.66,y:0.28}, 13:{x:0.44,y:0.24} }), // one arm up
+  makePose({ 15:{x:0.34,y:0.28}, 16:{x:0.50,y:0.14}, 14:{x:0.56,y:0.24} }), // other arm up
+  makePose({ 15:{x:0.20,y:0.44}, 16:{x:0.80,y:0.44} }), // arms out horizontal
+  makePose({ 15:{x:0.44,y:0.60}, 16:{x:0.56,y:0.60}, 25:{x:0.38,y:0.80}, 26:{x:0.62,y:0.80} }), // arms down, bent knees
+  makePose({ 15:{x:0.40,y:0.30}, 16:{x:0.40,y:0.30}, 13:{x:0.38,y:0.38}, 14:{x:0.42,y:0.38} }), // both arms left
+  makePose({}), // neutral
+];
+
+// Song 2: 비트 블라스터 – 12 keyframes (fast, sharp)
+const KF_2 = [
+  makePose({ 15:{x:0.14,y:0.18}, 16:{x:0.86,y:0.18}, 13:{x:0.18,y:0.28}, 14:{x:0.82,y:0.28} }), // star pose
+  makePose({ 15:{x:0.52,y:0.08}, 16:{x:0.30,y:0.56}, 13:{x:0.50,y:0.20} }), // right diagonal
+  makePose({ 15:{x:0.70,y:0.56}, 16:{x:0.48,y:0.08}, 14:{x:0.50,y:0.20} }), // left diagonal
+  makePose({ 15:{x:0.26,y:0.28}, 16:{x:0.74,y:0.28}, 25:{x:0.30,y:0.68}, 26:{x:0.70,y:0.68} }), // wide low
+  makePose({ 15:{x:0.50,y:0.06}, 16:{x:0.50,y:0.06} }), // hands up center
+  makePose({ 15:{x:0.60,y:0.28}, 16:{x:0.40,y:0.28} }), // crossed arms
+  makePose({ 15:{x:0.18,y:0.56}, 16:{x:0.82,y:0.20}, 13:{x:0.24,y:0.46}, 14:{x:0.76,y:0.30} }), // right arm high left low
+  makePose({ 15:{x:0.82,y:0.56}, 16:{x:0.18,y:0.20}, 13:{x:0.76,y:0.46}, 14:{x:0.24,y:0.30} }), // mirror
+  makePose({ 27:{x:0.34,y:0.90}, 28:{x:0.66,y:0.90}, 25:{x:0.34,y:0.72}, 26:{x:0.66,y:0.72}, 15:{x:0.22,y:0.36}, 16:{x:0.78,y:0.36} }), // big wide stand
+  makePose({ 15:{x:0.44,y:0.54}, 16:{x:0.56,y:0.54}, 25:{x:0.36,y:0.78}, 26:{x:0.64,y:0.78} }), // squat
+  makePose({ 15:{x:0.16,y:0.22}, 16:{x:0.84,y:0.22} }), // super wide arms
+  makePose({}), // neutral
+];
+
+const SONG_KEYFRAMES = [KF_0, KF_1, KF_2];
+const SONG_DURATION  = 30; // seconds
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let selectedSong = 0;
+let currentKeyframeIdx = 0;
+let score = 0;
+let combo = 0;
+let maxCombo = 0;
+let timeLeft = SONG_DURATION;
+let danceActive = false;
+let judgmentCounts = { PERFECT:0, GREAT:0, GOOD:0, MISS:0 };
+
+let beatInterval = null;
+let kfInterval   = null;
+let timerInterval = null;
+let bpmInterval  = null;
+
+let poseDetector = null;
+let cameraRunning = false;
+let lastLandmarks = null;
+
+// ═══════════════════════════════════════════════
+//  SCREEN MANAGEMENT
+// ═══════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goBack() {
+  if (typeof window.parent !== 'undefined') {
+    window.parent.postMessage({ type: 'back' }, '*');
+  } else {
+    window.history.back();
+  }
+  stopAll();
+  showScreen('screen-select');
+}
+
+function backToSelect() {
+  stopAll();
+  showScreen('screen-select');
+}
+
+// ═══════════════════════════════════════════════
+//  SONG SELECT → COUNTDOWN → DANCE
+// ═══════════════════════════════════════════════
+function selectSong(idx) {
+  selectedSong = idx;
+  startCountdown();
+}
+
+function startCountdown() {
+  showScreen('screen-countdown');
+  initCamera(); // start camera early
+  let n = 3;
+  const el = document.getElementById('count-num');
+  el.textContent = n;
+  const iv = setInterval(() => {
+    n--;
+    if (n === 0) {
+      el.textContent = 'GO!';
+      clearInterval(iv);
+      setTimeout(startDance, 700);
+    } else {
+      el.textContent = n;
+      // retrigger animation
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = 'countPop 0.6s ease';
+    }
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════
+//  DANCE GAME LOOP
+// ═══════════════════════════════════════════════
+function startDance() {
+  // reset state
+  score = 0; combo = 0; maxCombo = 0; timeLeft = SONG_DURATION;
+  judgmentCounts = { PERFECT:0, GREAT:0, GOOD:0, MISS:0 };
+  currentKeyframeIdx = 0;
+  danceActive = true;
+
+  updateScoreUI();
+  buildKfRow();
+  showScreen('screen-dance');
+
+  const song = SONGS[selectedSong];
+  const kfs  = SONG_KEYFRAMES[selectedSong];
+  const beatMs = Math.round(60000 / song.bpm);
+  const kfInterval_ms = Math.round((SONG_DURATION * 1000) / kfs.length);
+
+  // Draw first reference pose
+  drawRefPose(kfs[0]);
+  highlightKf(0);
+
+  // BPM beat flash
+  bpmInterval = setInterval(() => {
+    const flash = document.getElementById('beat-flash');
+    flash.classList.add('on');
+    setTimeout(() => flash.classList.remove('on'), 80);
+  }, beatMs);
+
+  // Keyframe advancement
+  kfInterval = setInterval(() => {
+    if (!danceActive) return;
+    // Evaluate current pose vs keyframe
+    evaluatePose(kfs[currentKeyframeIdx]);
+    currentKeyframeIdx++;
+    if (currentKeyframeIdx >= kfs.length) {
+      endDance();
+      return;
+    }
+    drawRefPose(kfs[currentKeyframeIdx]);
+    highlightKf(currentKeyframeIdx);
+  }, kfInterval_ms);
+
+  // Countdown timer
+  timerInterval = setInterval(() => {
+    if (!danceActive) return;
+    timeLeft--;
+    document.getElementById('timer-disp').textContent = timeLeft;
+    if (timeLeft <= 0) {
+      endDance();
+    }
+  }, 1000);
+}
+
+function stopAll() {
+  danceActive = false;
+  clearInterval(bpmInterval);
+  clearInterval(kfInterval);
+  clearInterval(timerInterval);
+  bpmInterval = kfInterval = timerInterval = null;
+  stopCamera();
+}
+
+function buildKfRow() {
+  const kfs = SONG_KEYFRAMES[selectedSong];
+  const row = document.getElementById('kf-row');
+  row.innerHTML = '';
+  kfs.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'kf-dot';
+    d.id = 'kf-' + i;
+    row.appendChild(d);
+  });
+}
+
+function highlightKf(idx) {
+  const kfs = SONG_KEYFRAMES[selectedSong];
+  kfs.forEach((_, i) => {
+    const el = document.getElementById('kf-' + i);
+    if (!el) return;
+    el.className = 'kf-dot';
+    if (i < idx)  el.classList.add('done');
+    if (i === idx) el.classList.add('active');
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  POSE EVALUATION
+// ═══════════════════════════════════════════════
+function flattenPose(landmarks) {
+  const vec = [];
+  landmarks.forEach(pt => { vec.push(pt.x, pt.y); });
+  return vec;
+}
+
+function cosineSimilarity(a, b) {
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot   += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  if (normA === 0 || normB === 0) return 0;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+}
+
+function evaluatePose(keyframe) {
+  let sim;
+  if (lastLandmarks && lastLandmarks.length === 33) {
+    const a = flattenPose(keyframe);
+    const b = flattenPose(lastLandmarks);
+    sim = cosineSimilarity(a, b);
+  } else {
+    // No pose detected → slight penalty but don't fully block
+    sim = Math.random() * 0.3 + 0.35; // demo fallback
+  }
+
+  let judgment, pts;
+  if (sim > 0.92) {
+    judgment = 'PERFECT'; pts = 1000; combo++;
+  } else if (sim > 0.80) {
+    judgment = 'GREAT';   pts = 750;  combo++;
+  } else if (sim > 0.65) {
+    judgment = 'GOOD';    pts = 400;  combo++;
+  } else {
+    judgment = 'MISS';    pts = 0;    combo = 0;
+  }
+
+  // Combo bonus
+  if (combo > 1) pts = Math.round(pts * (1 + Math.min(combo, 10) * 0.05));
+  score += pts;
+  if (combo > maxCombo) maxCombo = combo;
+  judgmentCounts[judgment]++;
+
+  showJudgment(judgment);
+  updateScoreUI();
+}
+
+function showJudgment(type) {
+  const el = document.getElementById('judgment-display');
+  el.textContent = type;
+  el.className = 'show ' + type;
+  void el.offsetWidth;
+  el.className = 'show ' + type; // re-trigger
+}
+
+function updateScoreUI() {
+  document.getElementById('score-disp').textContent = score.toLocaleString();
+  document.getElementById('score-prog').style.width = Math.min(score / 100, 100) + '%';
+  const c = document.getElementById('combo-disp');
+  c.textContent = combo > 0 ? combo + '🔥' : '0';
+  c.style.transform = combo > 0 ? 'scale(1.2)' : 'scale(1)';
+  setTimeout(() => { c.style.transform = 'scale(1)'; }, 200);
+}
+
+// ═══════════════════════════════════════════════
+//  END DANCE
+// ═══════════════════════════════════════════════
+function endDance() {
+  if (!danceActive) return;
+  stopAll();
+  const finalScore = Math.min(score, 10000);
+  saveResults(finalScore);
+  showResultScreen(finalScore);
+}
+
+function getGrade(s) {
+  if (s >= 9500) return 'SSS';
+  if (s >= 9000) return 'SS';
+  if (s >= 8000) return 'S';
+  if (s >= 6500) return 'A';
+  if (s >= 5000) return 'B';
+  return 'C';
+}
+
+function showResultScreen(finalScore) {
+  const grade = getGrade(finalScore);
+  document.getElementById('res-grade').textContent = grade;
+  document.getElementById('res-score').textContent = finalScore.toLocaleString();
+  document.getElementById('res-song').textContent = SONGS[selectedSong].emoji + ' ' + SONGS[selectedSong].name;
+  document.getElementById('res-perfect').textContent = judgmentCounts.PERFECT;
+  document.getElementById('res-great').textContent   = judgmentCounts.GREAT;
+  document.getElementById('res-good').textContent    = judgmentCounts.GOOD;
+  document.getElementById('res-miss').textContent    = judgmentCounts.MISS;
+
+  // Stamp check
+  const stamps = JSON.parse(localStorage.getItem('dreamfest_stamps') || '[]');
+  if (!stamps.includes(3)) {
+    document.getElementById('stamp-box').style.display = 'block';
+  }
+
+  showScreen('screen-result');
+}
+
+function saveResults(finalScore) {
+  const grade = getGrade(finalScore);
+
+  // Stamp
+  const stamps = JSON.parse(localStorage.getItem('dreamfest_stamps') || '[]');
+  if (!stamps.includes(3)) {
+    stamps.push(3);
+    localStorage.setItem('dreamfest_stamps', JSON.stringify(stamps));
+  }
+
+  // Results
+  const results = JSON.parse(localStorage.getItem('dreamfest_results') || '{}');
+  results['3'] = { score: finalScore, grade: grade, completedAt: new Date().toISOString() };
+  localStorage.setItem('dreamfest_results', JSON.stringify(results));
+}
+
+// ═══════════════════════════════════════════════
+//  NICK MODAL → LEADERBOARD
+// ═══════════════════════════════════════════════
+function openNickModal() {
+  document.getElementById('nick-modal').classList.add('open');
+  document.getElementById('nick-input').focus();
+}
+
+function confirmNick() {
+  const nick = document.getElementById('nick-input').value.trim() || '익명';
+  document.getElementById('nick-modal').classList.remove('open');
+  registerLeaderboard(nick);
+}
+
+document.getElementById('nick-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') confirmNick();
+});
+
+function registerLeaderboard(nick) {
+  const finalScore = Math.min(score, 10000);
+  const lb = JSON.parse(localStorage.getItem('dreamfest_leaderboard') || '{"dance":[],"classify":[],"prompt":[]}');
+  if (!lb.dance) lb.dance = [];
+  // mark old entries as not new
+  lb.dance.forEach(e => e.isNew = false);
+  lb.dance.push({ nick, score: finalScore, zone: 'A', isNew: true, song: SONGS[selectedSong].name });
+  lb.dance.sort((a, b) => b.score - a.score);
+  lb.dance = lb.dance.slice(0, 20);
+  localStorage.setItem('dreamfest_leaderboard', JSON.stringify(lb));
+  showLeaderboard(lb.dance);
+}
+
+function showLeaderboard(entries) {
+  const table = document.getElementById('lb-table');
+  if (entries.length === 0) {
+    table.innerHTML = '<div style="padding:24px;text-align:center;color:#aaa">아직 기록이 없습니다</div>';
+  } else {
+    table.innerHTML = entries.map((e, i) => `
+      <div class="lb-row ${e.isNew ? 'new-entry' : ''}">
+        <div class="lb-rank">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i+1}</div>
+        <div class="lb-nick">${escapeHtml(e.nick)} <span style="font-size:11px;color:#aaa">${e.song || ''}</span></div>
+        <div class="lb-score">${e.score.toLocaleString()}</div>
+        ${e.isNew ? '<span class="lb-new-badge">NEW</span>' : ''}
+      </div>
+    `).join('');
+  }
+  showScreen('screen-leaderboard');
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ═══════════════════════════════════════════════
+//  SVG SKELETON DRAWING
+// ═══════════════════════════════════════════════
+const BONES = [
+  [11, 12], // shoulders
+  [11, 13], [13, 15], // left arm
+  [12, 14], [14, 16], // right arm
+  [11, 23], [12, 24], // torso sides
+  [23, 24], // hips
+  [23, 25], [25, 27], // left leg
+  [24, 26], [26, 28], // right leg
+  [0, 11], [0, 12], // neck to shoulders
+];
+
+function drawRefPose(landmarks, svgEl) {
+  const svg = svgEl || document.getElementById('ref-svg');
+  const W = 320, H = 360;
+  svg.innerHTML = '<rect width="320" height="360" fill="#111"/>';
+
+  // Draw bones
+  BONES.forEach(([a, b]) => {
+    const pa = landmarks[a], pb = landmarks[b];
+    if (!pa || !pb) return;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', pa.x * W);
+    line.setAttribute('y1', pa.y * H);
+    line.setAttribute('x2', pb.x * W);
+    line.setAttribute('y2', pb.y * H);
+    line.setAttribute('class', 'skel-bone');
+    svg.appendChild(line);
+  });
+
+  // Draw joints
+  const key_joints = [0,11,12,13,14,15,16,23,24,25,26,27,28];
+  key_joints.forEach(i => {
+    const pt = landmarks[i];
+    if (!pt) return;
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', pt.x * W);
+    c.setAttribute('cy', pt.y * H);
+    c.setAttribute('r', i === 0 ? 10 : 6);
+    c.setAttribute('class', 'skel-joint');
+    svg.appendChild(c);
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  MEDIAPIPE CAMERA
+// ═══════════════════════════════════════════════
+let mpCamera = null;
+
+async function initCamera() {
+  if (cameraRunning) return;
+  const videoEl  = document.getElementById('video');
+  const canvasEl = document.getElementById('pose-canvas');
+
+  try {
+    const pose = new Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}` });
+    pose.setOptions({
+      modelComplexity: 1,
+      smoothLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5,
+    });
+    pose.onResults(onPoseResults);
+    poseDetector = pose;
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+    });
+    videoEl.srcObject = stream;
+
+    mpCamera = new Camera(videoEl, {
+      onFrame: async () => { await pose.send({ image: videoEl }); },
+      width: 640,
+      height: 480,
+    });
+    mpCamera.start();
+    cameraRunning = true;
+
+    // Sync canvas size to video
+    videoEl.addEventListener('loadedmetadata', () => {
+      canvasEl.width  = videoEl.videoWidth;
+      canvasEl.height = videoEl.videoHeight;
+    });
+
+  } catch (err) {
+    console.warn('Camera init failed:', err);
+    document.getElementById('camera-error').classList.add('show');
+  }
+}
+
+function stopCamera() {
+  if (mpCamera) { try { mpCamera.stop(); } catch(e){} mpCamera = null; }
+  const videoEl = document.getElementById('video');
+  if (videoEl.srcObject) {
+    videoEl.srcObject.getTracks().forEach(t => t.stop());
+    videoEl.srcObject = null;
+  }
+  cameraRunning = false;
+}
+
+function onPoseResults(results) {
+  const canvas = document.getElementById('pose-canvas');
+  const ctx    = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!results.poseLandmarks) { lastLandmarks = null; return; }
+  lastLandmarks = results.poseLandmarks;
+
+  // Draw skeleton overlay on webcam
+  const W = canvas.width, H = canvas.height;
+  ctx.save();
+
+  // Bones
+  BONES.forEach(([a, b]) => {
+    const pa = results.poseLandmarks[a];
+    const pb = results.poseLandmarks[b];
+    if (!pa || !pb) return;
+    ctx.beginPath();
+    ctx.moveTo(pa.x * W, pa.y * H);
+    ctx.lineTo(pb.x * W, pb.y * H);
+    ctx.strokeStyle = '#E8705A';
+    ctx.lineWidth   = 3;
+    ctx.lineCap     = 'round';
+    ctx.shadowColor = '#E8705A';
+    ctx.shadowBlur  = 8;
+    ctx.stroke();
+  });
+
+  // Joints
+  [0,11,12,13,14,15,16,23,24,25,26,27,28].forEach(i => {
+    const pt = results.poseLandmarks[i];
+    if (!pt) return;
+    ctx.beginPath();
+    ctx.arc(pt.x * W, pt.y * H, i === 0 ? 7 : 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = '#fff';
+    ctx.shadowBlur  = 6;
+    ctx.fill();
+  });
+
+  ctx.restore();
+}
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

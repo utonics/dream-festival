@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>꿈-드림 페스티벌 | 인증서 발급</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#2D7A4F;--green-light:#E8F5E9;--gold:#C5961B;--gold-light:#FFF8E1;
+  --navy:#1a237e;--red:#c62828;--bg:#F7F6F3;--text:#333;
+}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── 컨트롤 패널 ── */
+.controls{max-width:800px;margin:0 auto;padding:24px 20px}
+.controls h1{font-size:1.5rem;font-weight:700;color:var(--green);margin-bottom:4px}
+.controls .sub{font-size:.85rem;color:#888;margin-bottom:20px}
+.back-link{display:inline-block;margin-bottom:16px;color:var(--green);text-decoration:none;font-size:.85rem;font-weight:500}
+.back-link:hover{text-decoration:underline}
+
+.form-section{background:#fff;border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.form-section h2{font-size:1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.form-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.form-row label{font-size:.8rem;font-weight:600;color:#666;display:block;margin-bottom:4px}
+.form-row input,.form-row select{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;transition:border .2s}
+.form-row input:focus,.form-row select:focus{border-color:var(--green)}
+.form-col{flex:1;min-width:180px}
+
+.cert-type-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.cert-type-card{border:2px solid #e0e0e0;border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer;transition:all .2s}
+.cert-type-card:hover{border-color:var(--green);background:var(--green-light)}
+.cert-type-card.active{border-color:var(--green);background:var(--green-light);box-shadow:0 0 0 3px rgba(45,122,79,.15)}
+.cert-type-card .icon{font-size:2.5rem;margin-bottom:8px}
+.cert-type-card .label{font-size:.9rem;font-weight:700}
+.cert-type-card .desc{font-size:.72rem;color:#888;margin-top:4px}
+
+.stamp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+.stamp-item{text-align:center;padding:8px 4px;border:1.5px solid #e0e0e0;border-radius:10px;cursor:pointer;transition:all .15s;font-size:.65rem}
+.stamp-item:hover{border-color:var(--green)}
+.stamp-item.active{border-color:var(--green);background:var(--green-light)}
+.stamp-item .num{font-size:.7rem;font-weight:700;color:var(--green)}
+
+.btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{padding:12px 24px;border:none;border-radius:12px;font-size:.9rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:#236B3E}
+.btn-outline{background:#fff;color:var(--green);border:2px solid var(--green)}
+.btn-outline:hover{background:var(--green-light)}
+.btn-gold{background:var(--gold);color:#fff}
+.btn-gold:hover{background:#a67c16}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.preview-toggle{font-size:.8rem;color:var(--green);cursor:pointer;font-weight:600;margin-top:12px;display:inline-block}
+
+/* ── 인증서 미리보기/인쇄 영역 ── */
+.cert-wrapper{max-width:800px;margin:0 auto;padding:0 20px 40px}
+#certPreview{display:none}
+
+/* ── 인증서 공통 ── */
+.certificate{
+  width:210mm;min-height:297mm;margin:0 auto;padding:0;
+  background:#fff;position:relative;overflow:hidden;
+  box-shadow:0 4px 24px rgba(0,0,0,.12);
+}
+
+/* ── 참가 확인서 ── */
+.cert-participation{border:3px solid var(--green)}
+.cert-participation .cert-border{
+  position:absolute;inset:8mm;
+  border:1.5px solid var(--green);border-radius:4px;
+  pointer-events:none;
+}
+.cert-participation .cert-corner{
+  position:absolute;width:24px;height:24px;
+  border:3px solid var(--green);
+}
+.cert-participation .cert-corner.tl{top:12mm;left:12mm;border-right:none;border-bottom:none}
+.cert-participation .cert-corner.tr{top:12mm;right:12mm;border-left:none;border-bottom:none}
+.cert-participation .cert-corner.bl{bottom:12mm;left:12mm;border-right:none;border-top:none}
+.cert-participation .cert-corner.br{bottom:12mm;right:12mm;border-left:none;border-top:none}
+
+.cert-participation .cert-header{
+  text-align:center;padding:25mm 20mm 10mm;
+}
+.cert-participation .cert-logo{font-size:2.5rem;margin-bottom:6px}
+.cert-participation .cert-event{
+  font-family:'Noto Serif KR',serif;font-size:1rem;color:var(--green);
+  letter-spacing:4px;font-weight:700;margin-bottom:4px;
+}
+.cert-participation .cert-subtitle{font-size:.75rem;color:#888;letter-spacing:2px}
+
+.cert-participation .cert-title-area{
+  text-align:center;padding:15mm 20mm 10mm;
+}
+.cert-participation .cert-title{
+  font-family:'Noto Serif KR',serif;font-size:2.8rem;font-weight:900;
+  color:var(--green);letter-spacing:12px;
+  border-bottom:2px solid var(--green);border-top:2px solid var(--green);
+  padding:12px 0;display:inline-block;
+}
+
+.cert-participation .cert-body{
+  text-align:center;padding:8mm 30mm;line-height:2.2;font-size:1.05rem;
+}
+.cert-participation .cert-name{
+  font-family:'Noto Serif KR',serif;font-size:1.8rem;font-weight:900;
+  color:var(--navy);border-bottom:2px solid var(--navy);
+  padding-bottom:2px;display:inline;
+}
+.cert-participation .cert-body-text{color:#555;margin-top:6mm}
+
+.cert-participation .cert-info{
+  text-align:center;padding:5mm 30mm;font-size:.85rem;color:#666;line-height:2;
+}
+.cert-participation .cert-info-row{display:flex;justify-content:center;gap:30px}
+.cert-participation .cert-info-label{font-weight:700;color:#444;min-width:80px;text-align:right}
+.cert-participation .cert-info-value{color:var(--navy);font-weight:500}
+
+.cert-participation .cert-footer{
+  text-align:center;padding:15mm 20mm 20mm;
+}
+.cert-participation .cert-date{font-size:1.1rem;font-weight:500;color:#444;margin-bottom:12mm}
+.cert-participation .cert-org{font-size:1rem;color:#555}
+.cert-participation .cert-org-name{
+  font-family:'Noto Serif KR',serif;font-size:1.4rem;font-weight:900;color:var(--green);
+  margin-top:4px;
+}
+.cert-participation .cert-seal{
+  width:80px;height:80px;border:3px solid var(--red);border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:'Noto Serif KR',serif;font-size:.7rem;font-weight:900;
+  color:var(--red);margin-top:8mm;line-height:1.2;
+  transform:rotate(-15deg);
+}
+
+/* ── 스탬프 완료 인증서 ── */
+.cert-completion{border:3px solid var(--gold)}
+.cert-completion .cert-border{
+  position:absolute;inset:8mm;
+  border:1.5px solid var(--gold);border-radius:4px;
+  pointer-events:none;
+}
+.cert-completion .cert-corner{
+  position:absolute;width:24px;height:24px;
+  border:3px solid var(--gold);
+}
+.cert-completion .cert-corner.tl{top:12mm;left:12mm;border-right:none;border-bottom:none}
+.cert-completion .cert-corner.tr{top:12mm;right:12mm;border-left:none;border-bottom:none}
+.cert-completion .cert-corner.bl{bottom:12mm;left:12mm;border-right:none;border-top:none}
+.cert-completion .cert-corner.br{bottom:12mm;right:12mm;border-left:none;border-top:none}
+
+.cert-completion .cert-header{
+  text-align:center;padding:20mm 20mm 6mm;
+}
+.cert-completion .cert-logo{font-size:2.5rem;margin-bottom:6px}
+.cert-completion .cert-event{
+  font-family:'Noto Serif KR',serif;font-size:1rem;color:var(--gold);
+  letter-spacing:4px;font-weight:700;margin-bottom:4px;
+}
+.cert-completion .cert-subtitle{font-size:.75rem;color:#888;letter-spacing:2px}
+
+.cert-completion .cert-title-area{
+  text-align:center;padding:10mm 20mm 8mm;
+}
+.cert-completion .cert-title{
+  font-family:'Noto Serif KR',serif;font-size:2.2rem;font-weight:900;
+  color:var(--gold);letter-spacing:8px;
+  border-bottom:2px solid var(--gold);border-top:2px solid var(--gold);
+  padding:10px 0;display:inline-block;
+}
+
+.cert-completion .cert-body{
+  text-align:center;padding:5mm 25mm;line-height:2;font-size:1rem;
+}
+.cert-completion .cert-name{
+  font-family:'Noto Serif KR',serif;font-size:1.6rem;font-weight:900;
+  color:var(--navy);border-bottom:2px solid var(--navy);
+  padding-bottom:2px;display:inline;
+}
+
+.cert-completion .stamp-board{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:6px;
+  padding:6mm 20mm;max-width:160mm;margin:0 auto;
+}
+.cert-completion .stamp-cell{
+  text-align:center;padding:6px 2px;border:1px solid #e0e0e0;border-radius:8px;
+  font-size:.55rem;line-height:1.3;background:#fafafa;
+}
+.cert-completion .stamp-cell.earned{
+  background:var(--gold-light);border-color:var(--gold);
+}
+.cert-completion .stamp-cell .s-icon{font-size:1.1rem;display:block;margin-bottom:2px}
+.cert-completion .stamp-cell .s-name{font-weight:600;color:#444}
+.cert-completion .stamp-cell .s-check{color:var(--gold);font-weight:900;font-size:.7rem}
+
+.cert-completion .cert-stats{
+  text-align:center;padding:4mm 20mm;font-size:.85rem;color:#666;
+}
+.cert-completion .stat-row{display:flex;justify-content:center;gap:24px;margin-top:4px}
+.cert-completion .stat-item{font-weight:700;color:var(--gold)}
+
+.cert-completion .cert-footer{
+  text-align:center;padding:8mm 20mm 15mm;
+}
+.cert-completion .cert-date{font-size:1rem;font-weight:500;color:#444;margin-bottom:8mm}
+.cert-completion .cert-org-name{
+  font-family:'Noto Serif KR',serif;font-size:1.2rem;font-weight:900;color:var(--gold);
+  margin-top:4px;
+}
+.cert-completion .cert-seal{
+  width:70px;height:70px;border:3px solid var(--gold);border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:'Noto Serif KR',serif;font-size:.6rem;font-weight:900;
+  color:var(--gold);margin-top:6mm;line-height:1.2;
+  transform:rotate(-15deg);
+}
+
+/* ── 인쇄 스타일 ── */
+@media print{
+  body{background:#fff;margin:0;padding:0}
+  .controls,.cert-wrapper,.back-link,#certPreview .no-print,.btn-row{display:none!important}
+  #certPreview{display:block!important}
+  .certificate{
+    box-shadow:none;page-break-after:always;
+    width:100%;min-height:auto;margin:0;
+  }
+}
+
+/* ── 모바일 ── */
+@media(max-width:600px){
+  .certificate{width:100%;min-height:auto;padding-bottom:20mm}
+  .cert-type-cards{grid-template-columns:1fr}
+  .stamp-grid{grid-template-columns:repeat(3,1fr)}
+  .cert-participation .cert-title{font-size:2rem;letter-spacing:6px}
+  .cert-completion .cert-title{font-size:1.6rem;letter-spacing:4px}
+  .cert-participation .cert-body{padding:5mm 15mm}
+  .cert-completion .stamp-board{grid-template-columns:repeat(3,1fr);padding:4mm 10mm}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ 컨트롤 패널 ═══ -->
+<div class="controls" id="controlPanel">
+  <a href="index.html" class="back-link">&larr; 대시보드로 돌아가기</a>
+  <h1>📜 인증서 발급</h1>
+  <p class="sub">참가 확인서 및 스탬프 완료 인증서를 생성하고 인쇄/PDF 다운로드할 수 있습니다.</p>
+
+  <!-- 인증서 유형 선택 -->
+  <div class="form-section">
+    <h2>1️⃣ 인증서 유형</h2>
+    <div class="cert-type-cards">
+      <div class="cert-type-card active" data-type="participation" onclick="selectCertType('participation')">
+        <div class="icon">📋</div>
+        <div class="label">참가 확인서</div>
+        <div class="desc">미래기술존 참가를 확인하는 인증서</div>
+      </div>
+      <div class="cert-type-card" data-type="completion" onclick="selectCertType('completion')">
+        <div class="icon">🏆</div>
+        <div class="label">스탬프 완료 인증서</div>
+        <div class="desc">부스 체험 완료를 인증하는 인증서</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 참가자 정보 -->
+  <div class="form-section">
+    <h2>2️⃣ 참가자 정보</h2>
+    <div class="form-row">
+      <div class="form-col">
+        <label>참가자 이름 *</label>
+        <input type="text" id="certName" placeholder="홍길동" maxlength="20">
+      </div>
+      <div class="form-col">
+        <label>소속 학교</label>
+        <input type="text" id="certSchool" placeholder="영천중학교" maxlength="30">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-col">
+        <label>참가자 ID</label>
+        <input type="text" id="certId" placeholder="DF-XXXX (자동 입력)" readonly>
+      </div>
+      <div class="form-col">
+        <label>발급일</label>
+        <input type="date" id="certDate">
+      </div>
+    </div>
+    <div style="margin-top:8px">
+      <span class="preview-toggle" onclick="loadFromLocal()">💾 localStorage에서 불러오기</span>
+    </div>
+  </div>
+
+  <!-- 스탬프 선택 (완료 인증서용) -->
+  <div class="form-section" id="stampSection" style="display:none">
+    <h2>3️⃣ 체험 완료 부스 선택</h2>
+    <p style="font-size:.78rem;color:#888;margin-bottom:10px">체험 완료한 부스를 선택하세요. localStorage에서 자동 반영됩니다.</p>
+    <div class="stamp-grid" id="stampGrid"></div>
+    <div style="font-size:.8rem;color:var(--green);font-weight:600;margin-top:4px">
+      선택: <span id="stampCount">0</span>/15개
+    </div>
+  </div>
+
+  <!-- 버튼 -->
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="generateCert()">📄 미리보기 생성</button>
+    <button class="btn btn-outline" onclick="printCert()" id="btnPrint" disabled>🖨️ 인쇄</button>
+    <button class="btn btn-gold" onclick="downloadPdf()" id="btnPdf" disabled>📥 PDF 다운로드</button>
+  </div>
+</div>
+
+<!-- ═══ 인증서 미리보기 ═══ -->
+<div class="cert-wrapper">
+  <div id="certPreview"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+/* ═══════════════════════════════════════ */
+/* DATA                                    */
+/* ═══════════════════════════════════════ */
+var PROGRAMS = [
+  {id:1,name:'나의 몸을 읽는 AI',icon:'🏃',zone:'A'},
+  {id:2,name:'AI 운동 코치',icon:'💪',zone:'A'},
+  {id:3,name:'댄스 AI 챌린지',icon:'💃',zone:'A'},
+  {id:4,name:'물건을 알아보는 AI',icon:'👁️',zone:'B'},
+  {id:5,name:'AI 안전 감시관',icon:'🛡️',zone:'B'},
+  {id:6,name:'AI 분류 챌린지',icon:'🔬',zone:'B'},
+  {id:7,name:'AI 아바타 스튜디오',icon:'🎭',zone:'C'},
+  {id:8,name:'AI 뮤직비디오 제작',icon:'🎬',zone:'C'},
+  {id:9,name:'프롬프트 아트 챌린지',icon:'🎨',zone:'C'},
+  {id:10,name:'AI 의사 체험',icon:'🩺',zone:'D'},
+  {id:11,name:'스마트팜 관제',icon:'🌱',zone:'D'},
+  {id:12,name:'자율주행 시뮬레이터',icon:'🚗',zone:'D'},
+  {id:13,name:'AI 직업 매칭',icon:'🎯',zone:'E'},
+  {id:14,name:'비주얼 코딩 체험',icon:'🧩',zone:'E'},
+  {id:15,name:'IT 전문가 멘토링',icon:'👨‍💻',zone:'E'}
+];
+
+var ZONE_COLORS = {A:'#2D7A4F',B:'#E67E22',C:'#8E44AD',D:'#2980B9',E:'#C0392B'};
+
+var currentType = 'participation';
+var selectedStamps = [];
+
+/* ═══════════════════════════════════════ */
+/* INIT                                    */
+/* ═══════════════════════════════════════ */
+(function init(){
+  // 오늘 날짜 기본값
+  document.getElementById('certDate').value = new Date().toISOString().slice(0,10);
+
+  // 스탬프 그리드 생성
+  var grid = document.getElementById('stampGrid');
+  PROGRAMS.forEach(function(p){
+    var div = document.createElement('div');
+    div.className = 'stamp-item';
+    div.dataset.id = p.id;
+    div.innerHTML = '<div class="num">' + p.icon + ' ' + String(p.id).padStart(2,'0') + '</div>' + p.name;
+    div.onclick = function(){ toggleStamp(p.id, div); };
+    grid.appendChild(div);
+  });
+
+  // localStorage에서 자동 로드 시도
+  loadFromLocal();
+})();
+
+/* ═══════════════════════════════════════ */
+/* CONTROLS                                */
+/* ═══════════════════════════════════════ */
+function selectCertType(type){
+  currentType = type;
+  document.querySelectorAll('.cert-type-card').forEach(function(c){
+    c.classList.toggle('active', c.dataset.type === type);
+  });
+  document.getElementById('stampSection').style.display = type === 'completion' ? '' : 'none';
+}
+
+function toggleStamp(id, el){
+  var idx = selectedStamps.indexOf(id);
+  if(idx === -1){ selectedStamps.push(id); el.classList.add('active'); }
+  else{ selectedStamps.splice(idx,1); el.classList.remove('active'); }
+  document.getElementById('stampCount').textContent = selectedStamps.length;
+}
+
+function loadFromLocal(){
+  try{
+    var p = JSON.parse(localStorage.getItem('dreamfest_participant') || 'null');
+    if(p){
+      if(p.nick) document.getElementById('certName').value = p.nick;
+      if(p.school) document.getElementById('certSchool').value = p.school;
+      if(p.id) document.getElementById('certId').value = p.id;
+    }
+    var stamps = JSON.parse(localStorage.getItem('dreamfest_stamps') || '[]');
+    if(stamps.length > 0){
+      selectedStamps = stamps.map(Number);
+      document.querySelectorAll('.stamp-item').forEach(function(el){
+        var sid = Number(el.dataset.id);
+        el.classList.toggle('active', selectedStamps.indexOf(sid) !== -1);
+      });
+      document.getElementById('stampCount').textContent = selectedStamps.length;
+    }
+  }catch(e){}
+}
+
+/* ═══════════════════════════════════════ */
+/* CERTIFICATE GENERATION                  */
+/* ═══════════════════════════════════════ */
+function generateCert(){
+  var name = document.getElementById('certName').value.trim();
+  if(!name){ alert('참가자 이름을 입력해주세요.'); return; }
+
+  var school = document.getElementById('certSchool').value.trim() || '';
+  var pid = document.getElementById('certId').value.trim() || '';
+  var dateStr = document.getElementById('certDate').value;
+  var dateObj = new Date(dateStr);
+  var formattedDate = dateObj.getFullYear() + '년 ' +
+    (dateObj.getMonth()+1) + '월 ' + dateObj.getDate() + '일';
+
+  var preview = document.getElementById('certPreview');
+
+  if(currentType === 'participation'){
+    preview.innerHTML = buildParticipationCert(name, school, pid, formattedDate);
+  } else {
+    if(selectedStamps.length === 0){
+      alert('체험 완료한 부스를 1개 이상 선택해주세요.'); return;
+    }
+    preview.innerHTML = buildCompletionCert(name, school, pid, formattedDate, selectedStamps);
+  }
+
+  preview.style.display = 'block';
+  document.getElementById('btnPrint').disabled = false;
+  document.getElementById('btnPdf').disabled = false;
+
+  // 스크롤 이동
+  preview.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildParticipationCert(name, school, pid, date){
+  var schoolLine = school ? '<br><span style="font-size:.9rem;color:#666">소속: ' + esc(school) + '</span>' : '';
+  var pidLine = pid ? '<div class="cert-info-row"><span class="cert-info-label">참가번호</span><span class="cert-info-value">' + esc(pid) + '</span></div>' : '';
+
+  return '<div class="certificate cert-participation" id="certCanvas">' +
+    '<div class="cert-border"></div>' +
+    '<div class="cert-corner tl"></div><div class="cert-corner tr"></div>' +
+    '<div class="cert-corner bl"></div><div class="cert-corner br"></div>' +
+    '<div class="cert-header">' +
+      '<div class="cert-logo">🚀</div>' +
+      '<div class="cert-event">꿈-드림 페스티벌</div>' +
+      '<div class="cert-subtitle">2026 영천시 청소년 진로진학 박람회 · 미래기술존</div>' +
+    '</div>' +
+    '<div class="cert-title-area">' +
+      '<div class="cert-title">참 가 확 인 서</div>' +
+    '</div>' +
+    '<div class="cert-body">' +
+      '<span class="cert-name">' + esc(name) + '</span> 님' + schoolLine +
+      '<div class="cert-body-text">' +
+        '위 사람은 2026년 영천시 청소년 진로진학 박람회<br>' +
+        '<strong>「꿈-드림(Dream) 페스티벌」 미래기술존</strong>에 참가하여<br>' +
+        'AI·메타버스·로봇·자율주행 등 미래기술을 체험하고<br>' +
+        '미래 진로에 대한 탐색 활동을 수행하였음을 확인합니다.' +
+      '</div>' +
+    '</div>' +
+    '<div class="cert-info">' +
+      pidLine +
+      '<div class="cert-info-row"><span class="cert-info-label">행사일</span><span class="cert-info-value">2026년 6월 (예정)</span></div>' +
+      '<div class="cert-info-row"><span class="cert-info-label">장소</span><span class="cert-info-value">영천시민운동장 일원</span></div>' +
+    '</div>' +
+    '<div class="cert-footer">' +
+      '<div class="cert-date">' + date + '</div>' +
+      '<div class="cert-org">주최</div>' +
+      '<div class="cert-org-name">영천시 · 영천시교육지원청</div>' +
+      '<div class="cert-seal">확 인<br>영천시</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function buildCompletionCert(name, school, pid, date, stamps){
+  var schoolLine = school ? '<br><span style="font-size:.85rem;color:#666">소속: ' + esc(school) + '</span>' : '';
+  var allComplete = stamps.length >= 15;
+
+  var stampCells = PROGRAMS.map(function(p){
+    var earned = stamps.indexOf(p.id) !== -1;
+    return '<div class="stamp-cell' + (earned ? ' earned' : '') + '">' +
+      '<span class="s-icon">' + p.icon + '</span>' +
+      '<span class="s-name">' + p.name.slice(0,5) + '</span>' +
+      (earned ? '<div class="s-check">✓</div>' : '<div style="color:#ccc;font-size:.6rem">미완료</div>') +
+    '</div>';
+  }).join('');
+
+  var titleText = allComplete ? '전 체 완 료 인 증 서' : '체 험 인 증 서';
+  var bodyText = allComplete
+    ? '위 사람은 꿈-드림 페스티벌 미래기술존의<br><strong>15개 전 부스 체험을 완료</strong>하였음을 인증합니다.'
+    : '위 사람은 꿈-드림 페스티벌 미래기술존에서<br><strong>' + stamps.length + '개 부스 체험을 완료</strong>하였음을 인증합니다.';
+
+  // 존별 완료 수
+  var zoneCounts = {A:0,B:0,C:0,D:0,E:0};
+  stamps.forEach(function(sid){
+    var prog = PROGRAMS.find(function(p){ return p.id === sid; });
+    if(prog) zoneCounts[prog.zone]++;
+  });
+  var zoneStats = Object.keys(zoneCounts).map(function(z){
+    return '<span class="stat-item">' + z + '존 ' + zoneCounts[z] + '/3</span>';
+  }).join('');
+
+  return '<div class="certificate cert-completion" id="certCanvas">' +
+    '<div class="cert-border"></div>' +
+    '<div class="cert-corner tl"></div><div class="cert-corner tr"></div>' +
+    '<div class="cert-corner bl"></div><div class="cert-corner br"></div>' +
+    '<div class="cert-header">' +
+      '<div class="cert-logo">' + (allComplete ? '🏆' : '⭐') + '</div>' +
+      '<div class="cert-event" style="color:var(--gold)">꿈-드림 페스티벌</div>' +
+      '<div class="cert-subtitle">2026 영천시 청소년 진로진학 박람회 · 미래기술존</div>' +
+    '</div>' +
+    '<div class="cert-title-area">' +
+      '<div class="cert-title">' + titleText + '</div>' +
+    '</div>' +
+    '<div class="cert-body">' +
+      '<span class="cert-name">' + esc(name) + '</span> 님' + schoolLine +
+      '<div style="margin-top:5mm;color:#555;line-height:2">' + bodyText + '</div>' +
+    '</div>' +
+    '<div class="stamp-board">' + stampCells + '</div>' +
+    '<div class="cert-stats">' +
+      '<div>체험 완료: <strong style="color:var(--gold)">' + stamps.length + '</strong> / 15개</div>' +
+      '<div class="stat-row">' + zoneStats + '</div>' +
+    '</div>' +
+    '<div class="cert-footer">' +
+      '<div class="cert-date">' + date + '</div>' +
+      '<div style="font-size:.85rem;color:#555">주최</div>' +
+      '<div class="cert-org-name">영천시 · 영천시교육지원청</div>' +
+      '<div class="cert-seal" style="border-color:var(--gold);color:var(--gold)">' +
+        (allComplete ? '전체완료<br>인증' : '체험<br>인증') +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function esc(str){
+  var d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ═══════════════════════════════════════ */
+/* PRINT & PDF                             */
+/* ═══════════════════════════════════════ */
+function printCert(){
+  window.print();
+}
+
+function downloadPdf(){
+  var cert = document.getElementById('certCanvas');
+  if(!cert) return;
+
+  var btn = document.getElementById('btnPdf');
+  btn.disabled = true;
+  btn.textContent = '⏳ 생성 중...';
+
+  html2canvas(cert, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    logging: false
+  }).then(function(canvas){
+    var jsPDF = window.jspdf.jsPDF;
+    var pdf = new jsPDF('p', 'mm', 'a4');
+    var imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+    var pdfW = pdf.internal.pageSize.getWidth();
+    var pdfH = pdf.internal.pageSize.getHeight();
+    var imgW = canvas.width;
+    var imgH = canvas.height;
+    var ratio = Math.min(pdfW / imgW, pdfH / imgH);
+    var w = imgW * ratio;
+    var h = imgH * ratio;
+    var x = (pdfW - w) / 2;
+    var y = (pdfH - h) / 2;
+
+    pdf.addImage(imgData, 'JPEG', x, y, w, h);
+
+    var name = document.getElementById('certName').value.trim() || 'certificate';
+    var typeLabel = currentType === 'participation' ? '참가확인서' : '체험인증서';
+    pdf.save(name + '_' + typeLabel + '.pdf');
+
+    btn.disabled = false;
+    btn.textContent = '📥 PDF 다운로드';
+  }).catch(function(err){
+    console.error('PDF generation failed:', err);
+    alert('PDF 생성에 실패했습니다. 인쇄 기능을 이용해주세요.');
+    btn.disabled = false;
+    btn.textContent = '📥 PDF 다운로드';
+  });
+}
+</script>
+<script src="sync-client.js"></script>
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}</script>
+</body>
+</html>

@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 운동 코치 | 꿈-드림 페스티벌</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --coral:#E8705A;
+  --coral-dark:#C85A44;
+  --coral-light:#FFF0ED;
+  --bg:#F7F6F3;
+  --bg-dot:rgba(0,0,0,.04);
+  --text:#1A1A1A;
+  --text-sub:#6B6B6B;
+  --text-light:#9A9A9A;
+  --border:#E2E0DC;
+  --card:#FFFFFF;
+  --shadow:0 2px 12px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --radius:8px;
+  --radius-lg:14px;
+  --font-sans:'Noto Sans KR','Space Grotesk',sans-serif;
+  --font-display:'Space Grotesk','Noto Sans KR',sans-serif;
+}
+html{font-size:15px;scroll-behavior:smooth}
+body{
+  font-family:var(--font-sans);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  background-image:radial-gradient(circle,var(--bg-dot) 1px,transparent 1px);
+  background-size:20px 20px;
+  min-height:100vh;
+}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:inherit;border:none;background:none}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--coral);
+  padding:0 24px;
+  height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:100;
+  box-shadow:0 2px 12px rgba(232,112,90,.3);
+}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.topbar-back{
+  color:#fff;
+  font-size:13px;
+  font-weight:500;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  opacity:.85;
+  transition:opacity .2s;
+}
+.topbar-back:hover{opacity:1}
+.topbar-title{
+  color:#fff;
+  font-family:var(--font-display);
+  font-size:17px;
+  font-weight:700;
+  letter-spacing:-.3px;
+}
+.topbar-badge{
+  background:rgba(255,255,255,.2);
+  color:#fff;
+  font-size:11px;
+  font-weight:600;
+  padding:2px 10px;
+  border-radius:20px;
+  letter-spacing:.5px;
+}
+
+/* ── STEP INDICATOR ── */
+.step-bar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  padding:20px 24px 0;
+}
+.step-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  color:var(--text-light);
+  font-weight:500;
+}
+.step-item.active{color:var(--coral);font-weight:700}
+.step-item.done{color:var(--text-sub)}
+.step-dot{
+  width:24px;height:24px;
+  border-radius:50%;
+  background:var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;
+  font-weight:700;
+  color:var(--text-light);
+  transition:all .3s;
+}
+.step-item.active .step-dot{background:var(--coral);color:#fff}
+.step-item.done .step-dot{background:var(--text-sub);color:#fff}
+.step-line{width:40px;height:2px;background:var(--border);margin:0 4px}
+.step-line.done{background:var(--text-sub)}
+
+/* ── MAIN WRAPPER ── */
+.main{max-width:1100px;margin:0 auto;padding:24px 24px 60px}
+
+/* ── SECTION PANELS ── */
+.panel{display:none}
+.panel.active{display:block}
+
+/* ═════════════════════════════════════════
+   STEP 1: EXERCISE SELECT
+   ═════════════════════════════════════════ */
+.select-header{
+  text-align:center;
+  padding:32px 0 24px;
+}
+.select-header h2{
+  font-family:var(--font-display);
+  font-size:28px;
+  font-weight:700;
+  color:var(--text);
+  margin-bottom:8px;
+}
+.select-header p{color:var(--text-sub);font-size:14px}
+
+.exercise-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;
+  margin-top:8px;
+}
+.exercise-card{
+  background:var(--card);
+  border:2px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:24px;
+  cursor:pointer;
+  transition:all .25s;
+  display:flex;
+  align-items:flex-start;
+  gap:16px;
+  position:relative;
+  overflow:hidden;
+}
+.exercise-card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:var(--coral-light);
+  opacity:0;
+  transition:opacity .25s;
+}
+.exercise-card:hover{
+  border-color:var(--coral);
+  transform:scale(1.02) translateY(-2px);
+  box-shadow:var(--shadow-lg);
+}
+.exercise-card:hover::before{opacity:1}
+.exercise-card:hover .ex-icon{transform:scale(1.1)}
+.exercise-card > *{position:relative;z-index:1}
+.ex-icon{
+  width:56px;height:56px;
+  border-radius:12px;
+  background:var(--coral-light);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;
+  flex-shrink:0;
+  transition:transform .25s;
+}
+.ex-info{flex:1}
+.ex-name{
+  font-family:var(--font-display);
+  font-size:17px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+.ex-desc{font-size:12px;color:var(--text-sub);line-height:1.5;margin-bottom:10px}
+.ex-meta{display:flex;align-items:center;gap:8px}
+.ex-level{
+  font-size:11px;
+  font-weight:600;
+  padding:2px 9px;
+  border-radius:20px;
+}
+.level-easy{background:#E8F5EE;color:#2D7A4F}
+.level-mid{background:#FFF5E6;color:#D4943A}
+.level-hard{background:#FFF0ED;color:#E8705A}
+.ex-joints{font-size:11px;color:var(--text-light)}
+
+/* ═════════════════════════════════════════
+   STEP 2: DEMO (SVG animation)
+   ═════════════════════════════════════════ */
+.demo-container{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:24px;
+  align-items:center;
+  padding:24px 0;
+}
+@media(max-width:700px){.demo-container{grid-template-columns:1fr}}
+
+.demo-title-area h2{
+  font-family:var(--font-display);
+  font-size:26px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+.demo-title-area p{color:var(--text-sub);font-size:14px;line-height:1.7;margin-bottom:20px}
+.demo-keypoints{list-style:none;padding:0;margin-bottom:24px}
+.demo-keypoints li{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:13px;
+  color:var(--text-sub);
+  padding:6px 0;
+  border-bottom:1px solid var(--border);
+}
+.demo-keypoints li:last-child{border-bottom:none}
+.demo-keypoints .kp-dot{
+  width:20px;height:20px;
+  background:var(--coral-light);
+  color:var(--coral);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;
+  font-weight:700;
+  flex-shrink:0;
+  margin-top:2px;
+}
+.demo-svg-wrap{
+  background:var(--card);
+  border-radius:var(--radius-lg);
+  padding:16px;
+  box-shadow:var(--shadow);
+  display:flex;flex-direction:column;align-items:center;
+  gap:12px;
+}
+.demo-svg-wrap svg{width:100%;max-width:240px;height:auto}
+.demo-label{
+  font-size:12px;
+  color:var(--text-sub);
+  font-weight:500;
+  text-align:center;
+  display:flex;align-items:center;gap:6px;
+}
+.demo-dot-anim{
+  width:8px;height:8px;
+  border-radius:50%;
+  background:var(--coral);
+  animation:pulse-dot 1s ease-in-out infinite;
+}
+@keyframes pulse-dot{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.5;transform:scale(1.3)}
+}
+
+.demo-actions{display:flex;gap:12px;flex-wrap:wrap}
+.btn{
+  padding:12px 24px;
+  border-radius:var(--radius);
+  font-size:14px;
+  font-weight:600;
+  transition:all .2s;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn-primary{background:var(--coral);color:#fff}
+.btn-primary:hover{background:var(--coral-dark);transform:translateY(-1px);box-shadow:0 4px 16px rgba(232,112,90,.35)}
+.btn-ghost{background:transparent;color:var(--text-sub);border:1.5px solid var(--border)}
+.btn-ghost:hover{border-color:var(--coral);color:var(--coral)}
+
+/* ═════════════════════════════════════════
+   STEP 3: EXERCISE (webcam + pose)
+   ═════════════════════════════════════════ */
+.workout-layout{
+  display:grid;
+  grid-template-columns:220px 1fr 200px;
+  gap:16px;
+  align-items:start;
+  padding:16px 0;
+}
+@media(max-width:900px){
+  .workout-layout{grid-template-columns:1fr;grid-template-rows:auto auto auto}
+}
+
+/* Left panel */
+.angle-panel{
+  background:var(--card);
+  border-radius:var(--radius-lg);
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+.angle-panel h3{
+  font-family:var(--font-display);
+  font-size:13px;
+  font-weight:700;
+  color:var(--text-sub);
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  margin-bottom:14px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.angle-row{
+  margin-bottom:14px;
+}
+.angle-label{font-size:12px;color:var(--text-sub);margin-bottom:4px;font-weight:500}
+.angle-value{
+  font-family:var(--font-display);
+  font-size:28px;
+  font-weight:700;
+  color:var(--text);
+  line-height:1;
+  margin-bottom:4px;
+}
+.angle-bar{
+  height:4px;
+  background:var(--border);
+  border-radius:4px;
+  overflow:hidden;
+}
+.angle-bar-fill{
+  height:100%;
+  border-radius:4px;
+  background:var(--coral);
+  transition:width .3s ease;
+}
+.angle-target{font-size:11px;color:var(--text-light)}
+
+/* Center: video */
+.video-wrap{
+  position:relative;
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+  background:#1a1a1a;
+  aspect-ratio:4/3;
+  box-shadow:var(--shadow-lg);
+}
+.video-wrap video{
+  width:100%;height:100%;
+  object-fit:cover;
+  display:block;
+  transform:scaleX(-1);
+}
+.video-wrap canvas{
+  position:absolute;
+  inset:0;
+  width:100%;height:100%;
+  transform:scaleX(-1);
+}
+.timer-overlay{
+  position:absolute;
+  top:12px;
+  right:12px;
+  background:rgba(0,0,0,.65);
+  color:#fff;
+  font-family:var(--font-display);
+  font-size:22px;
+  font-weight:700;
+  padding:6px 14px;
+  border-radius:8px;
+  backdrop-filter:blur(4px);
+}
+.timer-overlay.urgent{color:#ff6b6b}
+
+.feedback-overlay{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  padding:12px 16px;
+  background:linear-gradient(transparent,rgba(0,0,0,.75));
+}
+.feedback-text{
+  color:#fff;
+  font-size:14px;
+  font-weight:600;
+  text-align:center;
+  min-height:20px;
+  transition:color .3s;
+}
+.feedback-text.good{color:#5BCA8A}
+.feedback-text.warn{color:#FFD166}
+.feedback-text.bad{color:#FF6B6B}
+
+.no-camera-msg{
+  position:absolute;
+  inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.6);
+  gap:12px;
+  font-size:14px;
+  text-align:center;
+  padding:24px;
+}
+.no-camera-msg .big-icon{font-size:48px;opacity:.4}
+
+/* Right panel */
+.score-panel{
+  background:var(--card);
+  border-radius:var(--radius-lg);
+  padding:16px;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.score-panel h3{
+  font-family:var(--font-display);
+  font-size:13px;
+  font-weight:700;
+  color:var(--text-sub);
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+/* Accuracy ring */
+.accuracy-ring-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+.ring-svg{width:100px;height:100px}
+.ring-bg{fill:none;stroke:var(--border);stroke-width:8}
+.ring-fill{
+  fill:none;
+  stroke-width:8;
+  stroke-linecap:round;
+  transform-origin:50% 50%;
+  transform:rotate(-90deg);
+  transition:stroke-dashoffset .4s ease, stroke .4s ease;
+}
+.ring-label{
+  font-family:var(--font-display);
+  font-size:22px;
+  font-weight:700;
+  fill:var(--text);
+  dominant-baseline:middle;
+  text-anchor:middle;
+}
+.ring-sublabel{
+  font-size:10px;
+  fill:var(--text-light);
+  dominant-baseline:middle;
+  text-anchor:middle;
+}
+.accuracy-title{font-size:12px;color:var(--text-sub);font-weight:600}
+
+/* Rep counter */
+.rep-wrap{text-align:center}
+.rep-num{
+  font-family:var(--font-display);
+  font-size:52px;
+  font-weight:700;
+  color:var(--coral);
+  line-height:1;
+  position:relative;
+  display:inline-block;
+}
+.rep-unit{font-size:14px;color:var(--text-sub);font-weight:500}
+.rep-label{font-size:12px;color:var(--text-sub);font-weight:600;margin-top:4px}
+
+/* Particles */
+.particles-canvas{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:9999;
+}
+
+/* ═════════════════════════════════════════
+   STEP 4: RESULT
+   ═════════════════════════════════════════ */
+.result-container{
+  max-width:600px;
+  margin:0 auto;
+  padding:32px 0 60px;
+}
+.result-header{
+  text-align:center;
+  margin-bottom:32px;
+}
+.result-grade{
+  font-family:var(--font-display);
+  font-size:80px;
+  font-weight:700;
+  line-height:1;
+  margin-bottom:8px;
+}
+.grade-s{color:#F59E0B}
+.grade-a{color:var(--coral)}
+.grade-b{color:#2BA5B3}
+.grade-c{color:#8B6FC0}
+.result-msg{font-size:16px;font-weight:500;color:var(--text-sub);margin-bottom:4px}
+.result-ex-name{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text)}
+
+.result-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-bottom:24px;
+}
+.stat-card{
+  background:var(--card);
+  border-radius:var(--radius-lg);
+  padding:20px 16px;
+  text-align:center;
+  box-shadow:var(--shadow);
+}
+.stat-num{
+  font-family:var(--font-display);
+  font-size:32px;
+  font-weight:700;
+  color:var(--coral);
+  line-height:1;
+  margin-bottom:4px;
+}
+.stat-label{font-size:12px;color:var(--text-sub);font-weight:500}
+
+.stamp-area{
+  background:var(--coral-light);
+  border:2px dashed var(--coral);
+  border-radius:var(--radius-lg);
+  padding:20px;
+  text-align:center;
+  margin-bottom:24px;
+}
+.stamp-icon{font-size:40px;margin-bottom:8px}
+.stamp-text{font-size:14px;color:var(--coral);font-weight:600}
+
+.result-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ── Utility ── */
+.hidden{display:none!important}
+.mt-8{margin-top:8px}
+.mt-16{margin-top:16px}
+.text-center{text-align:center}
+
+/* Loading overlay */
+.loading-overlay{
+  position:fixed;inset:0;
+  background:rgba(247,246,243,.9);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:200;
+  gap:16px;
+  backdrop-filter:blur(4px);
+}
+.loading-overlay.hidden{display:none!important}
+.loading-spinner{
+  width:48px;height:48px;
+  border:4px solid var(--border);
+  border-top-color:var(--coral);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--text-sub);font-weight:500}
+
+/* Rep pop animation */
+@keyframes repPop{
+  0%{transform:scale(1)}
+  30%{transform:scale(1.35)}
+  60%{transform:scale(.95)}
+  100%{transform:scale(1)}
+}
+.rep-pop{animation:repPop .4s ease}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOPBAR ═══ -->
+<header class="topbar">
+  <div class="topbar-left">
+    <a href="../index.html" class="topbar-back">← 대시보드</a>
+    <span class="topbar-title">💪 AI 운동 코치</span>
+  </div>
+  <span class="topbar-badge">A존 · AI 모션 분석</span>
+</header>
+
+<!-- ═══ STEP INDICATOR ═══ -->
+<div class="step-bar" id="stepBar">
+  <div class="step-item active" id="stepItem1">
+    <div class="step-dot">1</div>
+    <span>운동 선택</span>
+  </div>
+  <div class="step-line" id="stepLine1"></div>
+  <div class="step-item" id="stepItem2">
+    <div class="step-dot">2</div>
+    <span>시범 보기</span>
+  </div>
+  <div class="step-line" id="stepLine2"></div>
+  <div class="step-item" id="stepItem3">
+    <div class="step-dot">3</div>
+    <span>체험하기</span>
+  </div>
+  <div class="step-line" id="stepLine3"></div>
+  <div class="step-item" id="stepItem4">
+    <div class="step-dot">4</div>
+    <span>결과 확인</span>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+
+  <!-- ─── PANEL 1: SELECT ─── -->
+  <section class="panel active" id="panelSelect">
+    <div class="select-header">
+      <h2>오늘 어떤 운동을 해볼까요? 🏃</h2>
+      <p>6가지 운동 중 하나를 선택하면 AI가 자세를 분석해드려요</p>
+    </div>
+    <div class="exercise-grid" id="exerciseGrid"></div>
+  </section>
+
+  <!-- ─── PANEL 2: DEMO ─── -->
+  <section class="panel" id="panelDemo">
+    <div class="demo-container">
+      <div class="demo-title-area">
+        <h2 id="demoTitle">스쿼트</h2>
+        <p id="demoDesc"></p>
+        <ul class="demo-keypoints" id="demoKeypoints"></ul>
+        <div class="demo-actions">
+          <button class="btn btn-primary" id="btnStartWorkout">🎯 시작하기</button>
+          <button class="btn btn-ghost" id="btnBackSelect">← 다른 운동</button>
+        </div>
+      </div>
+      <div class="demo-svg-wrap">
+        <svg id="demoSvg" viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="demo-label">
+          <div class="demo-dot-anim"></div>
+          <span id="demoSvgLabel">올바른 자세 시범</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PANEL 3: WORKOUT ─── -->
+  <section class="panel" id="panelWorkout">
+    <div class="workout-layout">
+      <!-- Left: angles -->
+      <div class="angle-panel" id="anglePanel">
+        <h3>관절 각도</h3>
+        <div id="angleRows"></div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--text-sub);font-weight:600;margin-bottom:8px">목표 범위</div>
+          <div id="targetInfo" style="font-size:11px;color:var(--text-light);line-height:1.8"></div>
+        </div>
+      </div>
+
+      <!-- Center: video -->
+      <div class="video-wrap" id="videoWrap">
+        <video id="inputVideo" playsinline autoplay muted></video>
+        <canvas id="outputCanvas"></canvas>
+        <div class="timer-overlay" id="timerOverlay">30</div>
+        <div class="feedback-overlay">
+          <div class="feedback-text" id="feedbackText">카메라를 켜고 운동을 시작하세요</div>
+        </div>
+        <div class="no-camera-msg" id="noCameraMsg">
+          <div class="big-icon">📷</div>
+          <div>카메라 접근 권한이 필요합니다<br><small style="opacity:.6">브라우저 주소창의 카메라 아이콘을 클릭해 허용해주세요</small></div>
+        </div>
+      </div>
+
+      <!-- Right: score -->
+      <div class="score-panel">
+        <h3>실시간 분석</h3>
+        <div class="accuracy-ring-wrap">
+          <svg class="ring-svg" viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="38"/>
+            <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="38"
+              stroke-dasharray="238.76" stroke-dashoffset="238.76" stroke="#E8705A"/>
+            <text class="ring-label" x="50" y="47" id="ringPct">0%</text>
+            <text class="ring-sublabel" x="50" y="61">정확도</text>
+          </svg>
+          <div class="accuracy-title">자세 정확도</div>
+        </div>
+        <div class="rep-wrap">
+          <div class="rep-num" id="repNum">0</div>
+          <div class="rep-unit">회</div>
+          <div class="rep-label">반복 횟수</div>
+        </div>
+        <div id="phaseIndicator" style="text-align:center;font-size:12px;color:var(--text-light);font-weight:500">대기 중</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PANEL 4: RESULT ─── -->
+  <section class="panel" id="panelResult">
+    <div class="result-container">
+      <div class="result-header">
+        <div class="result-grade" id="resultGrade">A</div>
+        <div class="result-ex-name" id="resultExName"></div>
+        <div class="result-msg" id="resultMsg"></div>
+      </div>
+      <div class="result-stats">
+        <div class="stat-card">
+          <div class="stat-num" id="statReps">0</div>
+          <div class="stat-label">총 반복 횟수</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statAvg">0%</div>
+          <div class="stat-label">평균 정확도</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statBest">0%</div>
+          <div class="stat-label">최고 정확도</div>
+        </div>
+      </div>
+      <div class="stamp-area" id="stampArea">
+        <div class="stamp-icon">🏅</div>
+        <div class="stamp-text">스탬프 획득! 기록이 저장되었습니다.</div>
+      </div>
+      <div class="result-actions">
+        <button class="btn btn-primary" id="btnTryAgain">다시 도전하기</button>
+        <button class="btn btn-ghost" id="btnChangeExercise">다른 운동 선택</button>
+        <a href="../index.html" class="btn btn-ghost">대시보드로</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- Particles canvas -->
+<canvas class="particles-canvas" id="particlesCanvas"></canvas>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">MediaPipe 모델 로딩 중...</div>
+</div>
+
+<!-- MediaPipe CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   DATA: EXERCISES
+   ══════════════════════════════════════════════════════ */
+const EXERCISES = [
+  {
+    id: 'squat',
+    name: '스쿼트',
+    icon: '🏋️',
+    level: 'mid',
+    levelLabel: '중급',
+    desc: '다리 전체와 코어를 강화하는 기본 하체 운동. 무릎이 발끝을 넘지 않도록 주의하세요.',
+    joints: '무릎·엉덩이 각도',
+    keypoints: [
+      '발을 어깨너비로 벌리고 서세요',
+      '무릎이 90° 이하로 굽혀질 때 1회',
+      '허리는 곧게, 가슴은 앞으로',
+      '무릎이 발 안쪽으로 모이지 않도록'
+    ],
+    targetInfo: '무릎 각도: 90° 이하\n엉덩이 각도: 90° 이하',
+    angleKeys: ['knee_l', 'knee_r', 'hip_l'],
+    angleLabels: ['왼쪽 무릎', '오른쪽 무릎', '엉덩이'],
+    angleTargets: [90, 90, 90],
+    countPhase: 'down',  // count when transitioning from down to up
+    countAngle: 'knee_l',
+    countThreshold: 100, // below this = "down"
+    countReset: 140,     // above this = "up" (ready for next)
+  },
+  {
+    id: 'lunge',
+    name: '런지',
+    icon: '🦵',
+    level: 'mid',
+    levelLabel: '중급',
+    desc: '한쪽 다리씩 앞으로 나가 무릎을 굽히는 운동. 균형 감각과 하체 근력을 키워요.',
+    joints: '앞무릎·뒷무릎 각도',
+    keypoints: [
+      '한 발을 앞으로 크게 내딛으세요',
+      '앞무릎과 뒷무릎이 모두 90° 근접 시 1회',
+      '상체는 수직으로 유지',
+      '앞무릎이 발끝 앞으로 나가지 않도록'
+    ],
+    targetInfo: '앞무릎 각도: ~90°\n뒷무릎 각도: ~90°',
+    angleKeys: ['knee_l', 'knee_r', 'hip_l'],
+    angleLabels: ['왼쪽 무릎', '오른쪽 무릎', '상체'],
+    angleTargets: [90, 90, 160],
+    countAngle: 'knee_l',
+    countThreshold: 110,
+    countReset: 150,
+  },
+  {
+    id: 'jumping_jack',
+    name: '점핑잭',
+    icon: '🤸',
+    level: 'easy',
+    levelLabel: '초급',
+    desc: '팔을 벌리며 점프하는 전신 유산소 운동. 심폐기능과 협응력을 키울 수 있어요.',
+    joints: '팔 벌림 각도',
+    keypoints: [
+      '팔을 옆으로 쭉 펴 머리 위까지 올리세요',
+      '팔이 150° 이상 벌어지면 1회 카운트',
+      '점프하며 발도 함께 벌려요',
+      '착지 시 무릎을 살짝 굽혀 충격 흡수'
+    ],
+    targetInfo: '어깨-몸통 각도: 150° 이상',
+    angleKeys: ['arm_l', 'arm_r'],
+    angleLabels: ['왼팔 벌림', '오른팔 벌림'],
+    angleTargets: [150, 150],
+    countAngle: 'arm_l',
+    countThreshold: 140, // below this = arms down
+    countReset: 90,      // above this check logic inverted for jumping jack
+    isJumpingJack: true,
+  },
+  {
+    id: 'high_knee',
+    name: '하이니',
+    icon: '🏃',
+    level: 'easy',
+    levelLabel: '초급',
+    desc: '무릎을 높이 들어올리며 제자리 달리기. 하체 근력과 심폐 지구력을 동시에 강화해요.',
+    joints: '무릎 들기 각도',
+    keypoints: [
+      '무릎을 허리 높이까지 들어올리세요',
+      '엉덩이 굽힘 각도가 90° 이하일 때 1회',
+      '팔도 함께 힘차게 흔들어요',
+      '리듬감 있게 빠르게 진행해요'
+    ],
+    targetInfo: '엉덩이 굽힘: 90° 이하\n(무릎을 높이 들수록 좋음)',
+    angleKeys: ['hip_l', 'hip_r', 'knee_l'],
+    angleLabels: ['왼쪽 고관절', '오른쪽 고관절', '무릎'],
+    angleTargets: [90, 90, 80],
+    countAngle: 'hip_l',
+    countThreshold: 100,
+    countReset: 145,
+  },
+  {
+    id: 'side_lunge',
+    name: '사이드런지',
+    icon: '↔️',
+    level: 'hard',
+    levelLabel: '고급',
+    desc: '옆으로 크게 한 발을 내딛는 런지. 내전근과 외전근, 둔근을 집중 강화해요.',
+    joints: '무릎·엉덩이 측면 각도',
+    keypoints: [
+      '발을 옆으로 크게 내딛으세요 (어깨 2배 너비)',
+      '한쪽 무릎이 90° 굽혀지면 1회',
+      '반대쪽 다리는 쭉 펴세요',
+      '상체는 구부러지지 않도록 유지'
+    ],
+    targetInfo: '굽힌 무릎: 90° 이하\n편 무릎: 160° 이상',
+    angleKeys: ['knee_l', 'knee_r', 'hip_l'],
+    angleLabels: ['왼쪽 무릎', '오른쪽 무릎', '고관절'],
+    angleTargets: [90, 160, 90],
+    countAngle: 'knee_l',
+    countThreshold: 110,
+    countReset: 150,
+  },
+  {
+    id: 'burpee',
+    name: '팔벌려높이뛰기',
+    icon: '🌟',
+    level: 'hard',
+    levelLabel: '고급',
+    desc: '양팔을 머리 위로 올리며 발을 벌려 점프하는 전신 운동. 에너지 소비가 높아요.',
+    joints: '팔·다리 벌림 각도',
+    keypoints: [
+      '팔을 머리 위로 쭉 올리세요',
+      '발을 좌우로 함께 벌려요',
+      '팔이 150° 이상 + 발이 벌어지면 1회',
+      '착지 때 무릎을 부드럽게 구부려요'
+    ],
+    targetInfo: '양팔 벌림: 150° 이상\n발: 어깨너비 이상',
+    angleKeys: ['arm_l', 'arm_r', 'knee_l'],
+    angleLabels: ['왼팔 각도', '오른팔 각도', '무릎'],
+    angleTargets: [150, 150, 160],
+    countAngle: 'arm_l',
+    countThreshold: 140,
+    countReset: 90,
+    isJumpingJack: true,
+  }
+];
+
+/* ══════════════════════════════════════════════════════
+   SVG DEMO ANIMATIONS
+   ══════════════════════════════════════════════════════ */
+function buildDemoSvg(exerciseId, svg) {
+  svg.innerHTML = '';
+
+  // Shared skeleton builder
+  // keyframes: array of { t, joints: {head,neck,lShoulder,rShoulder,lElbow,rElbow,lWrist,rWrist,lHip,rHip,lKnee,rKnee,lAnkle,rAnkle} }
+  const skeletons = {
+    squat: [
+      { joints: { head:[100,30], neck:[100,55], lShoulder:[75,70], rShoulder:[125,70], lElbow:[65,100], rElbow:[135,100], lWrist:[60,130], rWrist:[140,130], lHip:[82,135], rHip:[118,135], lKnee:[78,200], rKnee:[122,200], lAnkle:[72,265], rAnkle:[128,265] }, label:'준비 자세' },
+      { joints: { head:[100,50], neck:[100,75], lShoulder:[72,90], rShoulder:[128,90], lElbow:[58,118], rElbow:[142,118], lWrist:[50,148], rWrist:[150,148], lHip:[80,150], rHip:[120,150], lKnee:[68,210], rKnee:[132,210], lAnkle:[62,270], rAnkle:[138,270] }, label:'스쿼트 자세' }
+    ],
+    lunge: [
+      { joints: { head:[100,30], neck:[100,55], lShoulder:[78,70], rShoulder:[122,70], lElbow:[70,100], rElbow:[130,100], lWrist:[66,130], rWrist:[134,130], lHip:[85,135], rHip:[115,135], lKnee:[65,200], rKnee:[118,195], lAnkle:[55,265], rAnkle:[125,265] }, label:'런지 자세' },
+      { joints: { head:[100,30], neck:[100,55], lShoulder:[78,70], rShoulder:[122,70], lElbow:[70,100], rElbow:[130,100], lWrist:[66,130], rWrist:[134,130], lHip:[85,135], rHip:[115,135], lKnee:[105,195], rKnee:[78,210], lAnkle:[120,265], rAnkle:[62,268] }, label:'반대 런지' }
+    ],
+    jumping_jack: [
+      { joints: { head:[100,30], neck:[100,55], lShoulder:[80,70], rShoulder:[120,70], lElbow:[80,100], rElbow:[120,100], lWrist:[80,130], rWrist:[120,130], lHip:[88,140], rHip:[112,140], lKnee:[86,200], rKnee:[114,200], lAnkle:[84,265], rAnkle:[116,265] }, label:'모은 자세' },
+      { joints: { head:[100,30], neck:[100,55], lShoulder:[80,70], rShoulder:[120,70], lElbow:[48,52], rElbow:[152,52], lWrist:[22,34], rWrist:[178,34], lHip:[88,140], rHip:[112,140], lKnee:[74,200], rKnee:[126,200], lAnkle:[58,262], rAnkle:[142,262] }, label:'벌린 자세' }
+    ],
+    high_knee: [
+      { joints: { head:[100,30], neck:[100,55], lShoulder:[80,70], rShoulder:[120,70], lElbow:[64,96], rElbow:[136,96], lWrist:[56,124], rWrist:[144,124], lHip:[88,140], rHip:[112,140], lKnee:[80,200], rKnee:[112,200], lAnkle:[78,265], rAnkle:[114,265] }, label:'준비' },
+      { joints: { head:[100,30], neck:[100,55], lShoulder:[80,70], rShoulder:[120,70], lElbow:[68,98], rElbow:[132,95], lWrist:[62,125], rWrist:[138,120], lHip:[88,140], rHip:[112,140], lKnee:[88,158], rKnee:[114,200], lAnkle:[90,185], rAnkle:[116,265] }, label:'무릎 들기' }
+    ],
+    side_lunge: [
+      { joints: { head:[100,30], neck:[100,55], lShoulder:[80,70], rShoulder:[120,70], lElbow:[70,100], rElbow:[130,100], lWrist:[66,130], rWrist:[134,130], lHip:[88,140], rHip:[112,140], lKnee:[86,200], rKnee:[114,200], lAnkle:[84,265], rAnkle:[116,265] }, label:'준비' },
+      { joints: { head:[100,40], neck:[100,65], lShoulder:[78,80], rShoulder:[122,80], lElbow:[65,108], rElbow:[135,108], lWrist:[58,138], rWrist:[142,138], lHip:[88,150], rHip:[112,150], lKnee:[60,210], rKnee:[130,195], lAnkle:[45,268], rAnkle:[148,258] }, label:'사이드 런지' }
+    ],
+    burpee: [
+      { joints: { head:[100,30], neck:[100,55], lShoulder:[80,70], rShoulder:[120,70], lElbow:[80,100], rElbow:[120,100], lWrist:[80,130], rWrist:[120,130], lHip:[88,140], rHip:[112,140], lKnee:[86,200], rKnee:[114,200], lAnkle:[84,265], rAnkle:[116,265] }, label:'모은 자세' },
+      { joints: { head:[100,30], neck:[100,55], lShoulder:[80,70], rShoulder:[120,70], lElbow:[44,50], rElbow:[156,50], lWrist:[18,28], rWrist:[182,28], lHip:[88,140], rHip:[112,140], lKnee:[72,200], rKnee:[128,200], lAnkle:[56,262], rAnkle:[144,262] }, label:'높이 뛰기' }
+    ]
+  };
+
+  const frames = skeletons[exerciseId] || skeletons['squat'];
+  const connections = [
+    ['head','neck'],['neck','lShoulder'],['neck','rShoulder'],
+    ['lShoulder','lElbow'],['lElbow','lWrist'],
+    ['rShoulder','rElbow'],['rElbow','rWrist'],
+    ['lShoulder','lHip'],['rShoulder','rHip'],['lHip','rHip'],
+    ['lHip','lKnee'],['lKnee','lAnkle'],
+    ['rHip','rKnee'],['rKnee','rAnkle']
+  ];
+
+  const ns = 'http://www.w3.org/2000/svg';
+  const g0 = document.createElementNS(ns, 'g'); g0.setAttribute('class','frame frame0');
+  const g1 = document.createElementNS(ns, 'g'); g1.setAttribute('class','frame frame1'); g1.style.display='none';
+
+  function drawFrame(g, joints, isActive) {
+    // connections
+    connections.forEach(([a, b]) => {
+      if (!joints[a] || !joints[b]) return;
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', joints[a][0]); line.setAttribute('y1', joints[a][1]);
+      line.setAttribute('x2', joints[b][0]); line.setAttribute('y2', joints[b][1]);
+      line.setAttribute('stroke', '#E8705A'); line.setAttribute('stroke-width', '4');
+      line.setAttribute('stroke-linecap', 'round');
+      g.appendChild(line);
+    });
+    // joints
+    Object.entries(joints).forEach(([k, [x, y]]) => {
+      const c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', x); c.setAttribute('cy', y);
+      c.setAttribute('r', k === 'head' ? 14 : 6);
+      c.setAttribute('fill', k === 'head' ? '#E8705A' : '#fff');
+      c.setAttribute('stroke', '#E8705A'); c.setAttribute('stroke-width', '2.5');
+      g.appendChild(c);
+    });
+  }
+
+  drawFrame(g0, frames[0].joints);
+  drawFrame(g1, frames[1] ? frames[1].joints : frames[0].joints);
+  svg.appendChild(g0); svg.appendChild(g1);
+
+  // Animate toggle
+  let current = 0;
+  const interval = setInterval(() => {
+    current = 1 - current;
+    g0.style.display = current === 0 ? '' : 'none';
+    g1.style.display = current === 1 ? '' : 'none';
+  }, 900);
+  svg._clearAnim = () => clearInterval(interval);
+}
+
+/* ══════════════════════════════════════════════════════
+   APP STATE
+   ══════════════════════════════════════════════════════ */
+const state = {
+  step: 1,
+  exercise: null,
+  pose: null,
+  camera: null,
+  running: false,
+  timer: 30,
+  timerInterval: null,
+  reps: 0,
+  accuracyHistory: [],
+  bestAccuracy: 0,
+  currentAccuracy: 0,
+  // angle tracking
+  angles: {},
+  phaseDown: false,  // currently in "down" phase
+  lastCountTime: 0,
+};
+
+/* ══════════════════════════════════════════════════════
+   STEP NAVIGATION
+   ══════════════════════════════════════════════════════ */
+function goStep(n) {
+  state.step = n;
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panelSelect').classList.toggle('active', n===1);
+  document.getElementById('panelDemo').classList.toggle('active', n===2);
+  document.getElementById('panelWorkout').classList.toggle('active', n===3);
+  document.getElementById('panelResult').classList.toggle('active', n===4);
+
+  // Step indicator
+  for (let i=1; i<=4; i++) {
+    const item = document.getElementById('stepItem'+i);
+    item.classList.remove('active','done');
+    if (i < n) item.classList.add('done');
+    else if (i === n) item.classList.add('active');
+    // dot inner
+    const dot = item.querySelector('.step-dot');
+    dot.textContent = i < n ? '✓' : i;
+  }
+  for (let i=1; i<=3; i++) {
+    const line = document.getElementById('stepLine'+i);
+    line.classList.toggle('done', i < n);
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   RENDER EXERCISE CARDS
+   ══════════════════════════════════════════════════════ */
+function renderExerciseCards() {
+  const grid = document.getElementById('exerciseGrid');
+  grid.innerHTML = '';
+  EXERCISES.forEach(ex => {
+    const card = document.createElement('div');
+    card.className = 'exercise-card';
+    card.innerHTML = `
+      <div class="ex-icon">${ex.icon}</div>
+      <div class="ex-info">
+        <div class="ex-name">${ex.name}</div>
+        <div class="ex-desc">${ex.desc}</div>
+        <div class="ex-meta">
+          <span class="ex-level level-${ex.level}">${ex.levelLabel}</span>
+          <span class="ex-joints">📐 ${ex.joints}</span>
+        </div>
+      </div>
+    `;
+    card.addEventListener('click', () => selectExercise(ex));
+    grid.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   SELECT EXERCISE → DEMO
+   ══════════════════════════════════════════════════════ */
+function selectExercise(ex) {
+  state.exercise = ex;
+  // Clear any previous SVG animation
+  const svg = document.getElementById('demoSvg');
+  if (svg._clearAnim) { svg._clearAnim(); svg._clearAnim = null; }
+
+  document.getElementById('demoTitle').textContent = ex.icon + ' ' + ex.name;
+  document.getElementById('demoDesc').textContent = ex.desc;
+
+  const kpList = document.getElementById('demoKeypoints');
+  kpList.innerHTML = ex.keypoints.map((kp, i) => `
+    <li><div class="kp-dot">${i+1}</div><span>${kp}</span></li>
+  `).join('');
+
+  buildDemoSvg(ex.id, svg);
+  goStep(2);
+}
+
+/* ══════════════════════════════════════════════════════
+   ANGLE PANEL SETUP
+   ══════════════════════════════════════════════════════ */
+function setupAnglePanel() {
+  const ex = state.exercise;
+  const rows = document.getElementById('angleRows');
+  rows.innerHTML = ex.angleKeys.map((key, i) => `
+    <div class="angle-row" id="angleRow_${key}">
+      <div class="angle-label">${ex.angleLabels[i]}</div>
+      <div class="angle-value" id="angleVal_${key}">--°</div>
+      <div class="angle-bar"><div class="angle-bar-fill" id="angleBar_${key}" style="width:50%"></div></div>
+      <div class="angle-target">목표: ${ex.angleTargets[i]}°</div>
+    </div>
+  `).join('');
+
+  document.getElementById('targetInfo').textContent = ex.targetInfo;
+}
+
+function updateAngleDisplay(key, angle) {
+  const valEl = document.getElementById('angleVal_'+key);
+  const barEl = document.getElementById('angleBar_'+key);
+  if (!valEl || !barEl) return;
+  valEl.textContent = Math.round(angle) + '°';
+  const pct = Math.min(100, Math.max(0, (angle / 180) * 100));
+  barEl.style.width = pct + '%';
+  // Color based on proximity to target
+  const ex = state.exercise;
+  const idx = ex.angleKeys.indexOf(key);
+  const target = ex.angleTargets[idx] || 90;
+  const diff = Math.abs(angle - target);
+  barEl.style.background = diff < 15 ? '#5BCA8A' : diff < 35 ? '#FFD166' : '#FF6B6B';
+}
+
+/* ══════════════════════════════════════════════════════
+   ANGLE MATH HELPERS
+   ══════════════════════════════════════════════════════ */
+function calcAngle(a, b, c) {
+  // angle at b, using vectors ba and bc
+  const ba = { x: a.x - b.x, y: a.y - b.y };
+  const bc = { x: c.x - b.x, y: c.y - b.y };
+  const dot = ba.x*bc.x + ba.y*bc.y;
+  const magBa = Math.sqrt(ba.x**2 + ba.y**2);
+  const magBc = Math.sqrt(bc.x**2 + bc.y**2);
+  if (magBa === 0 || magBc === 0) return 180;
+  const cosA = Math.max(-1, Math.min(1, dot / (magBa * magBc)));
+  return Math.acos(cosA) * (180 / Math.PI);
+}
+
+function getLandmark(lm, idx) {
+  const l = lm[idx];
+  if (!l || l.visibility < 0.3) return null;
+  return { x: l.x, y: l.y };
+}
+
+// MediaPipe pose landmark indices
+const MP = {
+  nose:0, leftEye:2, rightEye:5,
+  leftShoulder:11, rightShoulder:12,
+  leftElbow:13, rightElbow:14,
+  leftWrist:15, rightWrist:16,
+  leftHip:23, rightHip:24,
+  leftKnee:25, rightKnee:26,
+  leftAnkle:27, rightAnkle:28,
+};
+
+function computeAngles(lm) {
+  const angles = {};
+  const get = (i) => getLandmark(lm, i);
+
+  // Knee angles (hip - knee - ankle)
+  const lHip = get(MP.leftHip), lKnee = get(MP.leftKnee), lAnkle = get(MP.leftAnkle);
+  const rHip = get(MP.rightHip), rKnee = get(MP.rightKnee), rAnkle = get(MP.rightAnkle);
+
+  if (lHip && lKnee && lAnkle) angles.knee_l = calcAngle(lHip, lKnee, lAnkle);
+  if (rHip && rKnee && rAnkle) angles.knee_r = calcAngle(rHip, rKnee, rAnkle);
+
+  // Hip angles (shoulder - hip - knee)
+  const lShoulder = get(MP.leftShoulder), rShoulder = get(MP.rightShoulder);
+  if (lShoulder && lHip && lKnee) angles.hip_l = calcAngle(lShoulder, lHip, lKnee);
+  if (rShoulder && rHip && rKnee) angles.hip_r = calcAngle(rShoulder, rHip, rKnee);
+
+  // Arm angles: shoulder angle from hip (hip - shoulder - elbow for raise)
+  const lElbow = get(MP.leftElbow), rElbow = get(MP.rightElbow);
+  // Arm raise: angle between shoulder-hip vector and shoulder-wrist vector
+  const lWrist = get(MP.leftWrist), rWrist = get(MP.rightWrist);
+
+  // For jumping jack: measure arm abduction = angle hip-shoulder-elbow
+  if (lHip && lShoulder && lElbow) angles.arm_l = calcAngle(lHip, lShoulder, lElbow);
+  if (rHip && rShoulder && rElbow) angles.arm_r = calcAngle(rHip, rShoulder, rElbow);
+
+  return angles;
+}
+
+/* ══════════════════════════════════════════════════════
+   ACCURACY SCORE
+   ══════════════════════════════════════════════════════ */
+function computeAccuracy(angles, ex) {
+  const scores = ex.angleKeys.map((key, i) => {
+    const a = angles[key];
+    if (a === undefined) return 50;
+    const target = ex.angleTargets[i];
+    const diff = Math.abs(a - target);
+    // Linearly map diff: 0 diff = 100, 60+ diff = 0
+    return Math.max(0, Math.min(100, 100 - (diff / 60) * 100));
+  });
+  return scores.reduce((s,v) => s+v, 0) / scores.length;
+}
+
+/* ══════════════════════════════════════════════════════
+   REP COUNTING
+   ══════════════════════════════════════════════════════ */
+function checkRepCount(angles, ex) {
+  const key = ex.countAngle;
+  const angle = angles[key];
+  if (angle === undefined) return;
+
+  const now = Date.now();
+  if (now - state.lastCountTime < 600) return; // debounce
+
+  if (ex.isJumpingJack) {
+    // Count when arm goes UP (angle > threshold = arms raised)
+    const threshold = ex.countThreshold; // e.g. 140
+    const reset = ex.countReset;         // e.g. 90
+
+    if (!state.phaseDown && angle > threshold) {
+      // arms are up
+      state.phaseDown = true;
+    } else if (state.phaseDown && angle < reset) {
+      // arms returned down → complete rep
+      state.reps++;
+      state.phaseDown = false;
+      state.lastCountTime = now;
+      triggerRepEffect();
+    }
+  } else {
+    // Count when angle goes below threshold (down) then back up above reset
+    const threshold = ex.countThreshold;
+    const reset = ex.countReset;
+
+    if (!state.phaseDown && angle < threshold) {
+      state.phaseDown = true;
+    } else if (state.phaseDown && angle > reset) {
+      state.reps++;
+      state.phaseDown = false;
+      state.lastCountTime = now;
+      triggerRepEffect();
+    }
+  }
+
+  updateRepDisplay();
+}
+
+function updateRepDisplay() {
+  const el = document.getElementById('repNum');
+  el.textContent = state.reps;
+  el.classList.remove('rep-pop');
+  void el.offsetWidth;
+  el.classList.add('rep-pop');
+}
+
+/* ══════════════════════════════════════════════════════
+   FEEDBACK TEXT
+   ══════════════════════════════════════════════════════ */
+function generateFeedback(angles, ex, accuracy) {
+  const msgs = [];
+
+  if (ex.id === 'squat') {
+    const knee = angles.knee_l || 180;
+    const hip = angles.hip_l || 180;
+    if (knee > 130) msgs.push('무릎을 더 굽히세요! 90° 이하가 목표예요');
+    else if (knee < 70) msgs.push('너무 깊어요! 무릎이 너무 굽혀졌어요');
+    else if (hip > 120) msgs.push('엉덩이를 더 낮추세요');
+    else msgs.push('좋은 자세예요! 유지하세요 💪');
+  } else if (ex.id === 'lunge') {
+    const knee = angles.knee_l || 180;
+    if (knee > 130) msgs.push('무릎을 더 굽혀 90° 가까이 만드세요');
+    else if (knee < 70) msgs.push('너무 깊어요, 90° 근처가 목표예요');
+    else msgs.push('완벽한 런지 자세예요! 👏');
+  } else if (ex.id === 'jumping_jack' || ex.id === 'burpee') {
+    const arm = angles.arm_l || 0;
+    if (arm < 90) msgs.push('팔을 더 높이 벌리세요!');
+    else if (arm > 150) msgs.push('완벽해요! 팔을 활짝 벌렸군요 ⭐');
+    else msgs.push('팔을 조금 더 벌려봐요');
+  } else if (ex.id === 'high_knee') {
+    const hip = angles.hip_l || 180;
+    if (hip > 120) msgs.push('무릎을 더 높이 들어올리세요!');
+    else msgs.push('훌륭해요! 무릎이 높이 올라갔어요 🦵');
+  } else if (ex.id === 'side_lunge') {
+    const kl = angles.knee_l || 180;
+    if (kl > 130) msgs.push('무릎을 90°까지 더 굽혀보세요');
+    else msgs.push('멋진 사이드런지예요! 👊');
+  }
+
+  if (msgs.length === 0) {
+    if (accuracy > 80) msgs.push('훌륭한 자세예요! 계속하세요 ✨');
+    else if (accuracy > 55) msgs.push('거의 다 됐어요! 조금만 더');
+    else msgs.push('자세를 카메라에 맞춰주세요');
+  }
+
+  const fb = document.getElementById('feedbackText');
+  fb.textContent = msgs[0];
+  fb.className = 'feedback-text ' + (accuracy > 75 ? 'good' : accuracy > 45 ? 'warn' : 'bad');
+}
+
+/* ══════════════════════════════════════════════════════
+   ACCURACY RING UPDATE
+   ══════════════════════════════════════════════════════ */
+function updateRing(pct) {
+  const ring = document.getElementById('ringFill');
+  const label = document.getElementById('ringPct');
+  const circumference = 238.76;
+  const offset = circumference - (pct / 100) * circumference;
+  ring.style.strokeDashoffset = offset;
+  ring.style.stroke = pct > 75 ? '#5BCA8A' : pct > 45 ? '#FFD166' : '#FF6B6B';
+  label.textContent = Math.round(pct) + '%';
+}
+
+/* ══════════════════════════════════════════════════════
+   PHASE DISPLAY
+   ══════════════════════════════════════════════════════ */
+function updatePhaseDisplay(angles, ex) {
+  const phaseEl = document.getElementById('phaseIndicator');
+  const key = ex.countAngle;
+  const angle = angles[key];
+  if (angle === undefined) { phaseEl.textContent = '자세 감지 중...'; return; }
+
+  if (ex.isJumpingJack) {
+    phaseEl.textContent = angle > ex.countThreshold ? '⬆️ 팔 위로!' : '⬇️ 팔 내리기';
+  } else {
+    phaseEl.textContent = angle < ex.countThreshold ? '⬇️ 내려가기' : '⬆️ 올라오기';
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   PARTICLES
+   ══════════════════════════════════════════════════════ */
+const pCanvas = document.getElementById('particlesCanvas');
+const pCtx = pCanvas.getContext('2d');
+let particles = [];
+
+function resizeParticleCanvas() {
+  pCanvas.width = window.innerWidth;
+  pCanvas.height = window.innerHeight;
+}
+resizeParticleCanvas();
+window.addEventListener('resize', resizeParticleCanvas);
+
+function triggerRepEffect() {
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight * 0.4;
+  for (let i = 0; i < 22; i++) {
+    const angle = (Math.random() * Math.PI * 2);
+    const speed = 3 + Math.random() * 5;
+    const colors = ['#E8705A','#FFD166','#5BCA8A','#2BA5B3','#F59E0B'];
+    particles.push({
+      x: cx, y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 3,
+      life: 1,
+      decay: 0.025 + Math.random() * 0.02,
+      r: 4 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+}
+
+function animateParticles() {
+  pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+  particles = particles.filter(p => p.life > 0);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= p.decay;
+    pCtx.globalAlpha = p.life;
+    pCtx.fillStyle = p.color;
+    pCtx.beginPath();
+    pCtx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    pCtx.fill();
+  });
+  pCtx.globalAlpha = 1;
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+/* ══════════════════════════════════════════════════════
+   MEDIAPIPE POSE INIT
+   ══════════════════════════════════════════════════════ */
+let poseInstance = null;
+let cameraInstance = null;
+let poseLoaded = false;
+
+async function initPose() {
+  if (poseLoaded) return true;
+  return new Promise((resolve, reject) => {
+    // Check if MediaPipe is available
+    if (typeof Pose === 'undefined') {
+      reject(new Error('MediaPipe not loaded'));
+      return;
+    }
+
+    const pose = new Pose({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+    });
+
+    pose.setOptions({
+      modelComplexity: 1,
+      smoothLandmarks: true,
+      enableSegmentation: false,
+      smoothSegmentation: false,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5,
+    });
+
+    pose.onResults(onPoseResults);
+    poseInstance = pose;
+
+    pose.initialize().then(() => {
+      poseLoaded = true;
+      resolve(true);
+    }).catch(reject);
+  });
+}
+
+function onPoseResults(results) {
+  const canvas = document.getElementById('outputCanvas');
+  const video = document.getElementById('inputVideo');
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (!results.poseLandmarks) {
+    document.getElementById('noCameraMsg').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('noCameraMsg').style.display = 'none';
+
+  // Draw skeleton
+  if (typeof drawConnectors !== 'undefined' && typeof POSE_CONNECTIONS !== 'undefined') {
+    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, { color: 'rgba(232,112,90,0.7)', lineWidth: 3 });
+    drawLandmarks(ctx, results.poseLandmarks, { color: '#E8705A', lineWidth: 1, radius: 4, fillColor: '#fff' });
+  } else {
+    // Fallback: manual drawing
+    drawSkeletonFallback(ctx, results.poseLandmarks, canvas.width, canvas.height);
+  }
+
+  if (!state.running) return;
+
+  // Compute angles
+  const angles = computeAngles(results.poseLandmarks);
+  state.angles = angles;
+
+  // Update displays
+  const ex = state.exercise;
+  ex.angleKeys.forEach(key => {
+    if (angles[key] !== undefined) updateAngleDisplay(key, angles[key]);
+  });
+
+  // Accuracy
+  const acc = computeAccuracy(angles, ex);
+  state.currentAccuracy = acc;
+  state.accuracyHistory.push(acc);
+  if (acc > state.bestAccuracy) state.bestAccuracy = acc;
+  updateRing(acc);
+  generateFeedback(angles, ex, acc);
+  updatePhaseDisplay(angles, ex);
+
+  // Rep counting
+  checkRepCount(angles, ex);
+}
+
+function drawSkeletonFallback(ctx, landmarks, w, h) {
+  const connections = [
+    [11,12],[11,13],[13,15],[12,14],[14,16],
+    [11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]
+  ];
+  ctx.strokeStyle = 'rgba(232,112,90,0.75)';
+  ctx.lineWidth = 3;
+  connections.forEach(([a, b]) => {
+    const la = landmarks[a], lb = landmarks[b];
+    if (!la || !lb) return;
+    ctx.beginPath();
+    ctx.moveTo(la.x * w, la.y * h);
+    ctx.lineTo(lb.x * w, lb.y * h);
+    ctx.stroke();
+  });
+  landmarks.forEach(lm => {
+    ctx.beginPath();
+    ctx.arc(lm.x * w, lm.y * h, 5, 0, Math.PI*2);
+    ctx.fillStyle = '#E8705A';
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   CAMERA START
+   ══════════════════════════════════════════════════════ */
+async function startCamera() {
+  const video = document.getElementById('inputVideo');
+  const noCam = document.getElementById('noCameraMsg');
+
+  try {
+    if (typeof Camera !== 'undefined') {
+      cameraInstance = new Camera(video, {
+        onFrame: async () => {
+          if (poseInstance) {
+            await poseInstance.send({ image: video });
+          }
+        },
+        width: 640,
+        height: 480
+      });
+      await cameraInstance.start();
+    } else {
+      // Fallback: getUserMedia directly
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+      video.srcObject = stream;
+      await video.play();
+
+      // Process frames manually
+      async function processFrame() {
+        if (!state.running && !state.poseSetup) return;
+        if (poseInstance && video.readyState >= 2) {
+          await poseInstance.send({ image: video });
+        }
+        requestAnimationFrame(processFrame);
+      }
+      state.poseSetup = true;
+      processFrame();
+    }
+    noCam.style.display = 'none';
+    return true;
+  } catch (e) {
+    noCam.style.display = 'flex';
+    noCam.innerHTML = `<div class="big-icon">📷</div><div>카메라를 사용할 수 없습니다<br><small style="opacity:.6">${e.message}</small></div>`;
+    return false;
+  }
+}
+
+function stopCamera() {
+  if (cameraInstance) {
+    try { cameraInstance.stop(); } catch(e){}
+    cameraInstance = null;
+  }
+  const video = document.getElementById('inputVideo');
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+  }
+  state.poseSetup = false;
+}
+
+/* ══════════════════════════════════════════════════════
+   TIMER
+   ══════════════════════════════════════════════════════ */
+function startTimer() {
+  state.timer = 30;
+  updateTimerDisplay();
+  state.timerInterval = setInterval(() => {
+    state.timer--;
+    updateTimerDisplay();
+    if (state.timer <= 0) finishWorkout();
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('timerOverlay');
+  el.textContent = state.timer + 's';
+  el.classList.toggle('urgent', state.timer <= 10);
+}
+
+function stopTimer() {
+  if (state.timerInterval) {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   START WORKOUT
+   ══════════════════════════════════════════════════════ */
+async function startWorkout() {
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const loadingText = document.getElementById('loadingText');
+
+  loadingOverlay.classList.remove('hidden');
+  loadingText.textContent = 'MediaPipe 모델 로딩 중...';
+
+  goStep(3);
+  setupAnglePanel();
+
+  // Reset state
+  state.reps = 0;
+  state.accuracyHistory = [];
+  state.bestAccuracy = 0;
+  state.currentAccuracy = 0;
+  state.phaseDown = false;
+  state.lastCountTime = 0;
+  state.running = false;
+  document.getElementById('repNum').textContent = '0';
+  updateRing(0);
+  document.getElementById('feedbackText').textContent = '준비 중...';
+  document.getElementById('feedbackText').className = 'feedback-text';
+
+  try {
+    await initPose();
+    loadingText.textContent = '카메라 연결 중...';
+    const camOk = await startCamera();
+    loadingOverlay.classList.add('hidden');
+
+    // Small delay before starting
+    setTimeout(() => {
+      state.running = true;
+      startTimer();
+      document.getElementById('feedbackText').textContent = '운동을 시작하세요!';
+    }, 800);
+  } catch (e) {
+    loadingOverlay.classList.add('hidden');
+    document.getElementById('feedbackText').textContent = 'MediaPipe 로드 실패: 네트워크를 확인하세요';
+    document.getElementById('noCameraMsg').style.display = 'flex';
+    document.getElementById('noCameraMsg').innerHTML = `
+      <div class="big-icon">⚠️</div>
+      <div>AI 모션 분석 초기화 실패<br><small style="opacity:.6">${e.message}<br>인터넷 연결 후 새로고침해주세요</small></div>
+    `;
+    // Still allow manual counting demo
+    state.running = false;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   FINISH WORKOUT → RESULT
+   ══════════════════════════════════════════════════════ */
+function finishWorkout() {
+  state.running = false;
+  stopTimer();
+  stopCamera();
+
+  const reps = state.reps;
+  const avgAcc = state.accuracyHistory.length > 0
+    ? Math.round(state.accuracyHistory.reduce((a,b)=>a+b,0) / state.accuracyHistory.length)
+    : 0;
+  const bestAcc = Math.round(state.bestAccuracy);
+
+  // Grade
+  let grade = 'C';
+  if (avgAcc >= 85 && reps >= 8) grade = 'S';
+  else if (avgAcc >= 70 && reps >= 5) grade = 'A';
+  else if (avgAcc >= 50 && reps >= 3) grade = 'B';
+
+  const gradeMessages = {
+    S: '완벽한 운동이에요! 프로 운동선수 수준이에요 🏆',
+    A: '훌륭한 자세로 운동했어요! 계속 도전하세요 💪',
+    B: '잘 하셨어요! 조금 더 연습하면 완벽해질 거예요',
+    C: '첫 시작은 항상 어렵죠! 다시 도전해보세요 🌱'
+  };
+
+  document.getElementById('resultGrade').textContent = grade;
+  document.getElementById('resultGrade').className = 'result-grade grade-' + grade.toLowerCase();
+  document.getElementById('resultExName').textContent = state.exercise.icon + ' ' + state.exercise.name;
+  document.getElementById('resultMsg').textContent = gradeMessages[grade];
+  document.getElementById('statReps').textContent = reps + '회';
+  document.getElementById('statAvg').textContent = avgAcc + '%';
+  document.getElementById('statBest').textContent = bestAcc + '%';
+
+  // Save to localStorage
+  const stamps = JSON.parse(localStorage.getItem('dreamfest_stamps') || '[]');
+  if (!stamps.includes(2)) stamps.push(2);
+  localStorage.setItem('dreamfest_stamps', JSON.stringify(stamps));
+
+  const results = JSON.parse(localStorage.getItem('dreamfest_results') || '{}');
+  results['2'] = {
+    score: avgAcc,
+    reps: reps,
+    grade: grade,
+    exercise: state.exercise.id,
+    completedAt: new Date().toISOString()
+  };
+  localStorage.setItem('dreamfest_results', JSON.stringify(results));
+
+  goStep(4);
+}
+
+/* ══════════════════════════════════════════════════════
+   EVENT LISTENERS
+   ══════════════════════════════════════════════════════ */
+document.getElementById('btnStartWorkout').addEventListener('click', startWorkout);
+document.getElementById('btnBackSelect').addEventListener('click', () => {
+  const svg = document.getElementById('demoSvg');
+  if (svg._clearAnim) { svg._clearAnim(); svg._clearAnim = null; }
+  goStep(1);
+});
+document.getElementById('btnTryAgain').addEventListener('click', () => {
+  stopTimer();
+  stopCamera();
+  startWorkout();
+});
+document.getElementById('btnChangeExercise').addEventListener('click', () => {
+  stopTimer();
+  stopCamera();
+  state.running = false;
+  goStep(1);
+});
+
+/* ══════════════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════════════ */
+renderExerciseCards();
+document.getElementById('loadingOverlay').classList.add('hidden');
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

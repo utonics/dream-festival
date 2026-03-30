@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 아바타 스튜디오 · My AI Avatar</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700;800&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<style>
+:root {
+  --cyan: #2BA5B3;
+  --cyan-dark: #1E8A97;
+  --cyan-light: #4DC4D0;
+  --cyan-pale: #E8F7F8;
+  --bg: #F7F6F3;
+  --dark: #1A1A1A;
+  --white: #FFFFFF;
+  --text: #2D2D2D;
+  --muted: #8A8A8A;
+  --border: #E2E0DA;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 24px rgba(0,0,0,.10);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  background-image: radial-gradient(circle, #D0CEC9 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* TOP BAR */
+#topbar {
+  background: var(--cyan);
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 16px rgba(43,165,179,0.35);
+}
+#topbar .title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.back-btn {
+  background: rgba(255,255,255,0.22);
+  border: none;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.2s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+.back-btn:hover { background: rgba(255,255,255,0.38); }
+.zone-badge {
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* MAIN LAYOUT */
+#main {
+  display: flex;
+  flex-direction: column;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+  gap: 16px;
+}
+
+/* INSTRUCTION BANNER */
+.instruction-banner {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: var(--shadow);
+}
+.instruction-banner .step-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.step-chip {
+  background: var(--cyan-pale);
+  color: var(--cyan-dark);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.step-chip .num {
+  background: var(--cyan);
+  color: #fff;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* STUDIO AREA */
+#studio {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* LEFT: webcam + controls */
+#left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Webcam panel */
+.cam-panel {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.cam-panel-header {
+  background: var(--cyan-pale);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(43,165,179,0.15);
+}
+.cam-panel-header .label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cyan-dark);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cam-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #111;
+  overflow: hidden;
+}
+#webcam {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+#webcam.active { opacity: 1; }
+.cam-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #999;
+  font-size: 13px;
+  text-align: center;
+}
+.cam-overlay .icon { font-size: 36px; opacity: 0.5; }
+#camStatusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ccc;
+  display: inline-block;
+  transition: background 0.3s;
+}
+#camStatusDot.on { background: #3DAA7C; box-shadow: 0 0 0 2px rgba(61,170,124,0.25); }
+
+/* Cam button */
+.cam-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--cyan);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s;
+}
+.cam-btn:hover { background: var(--cyan-dark); }
+.cam-btn.active { background: #D94040; }
+.cam-btn.active:hover { background: #B83030; }
+
+/* Expression meters */
+.expr-panel {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+.expr-panel h3 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+.expr-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.expr-item:last-child { margin-bottom: 0; }
+.expr-icon { font-size: 16px; width: 20px; text-align: center; }
+.expr-bar-bg {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.expr-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--cyan);
+  transition: width 0.08s ease-out;
+  width: 0%;
+}
+.expr-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  width: 28px;
+  text-align: right;
+}
+
+/* Screenshot button */
+.shot-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(43,165,179,0.4);
+  transition: all 0.2s;
+}
+.shot-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(43,165,179,0.5); }
+.shot-btn:active { transform: translateY(0); }
+.shot-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; transform: none; }
+
+/* RIGHT: avatar + customize */
+#right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Avatar canvas */
+.avatar-panel {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.avatar-panel-header {
+  background: linear-gradient(90deg, var(--cyan-pale) 0%, var(--white) 100%);
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(43,165,179,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.avatar-panel-header .label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--cyan-dark);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tracking-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 10px;
+  background: var(--border);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.3s;
+}
+.tracking-badge.active {
+  background: rgba(61,170,124,0.15);
+  color: #2A8A5A;
+}
+.tracking-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: background 0.3s;
+}
+.tracking-badge.active .dot { background: #3DAA7C; animation: blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+#avatarCanvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: linear-gradient(160deg, #E8F7F8 0%, #F0FAFB 100%);
+}
+
+/* Customize panel */
+.customize-panel {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+.customize-panel h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.customize-row {
+  margin-bottom: 12px;
+}
+.customize-row:last-child { margin-bottom: 0; }
+.customize-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.option-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.option-item {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.15s;
+  background: var(--border);
+  position: relative;
+  overflow: visible;
+}
+.option-item:hover { transform: scale(1.1); }
+.option-item.selected {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 2px rgba(43,165,179,0.3);
+  transform: scale(1.08);
+}
+.option-item.color-swatch { font-size: 0; }
+.option-item .tooltip {
+  position: absolute;
+  bottom: 105%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--dark);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+.option-item:hover .tooltip { opacity: 1; }
+
+/* Gallery */
+.gallery-panel {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+.gallery-panel h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.gallery-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--border);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+.gallery-grid {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.gallery-empty {
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+  font-size: 13px;
+  width: 100%;
+}
+.gallery-item {
+  position: relative;
+  flex: 1;
+  max-width: 180px;
+}
+.gallery-item img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  display: block;
+}
+.gallery-item .dl-btn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.gallery-item .dl-btn:hover { background: rgba(0,0,0,0.8); }
+.gallery-placeholder {
+  flex: 1;
+  aspect-ratio: 4/3;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 20px;
+  max-width: 180px;
+}
+
+/* Stamp notification */
+.stamp-toast {
+  position: fixed;
+  top: 72px;
+  right: 16px;
+  background: linear-gradient(135deg, var(--cyan), var(--cyan-dark));
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(43,165,179,0.45);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.stamp-toast.show { transform: translateX(0); }
+
+/* Flash animation */
+.flash-overlay {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.05s;
+}
+.flash-overlay.flash { opacity: 0.9; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  #studio {
+    grid-template-columns: 1fr;
+  }
+  #left-col { order: 2; }
+  #right-col { order: 1; }
+  .gallery-grid { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <button class="back-btn" onclick="window.location.href='../index.html'">← 대시보드</button>
+  <div class="title">🎭 AI 아바타 스튜디오</div>
+  <div class="zone-badge">C존 · AI 창작</div>
+</div>
+
+<!-- FLASH OVERLAY -->
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<!-- STAMP TOAST -->
+<div class="stamp-toast" id="stampToast">🏅 스탬프 획득! +1</div>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- INSTRUCTION -->
+  <div class="instruction-banner">
+    <div style="font-size:24px;">🎭</div>
+    <div class="step-list">
+      <div class="step-chip"><span class="num">1</span> 피부·헤어·악세사리 선택</div>
+      <div class="step-chip"><span class="num">2</span> 웹캠 켜고 표정 추적</div>
+      <div class="step-chip"><span class="num">3</span> 포즈 잡고 📸 촬영</div>
+      <div class="step-chip"><span class="num">4</span> 갤러리에서 다운로드</div>
+    </div>
+  </div>
+
+  <!-- STUDIO -->
+  <div id="studio">
+
+    <!-- LEFT COL -->
+    <div id="left-col">
+
+      <!-- Webcam -->
+      <div class="cam-panel">
+        <div class="cam-panel-header">
+          <div class="label">
+            <span id="camStatusDot"></span>
+            <span id="camStatusText">웹캠 꺼짐</span>
+          </div>
+        </div>
+        <div class="cam-container">
+          <video id="webcam" autoplay muted playsinline></video>
+          <div class="cam-overlay" id="camOverlay">
+            <div class="icon">📷</div>
+            <div>"웹캠 켜기" 버튼을 눌러<br>표정 추적을 시작하세요</div>
+          </div>
+        </div>
+        <button class="cam-btn" id="camBtn" onclick="toggleCamera()">
+          📷 웹캠 켜기
+        </button>
+      </div>
+
+      <!-- Expression meters -->
+      <div class="expr-panel">
+        <h3>📊 표정 분석</h3>
+        <div class="expr-item">
+          <span class="expr-icon">👁️</span>
+          <div class="expr-bar-bg"><div class="expr-bar-fill" id="barBlink"></div></div>
+          <span class="expr-val" id="valBlink">0%</span>
+        </div>
+        <div class="expr-item">
+          <span class="expr-icon">😮</span>
+          <div class="expr-bar-bg"><div class="expr-bar-fill" id="barMouth"></div></div>
+          <span class="expr-val" id="valMouth">0%</span>
+        </div>
+        <div class="expr-item">
+          <span class="expr-icon">😲</span>
+          <div class="expr-bar-bg"><div class="expr-bar-fill" id="barBrow"></div></div>
+          <span class="expr-val" id="valBrow">0%</span>
+        </div>
+        <div class="expr-item">
+          <span class="expr-icon">↗️</span>
+          <div class="expr-bar-bg"><div class="expr-bar-fill" id="barTilt"></div></div>
+          <span class="expr-val" id="valTilt">0%</span>
+        </div>
+      </div>
+
+      <!-- Screenshot -->
+      <button class="shot-btn" id="shotBtn" onclick="takeScreenshot()">
+        📸 스크린샷 촬영
+      </button>
+
+    </div>
+
+    <!-- RIGHT COL -->
+    <div id="right-col">
+
+      <!-- Avatar canvas -->
+      <div class="avatar-panel">
+        <div class="avatar-panel-header">
+          <div class="label">🤖 내 AI 아바타</div>
+          <div class="tracking-badge" id="trackingBadge">
+            <span class="dot"></span>
+            추적 대기
+          </div>
+        </div>
+        <canvas id="avatarCanvas"></canvas>
+      </div>
+
+      <!-- Customize -->
+      <div class="customize-panel">
+        <h3>🎨 아바타 커스터마이즈</h3>
+
+        <!-- Skin color -->
+        <div class="customize-row">
+          <div class="customize-label">피부색</div>
+          <div class="option-list" id="skinOptions"></div>
+        </div>
+
+        <!-- Hair style -->
+        <div class="customize-row">
+          <div class="customize-label">헤어스타일</div>
+          <div class="option-list" id="hairOptions"></div>
+        </div>
+
+        <!-- Accessory -->
+        <div class="customize-row">
+          <div class="customize-label">악세사리</div>
+          <div class="option-list" id="accOptions"></div>
+        </div>
+
+      </div>
+
+      <!-- Gallery -->
+      <div class="gallery-panel">
+        <h3>
+          <span>🖼️ 촬영 갤러리</span>
+          <span class="gallery-count" id="galleryCount">0 / 3</span>
+        </h3>
+        <div class="gallery-grid" id="galleryGrid">
+          <div class="gallery-empty">아직 촬영한 사진이 없어요 📷</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// CONFIGURATION
+// =============================================
+const PROGRAM_ID = 7;
+const STAMP_KEY = 'dreamfest_stamps';
+const RESULTS_KEY = 'dreamfest_results';
+const MAX_PHOTOS = 3;
+
+// Skin colors
+const SKIN_COLORS = [
+  { id: 'light',    hex: '#FDDBB4', name: '밝은 피부' },
+  { id: 'medium',   hex: '#E8B88A', name: '보통 피부' },
+  { id: 'tan',      hex: '#C68B5A', name: '황금 피부' },
+  { id: 'deep',     hex: '#8D5524', name: '진한 피부' },
+  { id: 'cool',     hex: '#F5D5C8', name: '핑크 피부' },
+  { id: 'warm',     hex: '#D4956A', name: '웜 피부' },
+];
+
+// Hair styles (drawn on canvas)
+const HAIR_STYLES = [
+  { id: 'short',    icon: '💆', name: '짧은 머리' },
+  { id: 'long',     icon: '👱', name: '긴 머리' },
+  { id: 'curly',    icon: '🌀', name: '곱슬머리' },
+  { id: 'bun',      icon: '🎀', name: '묶은 머리' },
+  { id: 'spiky',    icon: '⚡', name: '스파이크' },
+  { id: 'wave',     icon: '🌊', name: '웨이브' },
+];
+
+const HAIR_COLORS = [
+  '#2C1A0E', '#5A3825', '#B07030', '#D4A050', '#F0D080', '#E8C0A0',
+];
+
+// Accessories
+const ACCESSORIES = [
+  { id: 'none',     icon: '🚫', name: '없음' },
+  { id: 'glasses',  icon: '👓', name: '안경' },
+  { id: 'sunglasses',icon: '😎', name: '선글라스' },
+  { id: 'hat',      icon: '🎩', name: '모자' },
+  { id: 'bow',      icon: '🎀', name: '리본' },
+  { id: 'earrings', icon: '💎', name: '귀걸이' },
+];
+
+// =============================================
+// STATE
+// =============================================
+let state = {
+  skinId: 'light',
+  hairId: 'short',
+  accId: 'none',
+  hairColorIdx: 0,
+  // Expression values (0–1)
+  eyeOpen: 1,
+  mouthOpen: 0,
+  browRaise: 0,
+  headTilt: 0,
+  // Camera
+  cameraOn: false,
+  tracking: false,
+  // Gallery
+  photos: [],
+  stampGiven: false,
+};
+
+// =============================================
+// INIT PALETTE
+// =============================================
+function initPalette() {
+  // Skin
+  const skinOpts = document.getElementById('skinOptions');
+  SKIN_COLORS.forEach((s, i) => {
+    const el = document.createElement('div');
+    el.className = 'option-item color-swatch' + (i === 0 ? ' selected' : '');
+    el.style.background = s.hex;
+    el.innerHTML = `<span class="tooltip">${s.name}</span>`;
+    el.onclick = () => {
+      document.querySelectorAll('#skinOptions .option-item').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      state.skinId = s.id;
+      drawAvatar();
+    };
+    skinOpts.appendChild(el);
+  });
+
+  // Hair
+  const hairOpts = document.getElementById('hairOptions');
+  HAIR_STYLES.forEach((h, i) => {
+    const el = document.createElement('div');
+    el.className = 'option-item' + (i === 0 ? ' selected' : '');
+    el.textContent = h.icon;
+    el.innerHTML += `<span class="tooltip">${h.name}</span>`;
+    el.onclick = () => {
+      document.querySelectorAll('#hairOptions .option-item').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      state.hairId = h.id;
+      drawAvatar();
+    };
+    hairOpts.appendChild(el);
+  });
+
+  // Accessories
+  const accOpts = document.getElementById('accOptions');
+  ACCESSORIES.forEach((a, i) => {
+    const el = document.createElement('div');
+    el.className = 'option-item' + (i === 0 ? ' selected' : '');
+    el.textContent = a.icon;
+    el.innerHTML += `<span class="tooltip">${a.name}</span>`;
+    el.onclick = () => {
+      document.querySelectorAll('#accOptions .option-item').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      state.accId = a.id;
+      drawAvatar();
+    };
+    accOpts.appendChild(el);
+  });
+}
+
+// =============================================
+// AVATAR CANVAS
+// =============================================
+const avatarCanvas = document.getElementById('avatarCanvas');
+const ctx = avatarCanvas.getContext('2d');
+
+function resizeCanvas() {
+  const rect = avatarCanvas.getBoundingClientRect();
+  avatarCanvas.width = rect.width;
+  avatarCanvas.height = rect.height;
+  drawAvatar();
+}
+
+function getSkinHex() {
+  return (SKIN_COLORS.find(s => s.id === state.skinId) || SKIN_COLORS[0]).hex;
+}
+
+function getHairColor() {
+  return HAIR_COLORS[state.hairColorIdx];
+}
+
+function drawAvatar() {
+  const W = avatarCanvas.width;
+  const H = avatarCanvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Background gradient
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#E8F7F8');
+  bg.addColorStop(1, '#F0FAFB');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle grid
+  ctx.strokeStyle = 'rgba(43,165,179,0.07)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y < H; y += 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Apply head tilt transform
+  const cx = W / 2;
+  const cy = H * 0.48;
+  ctx.save();
+  ctx.translate(cx, cy);
+  const tiltAngle = (state.headTilt - 0.5) * 0.25;
+  ctx.rotate(tiltAngle);
+
+  const skinHex = getSkinHex();
+  const hairCol = getHairColor();
+
+  // --- Shadow below face ---
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.12)';
+  ctx.shadowBlur = 20;
+  ctx.shadowOffsetY = 8;
+
+  // --- NECK ---
+  const neckW = W * 0.085;
+  const neckH = H * 0.10;
+  ctx.fillStyle = skinHex;
+  ctx.beginPath();
+  ctx.roundRect(-neckW / 2, H * 0.29, neckW, neckH, 4);
+  ctx.fill();
+
+  // --- FACE OVAL ---
+  const faceW = W * 0.32;
+  const faceH = H * 0.40;
+  ctx.fillStyle = skinHex;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, faceW / 2, faceH / 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // --- HAIR ---
+  drawHair(W, H, hairCol, state.hairId);
+
+  // --- EYES ---
+  const eyeY = -faceH * 0.08;
+  const eyeSpacing = faceW * 0.26;
+  drawEye(-eyeSpacing, eyeY, faceW * 0.11, state.eyeOpen, skinHex);
+  drawEye(eyeSpacing, eyeY, faceW * 0.11, state.eyeOpen, skinHex);
+
+  // --- EYEBROWS ---
+  const browY = eyeY - faceH * 0.115 - state.browRaise * H * 0.025;
+  drawEyebrow(-eyeSpacing, browY, faceW * 0.13, hairCol, state.browRaise);
+  drawEyebrow(eyeSpacing, browY, faceW * 0.13, hairCol, state.browRaise);
+
+  // --- NOSE ---
+  const noseY = faceH * 0.05;
+  drawNose(0, noseY, W * 0.022, skinHex);
+
+  // --- MOUTH ---
+  const mouthY = faceH * 0.2;
+  drawMouth(0, mouthY, faceW * 0.22, state.mouthOpen);
+
+  // --- CHEEK BLUSH ---
+  ctx.save();
+  ctx.globalAlpha = 0.18;
+  ctx.fillStyle = '#FF8090';
+  ctx.beginPath();
+  ctx.ellipse(-faceW * 0.34, faceH * 0.06, faceW * 0.1, faceH * 0.065, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(faceW * 0.34, faceH * 0.06, faceW * 0.1, faceH * 0.065, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // --- ACCESSORY ---
+  drawAccessory(W, H, faceW, faceH, state.accId);
+
+  ctx.restore();
+
+  // Zone watermark
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = '#2BA5B3';
+  ctx.font = `bold ${W * 0.022}px Space Grotesk, sans-serif`;
+  ctx.textAlign = 'right';
+  ctx.fillText('C존 · AI 아바타 스튜디오', W - 12, H - 12);
+  ctx.restore();
+}
+
+function drawHair(W, H, hairCol, style) {
+  const faceW = W * 0.32;
+  const faceH = H * 0.40;
+  ctx.fillStyle = hairCol;
+  ctx.strokeStyle = shadeColor(hairCol, -30);
+  ctx.lineWidth = 1.5;
+
+  const r = faceW / 2;
+  const rH = faceH / 2;
+
+  switch (style) {
+    case 'short': {
+      // Short cap hair
+      ctx.beginPath();
+      ctx.ellipse(0, -rH * 0.15, r * 1.05, rH * 0.7, 0, Math.PI, 0);
+      ctx.fill();
+      ctx.stroke();
+      // Side burns
+      ctx.beginPath();
+      ctx.ellipse(-r * 0.88, 0, r * 0.15, rH * 0.3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(r * 0.88, 0, r * 0.15, rH * 0.3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      break;
+    }
+    case 'long': {
+      // Long flowing hair
+      ctx.beginPath();
+      ctx.ellipse(0, -rH * 0.1, r * 1.08, rH * 0.72, 0, Math.PI, 0);
+      ctx.fill();
+      // Left side long
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.95, -rH * 0.3);
+      ctx.bezierCurveTo(-r * 1.2, rH * 0.2, -r * 1.1, rH * 0.8, -r * 0.8, rH * 1.0);
+      ctx.bezierCurveTo(-r * 0.65, rH * 0.9, -r * 0.7, rH * 0.3, -r * 0.9, -rH * 0.1);
+      ctx.fill();
+      // Right side long
+      ctx.beginPath();
+      ctx.moveTo(r * 0.95, -rH * 0.3);
+      ctx.bezierCurveTo(r * 1.2, rH * 0.2, r * 1.1, rH * 0.8, r * 0.8, rH * 1.0);
+      ctx.bezierCurveTo(r * 0.65, rH * 0.9, r * 0.7, rH * 0.3, r * 0.9, -rH * 0.1);
+      ctx.fill();
+      ctx.stroke();
+      break;
+    }
+    case 'curly': {
+      // Curly poofy hair
+      ctx.beginPath();
+      ctx.arc(0, -rH * 0.75, r * 0.8, 0, Math.PI * 2);
+      ctx.fill();
+      // Side curls
+      for (let i = -1; i <= 1; i += 2) {
+        for (let j = 0; j < 3; j++) {
+          ctx.beginPath();
+          ctx.arc(i * r * 0.65, -rH * (0.5 - j * 0.18), r * 0.28, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.stroke();
+      break;
+    }
+    case 'bun': {
+      // Hair with bun on top
+      ctx.beginPath();
+      ctx.ellipse(0, -rH * 0.15, r * 1.05, rH * 0.65, 0, Math.PI, 0);
+      ctx.fill();
+      // Bun
+      ctx.beginPath();
+      ctx.arc(0, -rH * 0.78, r * 0.32, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      // Bun highlight
+      ctx.save();
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(-r * 0.08, -rH * 0.83, r * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    case 'spiky': {
+      // Spiky hair
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.9, -rH * 0.2);
+      // Spikes
+      const spikes = 5;
+      for (let i = 0; i < spikes; i++) {
+        const angle = Math.PI + (i / (spikes - 1)) * Math.PI;
+        const spikeX = Math.cos(angle) * r * 1.05;
+        const spikeY = Math.sin(angle) * rH * 0.7;
+        const midAngle = angle - Math.PI / spikes * 0.5;
+        ctx.lineTo(Math.cos(midAngle) * r * 0.75, Math.sin(midAngle) * rH * 0.5);
+        ctx.lineTo(spikeX, spikeY);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      break;
+    }
+    case 'wave': {
+      // Wavy medium hair
+      ctx.beginPath();
+      ctx.ellipse(0, -rH * 0.1, r * 1.06, rH * 0.68, 0, Math.PI, 0);
+      ctx.fill();
+      // Left wave
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.92, -rH * 0.2);
+      ctx.bezierCurveTo(-r * 1.15, rH * 0.1, -r * 0.85, rH * 0.4, -r * 1.05, rH * 0.65);
+      ctx.bezierCurveTo(-r * 0.75, rH * 0.55, -r * 0.9, rH * 0.2, -r * 0.85, -rH * 0.05);
+      ctx.fill();
+      // Right wave
+      ctx.beginPath();
+      ctx.moveTo(r * 0.92, -rH * 0.2);
+      ctx.bezierCurveTo(r * 1.15, rH * 0.1, r * 0.85, rH * 0.4, r * 1.05, rH * 0.65);
+      ctx.bezierCurveTo(r * 0.75, rH * 0.55, r * 0.9, rH * 0.2, r * 0.85, -rH * 0.05);
+      ctx.fill();
+      ctx.stroke();
+      break;
+    }
+  }
+}
+
+function drawEye(x, y, r, openness, skinHex) {
+  const eyeH = r * 0.65 * Math.max(0.05, openness);
+  // White
+  ctx.save();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.ellipse(x, y, r, eyeH, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Iris
+  if (openness > 0.15) {
+    const irisR = r * 0.6 * Math.min(1, openness * 1.1);
+    const irisGrad = ctx.createRadialGradient(x, y, 0, x, y, irisR);
+    irisGrad.addColorStop(0, '#2BA5B3');
+    irisGrad.addColorStop(0.6, '#1E7A85');
+    irisGrad.addColorStop(1, '#0D4A52');
+    ctx.fillStyle = irisGrad;
+    ctx.beginPath();
+    ctx.ellipse(x, y, irisR, Math.min(irisR, eyeH * 0.95), 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Pupil
+    ctx.fillStyle = '#0A1A1C';
+    ctx.beginPath();
+    ctx.ellipse(x, y, irisR * 0.42, Math.min(irisR * 0.42, eyeH * 0.55), 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath();
+    ctx.ellipse(x + irisR * 0.2, y - irisR * 0.2, irisR * 0.15, irisR * 0.15, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Eyelid outline
+  ctx.strokeStyle = shadeColor(skinHex, -35);
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.ellipse(x, y, r, eyeH, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawEyebrow(x, y, w, hairCol, raise) {
+  ctx.save();
+  ctx.strokeStyle = shadeColor(hairCol, -10);
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  const curve = raise * 8;
+  ctx.beginPath();
+  if (x < 0) {
+    ctx.moveTo(x - w / 2, y + curve);
+    ctx.quadraticCurveTo(x, y - 4 - curve, x + w / 2, y + curve);
+  } else {
+    ctx.moveTo(x - w / 2, y + curve);
+    ctx.quadraticCurveTo(x, y - 4 - curve, x + w / 2, y + curve);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawNose(x, y, r, skinHex) {
+  ctx.save();
+  ctx.strokeStyle = shadeColor(skinHex, -25);
+  ctx.lineWidth = 1.5;
+  ctx.lineCap = 'round';
+  // Nose bridge
+  ctx.beginPath();
+  ctx.moveTo(x - r * 0.3, y - r * 2.5);
+  ctx.bezierCurveTo(x - r * 1.2, y, x - r * 1.4, y + r * 0.8, x - r, y + r * 1.2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + r * 0.3, y - r * 2.5);
+  ctx.bezierCurveTo(x + r * 1.2, y, x + r * 1.4, y + r * 0.8, x + r, y + r * 1.2);
+  ctx.stroke();
+  // Nostrils
+  ctx.fillStyle = shadeColor(skinHex, -20);
+  ctx.beginPath();
+  ctx.ellipse(x - r * 0.85, y + r * 1.1, r * 0.55, r * 0.38, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(x + r * 0.85, y + r * 1.1, r * 0.55, r * 0.38, 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawMouth(x, y, w, openness) {
+  ctx.save();
+  const mouthOpenPx = openness * w * 0.7;
+
+  // Lips outline fill
+  if (openness > 0.05) {
+    ctx.fillStyle = '#1A0A08';
+    ctx.beginPath();
+    ctx.ellipse(x, y, w * 0.48, Math.max(2, mouthOpenPx * 0.5), 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Upper lip
+  ctx.fillStyle = '#C06060';
+  ctx.beginPath();
+  ctx.moveTo(x - w * 0.48, y - mouthOpenPx * 0.3);
+  ctx.bezierCurveTo(x - w * 0.24, y - mouthOpenPx * 0.3 - w * 0.12, x - w * 0.1, y - mouthOpenPx * 0.3 - w * 0.18, x, y - mouthOpenPx * 0.3 - w * 0.06);
+  ctx.bezierCurveTo(x + w * 0.1, y - mouthOpenPx * 0.3 - w * 0.18, x + w * 0.24, y - mouthOpenPx * 0.3 - w * 0.12, x + w * 0.48, y - mouthOpenPx * 0.3);
+  ctx.bezierCurveTo(x + w * 0.3, y - mouthOpenPx * 0.1, x - w * 0.3, y - mouthOpenPx * 0.1, x - w * 0.48, y - mouthOpenPx * 0.3);
+  ctx.closePath();
+  ctx.fill();
+
+  // Lower lip
+  ctx.fillStyle = '#D07070';
+  ctx.beginPath();
+  ctx.moveTo(x - w * 0.48, y + mouthOpenPx * 0.3);
+  ctx.bezierCurveTo(x - w * 0.3, y + mouthOpenPx * 0.3 + w * 0.16, x + w * 0.3, y + mouthOpenPx * 0.3 + w * 0.16, x + w * 0.48, y + mouthOpenPx * 0.3);
+  ctx.bezierCurveTo(x + w * 0.3, y + mouthOpenPx * 0.1, x - w * 0.3, y + mouthOpenPx * 0.1, x - w * 0.48, y + mouthOpenPx * 0.3);
+  ctx.closePath();
+  ctx.fill();
+
+  // Smile line
+  if (openness < 0.1) {
+    ctx.strokeStyle = '#A04040';
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x - w * 0.45, y);
+    ctx.bezierCurveTo(x - w * 0.2, y + w * 0.1, x + w * 0.2, y + w * 0.1, x + w * 0.45, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawAccessory(W, H, faceW, faceH, accId) {
+  const r = faceW / 2;
+  const rH = faceH / 2;
+  const eyeY = -rH * 0.08;
+
+  switch (accId) {
+    case 'glasses': {
+      ctx.save();
+      ctx.strokeStyle = '#2C2C2C';
+      ctx.lineWidth = 2.5;
+      ctx.fillStyle = 'rgba(200,230,240,0.25)';
+      const gR = r * 0.24;
+      const gGap = r * 0.48;
+      // Left lens
+      ctx.beginPath();
+      ctx.roundRect(-gGap - gR, eyeY - gR, gR * 2, gR * 1.8, 6);
+      ctx.fill(); ctx.stroke();
+      // Right lens
+      ctx.beginPath();
+      ctx.roundRect(gGap - gR, eyeY - gR, gR * 2, gR * 1.8, 6);
+      ctx.fill(); ctx.stroke();
+      // Bridge
+      ctx.beginPath();
+      ctx.moveTo(-gGap + gR, eyeY);
+      ctx.lineTo(gGap - gR, eyeY);
+      ctx.stroke();
+      // Temple left
+      ctx.beginPath();
+      ctx.moveTo(-gGap - gR, eyeY);
+      ctx.lineTo(-r * 1.05, eyeY + rH * 0.1);
+      ctx.stroke();
+      // Temple right
+      ctx.beginPath();
+      ctx.moveTo(gGap + gR, eyeY);
+      ctx.lineTo(r * 1.05, eyeY + rH * 0.1);
+      ctx.stroke();
+      ctx.restore();
+      break;
+    }
+    case 'sunglasses': {
+      ctx.save();
+      ctx.strokeStyle = '#1A1A1A';
+      ctx.lineWidth = 2.5;
+      ctx.fillStyle = 'rgba(20,20,40,0.75)';
+      const sR = r * 0.26;
+      const sGap = r * 0.48;
+      ctx.beginPath();
+      ctx.ellipse(-sGap, eyeY, sR, sR * 0.7, 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath();
+      ctx.ellipse(sGap, eyeY, sR, sR * 0.7, 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      // Bridge
+      ctx.beginPath();
+      ctx.moveTo(-sGap + sR, eyeY);
+      ctx.lineTo(sGap - sR, eyeY);
+      ctx.stroke();
+      // Temples
+      ctx.beginPath(); ctx.moveTo(-sGap - sR, eyeY); ctx.lineTo(-r * 1.05, eyeY + rH * 0.08); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sGap + sR, eyeY); ctx.lineTo(r * 1.05, eyeY + rH * 0.08); ctx.stroke();
+      // Shine
+      ctx.save();
+      ctx.globalAlpha = 0.25;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.ellipse(-sGap - sR * 0.15, eyeY - sR * 0.15, sR * 0.3, sR * 0.18, -0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.restore();
+      break;
+    }
+    case 'hat': {
+      ctx.save();
+      ctx.fillStyle = '#2C1A0E';
+      ctx.strokeStyle = '#1A0A04';
+      ctx.lineWidth = 1.5;
+      // Brim
+      ctx.beginPath();
+      ctx.ellipse(0, -rH * 0.74, r * 1.25, rH * 0.15, 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      // Crown
+      ctx.beginPath();
+      ctx.roundRect(-r * 0.65, -rH * 1.38, r * 1.3, rH * 0.68, 6);
+      ctx.fill(); ctx.stroke();
+      // Band
+      ctx.fillStyle = '#2BA5B3';
+      ctx.fillRect(-r * 0.65, -rH * 0.84, r * 1.3, rH * 0.12);
+      ctx.restore();
+      break;
+    }
+    case 'bow': {
+      ctx.save();
+      ctx.fillStyle = '#E83A7A';
+      // Left bow
+      ctx.beginPath();
+      ctx.moveTo(-r * 0.05, -rH * 0.82);
+      ctx.bezierCurveTo(-r * 0.4, -rH * 1.1, -r * 0.65, -rH * 0.95, -r * 0.55, -rH * 0.82);
+      ctx.bezierCurveTo(-r * 0.45, -rH * 0.70, -r * 0.1, -rH * 0.72, -r * 0.05, -rH * 0.82);
+      ctx.fill();
+      // Right bow
+      ctx.beginPath();
+      ctx.moveTo(r * 0.05, -rH * 0.82);
+      ctx.bezierCurveTo(r * 0.4, -rH * 1.1, r * 0.65, -rH * 0.95, r * 0.55, -rH * 0.82);
+      ctx.bezierCurveTo(r * 0.45, -rH * 0.70, r * 0.1, -rH * 0.72, r * 0.05, -rH * 0.82);
+      ctx.fill();
+      // Center knot
+      ctx.fillStyle = '#C02060';
+      ctx.beginPath();
+      ctx.ellipse(0, -rH * 0.82, r * 0.06, rH * 0.06, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+    case 'earrings': {
+      ctx.save();
+      const eX = r * 0.88;
+      const eY = rH * 0.12;
+      // Left earring
+      const grad1 = ctx.createRadialGradient(-eX, eY, 0, -eX, eY, r * 0.065);
+      grad1.addColorStop(0, '#A0E8F0');
+      grad1.addColorStop(1, '#2BA5B3');
+      ctx.fillStyle = grad1;
+      ctx.strokeStyle = '#1A7A85';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(-eX, eY, r * 0.065, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      // Shine
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.beginPath();
+      ctx.arc(-eX - r * 0.02, eY - r * 0.02, r * 0.02, 0, Math.PI * 2);
+      ctx.fill();
+      // Right earring
+      const grad2 = ctx.createRadialGradient(eX, eY, 0, eX, eY, r * 0.065);
+      grad2.addColorStop(0, '#A0E8F0');
+      grad2.addColorStop(1, '#2BA5B3');
+      ctx.fillStyle = grad2;
+      ctx.beginPath();
+      ctx.arc(eX, eY, r * 0.065, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.beginPath();
+      ctx.arc(eX - r * 0.02, eY - r * 0.02, r * 0.02, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      break;
+    }
+  }
+}
+
+function shadeColor(hex, amount) {
+  const num = parseInt(hex.replace('#', ''), 16);
+  const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0xff) + amount));
+  const b = Math.max(0, Math.min(255, (num & 0xff) + amount));
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+}
+
+// =============================================
+// FACE MESH
+// =============================================
+let faceMesh = null;
+let camera = null;
+let webcamEl = document.getElementById('webcam');
+
+function onFaceResults(results) {
+  if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) {
+    state.tracking = false;
+    updateTrackingBadge(false);
+    // Slowly return to neutral
+    state.eyeOpen = lerp(state.eyeOpen, 1, 0.05);
+    state.mouthOpen = lerp(state.mouthOpen, 0, 0.05);
+    state.browRaise = lerp(state.browRaise, 0, 0.05);
+    state.headTilt = lerp(state.headTilt, 0.5, 0.05);
+    drawAvatar();
+    updateExpressionMeters();
+    return;
+  }
+  state.tracking = true;
+  updateTrackingBadge(true);
+
+  const lm = results.multiFaceLandmarks[0];
+
+  // Eye openness: upper lid (159) vs lower lid (145) for left eye
+  const leftEyeTop = lm[159];
+  const leftEyeBot = lm[145];
+  const leftEyeLeft = lm[33];
+  const leftEyeRight = lm[133];
+  const eyeWidth = dist(leftEyeLeft, leftEyeRight);
+  const eyeHeight = dist(leftEyeTop, leftEyeBot);
+  const rawEyeOpen = eyeWidth > 0 ? clamp(eyeHeight / eyeWidth * 3.5, 0, 1) : 1;
+  state.eyeOpen = lerp(state.eyeOpen, rawEyeOpen, 0.35);
+
+  // Mouth openness: upper lip (13) vs lower lip (14)
+  const mouthTop = lm[13];
+  const mouthBot = lm[14];
+  const lipLeft = lm[61];
+  const lipRight = lm[291];
+  const mouthWidth = dist(lipLeft, lipRight);
+  const mouthHeight = dist(mouthTop, mouthBot);
+  const rawMouth = mouthWidth > 0 ? clamp(mouthHeight / mouthWidth * 2.8, 0, 1) : 0;
+  state.mouthOpen = lerp(state.mouthOpen, rawMouth, 0.3);
+
+  // Eyebrow raise: brow (70) vs eye (159) for left
+  const leftBrow = lm[70];
+  const leftEyeCenter = lm[159];
+  const rawBrow = clamp((leftEyeCenter.y - leftBrow.y) * 12 - 0.4, 0, 1);
+  state.browRaise = lerp(state.browRaise, rawBrow, 0.25);
+
+  // Head tilt: difference in y between left ear (234) and right ear (454)
+  const leftEar = lm[234];
+  const rightEar = lm[454];
+  const rawTilt = clamp(0.5 + (leftEar.y - rightEar.y) * 3.5, 0, 1);
+  state.headTilt = lerp(state.headTilt, rawTilt, 0.2);
+
+  drawAvatar();
+  updateExpressionMeters();
+}
+
+function dist(a, b) {
+  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+}
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function updateExpressionMeters() {
+  const blink = Math.round((1 - state.eyeOpen) * 100);
+  const mouth = Math.round(state.mouthOpen * 100);
+  const brow = Math.round(state.browRaise * 100);
+  const tilt = Math.round(Math.abs(state.headTilt - 0.5) * 200);
+
+  setBar('barBlink', 'valBlink', blink);
+  setBar('barMouth', 'valMouth', mouth);
+  setBar('barBrow', 'valBrow', brow);
+  setBar('barTilt', 'valTilt', Math.min(100, tilt));
+}
+
+function setBar(barId, valId, pct) {
+  document.getElementById(barId).style.width = pct + '%';
+  document.getElementById(valId).textContent = pct + '%';
+}
+
+function updateTrackingBadge(active) {
+  const badge = document.getElementById('trackingBadge');
+  if (active) {
+    badge.classList.add('active');
+    badge.innerHTML = '<span class="dot"></span>추적 중';
+  } else {
+    badge.classList.remove('active');
+    badge.innerHTML = '<span class="dot"></span>추적 대기';
+  }
+}
+
+// =============================================
+// CAMERA TOGGLE
+// =============================================
+async function toggleCamera() {
+  if (!state.cameraOn) {
+    await startCamera();
+  } else {
+    stopCamera();
+  }
+}
+
+async function startCamera() {
+  try {
+    faceMesh = new FaceMesh({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+    faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5,
+    });
+    faceMesh.onResults(onFaceResults);
+
+    camera = new Camera(webcamEl, {
+      onFrame: async () => {
+        if (faceMesh) await faceMesh.send({ image: webcamEl });
+      },
+      width: 320,
+      height: 240,
+    });
+    await camera.start();
+
+    state.cameraOn = true;
+    webcamEl.classList.add('active');
+    document.getElementById('camOverlay').style.display = 'none';
+    document.getElementById('camStatusDot').classList.add('on');
+    document.getElementById('camStatusText').textContent = '웹캠 켜짐';
+    const btn = document.getElementById('camBtn');
+    btn.classList.add('active');
+    btn.innerHTML = '⏹ 웹캠 끄기';
+  } catch (err) {
+    console.error('Camera error:', err);
+    alert('웹캠을 시작할 수 없습니다. 브라우저에서 카메라 권한을 허용해주세요.');
+  }
+}
+
+function stopCamera() {
+  if (camera) { camera.stop(); camera = null; }
+  if (faceMesh) { faceMesh.close(); faceMesh = null; }
+  state.cameraOn = false;
+  state.tracking = false;
+  webcamEl.classList.remove('active');
+  document.getElementById('camOverlay').style.display = 'flex';
+  document.getElementById('camStatusDot').classList.remove('on');
+  document.getElementById('camStatusText').textContent = '웹캠 꺼짐';
+  const btn = document.getElementById('camBtn');
+  btn.classList.remove('active');
+  btn.innerHTML = '📷 웹캠 켜기';
+  updateTrackingBadge(false);
+}
+
+// =============================================
+// SCREENSHOT
+// =============================================
+function takeScreenshot() {
+  if (state.photos.length >= MAX_PHOTOS) {
+    alert('최대 3장까지 저장할 수 있어요! 갤러리를 확인하세요.');
+    return;
+  }
+
+  // Flash effect
+  const flashEl = document.getElementById('flashOverlay');
+  flashEl.classList.add('flash');
+  setTimeout(() => flashEl.classList.remove('flash'), 150);
+
+  // Capture canvas as PNG
+  const dataUrl = avatarCanvas.toDataURL('image/png');
+  state.photos.push(dataUrl);
+  renderGallery();
+  saveToStorage(dataUrl);
+
+  // Stamp (only first time)
+  if (!state.stampGiven) {
+    state.stampGiven = true;
+    giveStamp();
+  }
+}
+
+function renderGallery() {
+  const grid = document.getElementById('galleryGrid');
+  const count = document.getElementById('galleryCount');
+  count.textContent = `${state.photos.length} / ${MAX_PHOTOS}`;
+  grid.innerHTML = '';
+
+  if (state.photos.length === 0) {
+    grid.innerHTML = '<div class="gallery-empty">아직 촬영한 사진이 없어요 📷</div>';
+    return;
+  }
+
+  state.photos.forEach((dataUrl, i) => {
+    const item = document.createElement('div');
+    item.className = 'gallery-item';
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = `아바타 사진 ${i + 1}`;
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'dl-btn';
+    dlBtn.textContent = '⬇ 저장';
+    dlBtn.onclick = () => downloadPhoto(dataUrl, i + 1);
+    item.appendChild(img);
+    item.appendChild(dlBtn);
+    grid.appendChild(item);
+  });
+
+  // Placeholders
+  for (let i = state.photos.length; i < MAX_PHOTOS; i++) {
+    const ph = document.createElement('div');
+    ph.className = 'gallery-placeholder';
+    ph.textContent = '📷';
+    grid.appendChild(ph);
+  }
+}
+
+function downloadPhoto(dataUrl, idx) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = `ai-avatar-${idx}.png`;
+  a.click();
+}
+
+// =============================================
+// STORAGE
+// =============================================
+function giveStamp() {
+  // Save stamp
+  const stamps = JSON.parse(localStorage.getItem(STAMP_KEY) || '[]');
+  if (!stamps.includes(PROGRAM_ID)) {
+    stamps.push(PROGRAM_ID);
+    localStorage.setItem(STAMP_KEY, JSON.stringify(stamps));
+  }
+  // Show toast
+  const toast = document.getElementById('stampToast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+function saveToStorage(dataUrl) {
+  const results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}');
+  if (!results[PROGRAM_ID]) results[PROGRAM_ID] = [];
+  results[PROGRAM_ID].push({
+    timestamp: Date.now(),
+    thumbnail: dataUrl,
+    customize: { skinId: state.skinId, hairId: state.hairId, accId: state.accId },
+  });
+  localStorage.setItem(RESULTS_KEY, JSON.stringify(results));
+}
+
+function loadFromStorage() {
+  // Check if stamp already given
+  const stamps = JSON.parse(localStorage.getItem(STAMP_KEY) || '[]');
+  if (stamps.includes(PROGRAM_ID)) state.stampGiven = true;
+
+  // Load saved photos
+  const results = JSON.parse(localStorage.getItem(RESULTS_KEY) || '{}');
+  if (results[PROGRAM_ID] && Array.isArray(results[PROGRAM_ID])) {
+    state.photos = results[PROGRAM_ID].slice(0, MAX_PHOTOS).map(r => r.thumbnail);
+  }
+  renderGallery();
+}
+
+// =============================================
+// IDLE ANIMATION (when no camera)
+// =============================================
+let idleT = 0;
+function idleLoop() {
+  if (!state.cameraOn) {
+    idleT += 0.025;
+    state.eyeOpen = 0.85 + Math.sin(idleT * 1.3) * 0.1;
+    // Occasional blink
+    if (Math.sin(idleT * 0.6) > 0.96) state.eyeOpen = 0.05;
+    state.mouthOpen = Math.max(0, Math.sin(idleT * 0.5) * 0.08);
+    state.browRaise = 0.1 + Math.sin(idleT * 0.4) * 0.08;
+    state.headTilt = 0.5 + Math.sin(idleT * 0.3) * 0.04;
+    drawAvatar();
+  }
+  requestAnimationFrame(idleLoop);
+}
+
+// =============================================
+// INIT
+// =============================================
+window.addEventListener('DOMContentLoaded', () => {
+  resizeCanvas();
+  initPalette();
+  loadFromStorage();
+  idleLoop();
+});
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+});
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>

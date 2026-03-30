@@ -1,0 +1,1653 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>물건을 알아보는 AI</title>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#2D7A4F">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --amber: #D4943A;
+    --amber-light: #F0B860;
+    --amber-dark: #B07020;
+    --amber-soft: #FDF3E3;
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --text: #1A1A1A;
+    --text-secondary: #6B6B6B;
+    --border: #E8E4DC;
+    --success: #2ECC71;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Noto Sans KR', 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ── DOT GRID BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, #D4943A22 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 56px;
+    background: var(--amber);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
+    box-shadow: 0 2px 16px rgba(212,148,58,0.3);
+  }
+
+  #topbar .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+  }
+
+  #topbar .back-btn:hover { background: rgba(255,255,255,0.3); }
+
+  #topbar .title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #topbar .zone-badge {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  #app {
+    position: fixed;
+    inset: 56px 0 0 0;
+    z-index: 1;
+  }
+
+  /* ── SCREEN BASE ── */
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    overflow-y: auto;
+  }
+  .screen.active { display: flex; }
+
+  /* ══════════════════════════════
+     INTRO SCREEN
+  ══════════════════════════════ */
+  #screen-intro {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 32px;
+  }
+
+  .intro-hero {
+    text-align: center;
+    max-width: 480px;
+  }
+
+  .intro-icon {
+    font-size: 72px;
+    line-height: 1;
+    margin-bottom: 16px;
+    display: block;
+    filter: drop-shadow(0 4px 16px rgba(212,148,58,0.4));
+    animation: floatIcon 3s ease-in-out infinite;
+  }
+
+  @keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .intro-hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  .intro-hero p {
+    font-size: 16px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .mode-cards {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 600px;
+    width: 100%;
+  }
+
+  .mode-card {
+    flex: 1;
+    min-width: 240px;
+    max-width: 280px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 24px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--amber-soft), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .mode-card:hover {
+    border-color: var(--amber);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .mode-card:hover::before { opacity: 1; }
+
+  .mode-card .mode-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .mode-card .mode-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .mode-card .mode-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .mode-card .mode-tag {
+    display: inline-block;
+    margin-top: 12px;
+    background: var(--amber);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* ══════════════════════════════
+     LOADING SCREEN
+  ══════════════════════════════ */
+  #screen-loading {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    padding: 40px;
+  }
+
+  .loading-icon {
+    font-size: 64px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+  }
+
+  .loading-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    text-align: center;
+  }
+
+  .loading-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  .progress-wrap {
+    width: 320px;
+    max-width: 90vw;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 10px;
+    background: var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--amber-light));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .loading-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 320px;
+    max-width: 90vw;
+  }
+
+  .loading-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    transition: color 0.3s;
+  }
+
+  .loading-step.done { color: var(--success); }
+  .loading-step.active { color: var(--amber); font-weight: 600; }
+
+  .step-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  /* ══════════════════════════════
+     EXPLORE / MISSION SCREEN
+  ══════════════════════════════ */
+  #screen-explore {
+    display: none;
+    flex-direction: row;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #screen-explore.active { display: flex; }
+
+  /* Camera area */
+  .camera-area {
+    flex: 1;
+    position: relative;
+    background: #000;
+    min-width: 0;
+  }
+
+  #webcam {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scaleX(-1);
+  }
+
+  #detection-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    transform: scaleX(-1);
+  }
+
+  /* Detection indicator */
+  .detect-indicator {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .detect-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff4444;
+  }
+
+  .detect-dot.active {
+    background: var(--success);
+    animation: blink 1s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* FPS / detection count */
+  .camera-overlay-bottom {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+  }
+
+  .detection-count-badge {
+    background: var(--amber);
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+  }
+
+  /* Permission error overlay */
+  .camera-error {
+    position: absolute;
+    inset: 0;
+    background: #1a1a1a;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: #fff;
+    text-align: center;
+    padding: 32px;
+  }
+
+  .camera-error.visible { display: flex; }
+
+  .camera-error .error-icon { font-size: 56px; }
+
+  .camera-error h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .camera-error p { font-size: 14px; opacity: 0.7; line-height: 1.6; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .sidebar-header .mode-label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .sidebar-header .mode-switch-btn {
+    background: var(--amber-soft);
+    border: 1px solid var(--amber);
+    color: var(--amber-dark);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .sidebar-header .mode-switch-btn:hover {
+    background: var(--amber);
+    color: #fff;
+  }
+
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  /* ── POKEDEX (explore mode) ── */
+  .pokedex-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .pokedex-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .completion-badge {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+
+  .completion-bar-wrap {
+    margin-bottom: 16px;
+  }
+
+  .completion-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+
+  .completion-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--amber-light));
+    border-radius: 6px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  .pokedex-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+  }
+
+  .pokedex-card {
+    background: var(--amber-soft);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .pokedex-card.discovered {
+    border-color: var(--amber);
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(212,148,58,0.2);
+    animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .pokedex-card .card-emoji {
+    font-size: 24px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .pokedex-card .card-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+    word-break: keep-all;
+  }
+
+  .pokedex-card .card-conf {
+    font-size: 9px;
+    color: var(--amber);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+  }
+
+  .pokedex-card.undiscovered .card-emoji { filter: grayscale(1) opacity(0.3); }
+  .pokedex-card.undiscovered .card-name { color: var(--text-secondary); opacity: 0.5; }
+
+  /* New discovery toast */
+  .new-discovery-toast {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--amber);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 6px;
+    font-family: 'Space Grotesk', sans-serif;
+    white-space: nowrap;
+  }
+
+  /* ── MISSION MODE ── */
+  .mission-header {
+    margin-bottom: 12px;
+  }
+
+  .mission-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .mission-progress-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .mission-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .mission-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .mission-item.current {
+    border-color: var(--amber);
+    background: var(--amber-soft);
+    box-shadow: 0 2px 8px rgba(212,148,58,0.2);
+  }
+
+  .mission-item.cleared {
+    border-color: var(--success);
+    background: #f0faf4;
+  }
+
+  .mission-item.cleared .mission-text {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+  }
+
+  .mission-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .mission-item.cleared .mission-check {
+    background: var(--success);
+    border-color: var(--success);
+    color: #fff;
+  }
+
+  .mission-item.current .mission-check {
+    border-color: var(--amber);
+    animation: spin-check 2s linear infinite;
+  }
+
+  @keyframes spin-check {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(10deg); }
+    75% { transform: rotate(-10deg); }
+  }
+
+  .mission-text {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+  }
+
+  .mission-target {
+    font-size: 11px;
+    color: var(--amber);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+  }
+
+  .mission-item.cleared .mission-target {
+    color: var(--success);
+  }
+
+  .mission-conf-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--amber);
+    border-radius: 0 0 0 10px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .mission-item.current .mission-conf-bar { display: block; }
+  .mission-item:not(.current) .mission-conf-bar { display: none; }
+
+  /* ── COMPLETE BUTTON ── */
+  .complete-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--amber);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .complete-btn:hover { background: var(--amber-dark); transform: translateY(-1px); }
+  .complete-btn:disabled { background: var(--border); cursor: default; transform: none; }
+
+  /* ── RESULT SCREEN ── */
+  #screen-result {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 28px;
+  }
+
+  .result-card {
+    background: var(--surface);
+    border-radius: 24px;
+    padding: 40px 32px;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    border: 2px solid var(--border);
+  }
+
+  .result-stamp {
+    font-size: 72px;
+    margin-bottom: 16px;
+    display: block;
+    filter: drop-shadow(0 4px 16px rgba(212,148,58,0.4));
+    animation: stampDrop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes stampDrop {
+    from { transform: scale(0) rotate(-20deg); opacity: 0; }
+    to { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .result-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .result-subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 28px;
+  }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .result-stat {
+    background: var(--amber-soft);
+    border-radius: 14px;
+    padding: 16px;
+    border: 1px solid rgba(212,148,58,0.2);
+  }
+
+  .result-stat .stat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--amber);
+    display: block;
+  }
+
+  .result-stat .stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .stamp-earned {
+    background: linear-gradient(135deg, var(--amber-soft), #fff3e0);
+    border: 2px solid var(--amber);
+    border-radius: 16px;
+    padding: 16px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+  }
+
+  .stamp-earned .stamp-icon { font-size: 36px; }
+
+  .stamp-earned .stamp-text strong {
+    display: block;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--amber-dark);
+  }
+
+  .stamp-earned .stamp-text span {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .result-actions button {
+    flex: 1;
+    padding: 13px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    border: 2px solid var(--border);
+  }
+
+  .btn-retry {
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .btn-retry:hover { border-color: var(--amber); color: var(--amber); }
+
+  .btn-home {
+    background: var(--amber);
+    color: #fff;
+    border-color: var(--amber) !important;
+  }
+
+  .btn-home:hover { background: var(--amber-dark); }
+
+  /* ── MISSION CLEAR FLASH ── */
+  .mission-clear-flash {
+    position: fixed;
+    inset: 0;
+    background: rgba(46, 204, 113, 0.15);
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    animation: flashGreen 0.6s ease-out forwards;
+  }
+
+  @keyframes flashGreen {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  .mission-clear-badge {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: var(--success);
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    padding: 20px 36px;
+    border-radius: 20px;
+    z-index: 10000;
+    animation: badgePop 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(46,204,113,0.4);
+  }
+
+  @keyframes badgePop {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    30% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    70% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 700px) {
+    #screen-explore { flex-direction: column; }
+    .camera-area { height: 55vw; min-height: 200px; flex: none; }
+    .sidebar { width: 100%; flex: 1; border-left: none; border-top: 1px solid var(--border); }
+    .pokedex-grid { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+    .mode-cards { flex-direction: column; align-items: center; }
+    .mode-card { max-width: 100%; }
+    .result-card { padding: 28px 20px; }
+  }
+
+  @media (max-width: 400px) {
+    .result-stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header id="topbar">
+  <button class="back-btn" onclick="goHome()">← 대시보드</button>
+  <div class="title">👁️ 물건을 알아보는 AI</div>
+  <span class="zone-badge">B존</span>
+</header>
+
+<div id="app">
+
+  <!-- ── INTRO SCREEN ── -->
+  <section id="screen-intro" class="screen active">
+    <div class="intro-hero">
+      <span class="intro-icon">🔍</span>
+      <h1>물건을 알아보는 AI</h1>
+      <p>카메라로 주변 물건을 비춰보세요.<br>
+         AI가 실시간으로 무슨 물건인지 알아냅니다!</p>
+    </div>
+    <div class="mode-cards">
+      <div class="mode-card" onclick="startMode('explore')">
+        <span class="mode-icon">🗺️</span>
+        <div class="mode-title">자유 탐색 모드</div>
+        <div class="mode-desc">카메라에 물체를 비추면 도감에 자동 등록! 얼마나 많은 물건을 찾을 수 있을까요?</div>
+        <span class="mode-tag">도감 완성 도전</span>
+      </div>
+      <div class="mode-card" onclick="startMode('mission')">
+        <span class="mode-icon">🎯</span>
+        <div class="mode-title">미션 모드</div>
+        <div class="mode-desc">5가지 미션을 클리어하세요! 특정 물건을 찾아내면 미션 성공!</div>
+        <span class="mode-tag">5개 미션 클리어</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── LOADING SCREEN ── -->
+  <section id="screen-loading" class="screen">
+    <div class="loading-icon">🧠</div>
+    <div class="loading-title">AI 모델 준비 중...</div>
+    <div class="loading-subtitle">COCO-SSD 객체 인식 모델을 불러오고 있어요</div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span id="load-step-text">TensorFlow.js 초기화</span>
+        <span id="load-pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="load-bar"></div>
+      </div>
+    </div>
+    <div class="loading-steps">
+      <div class="loading-step active" id="step-tf">
+        <div class="step-dot">1</div>
+        <span>TensorFlow.js 엔진 초기화</span>
+      </div>
+      <div class="loading-step" id="step-model">
+        <div class="step-dot">2</div>
+        <span>COCO-SSD 모델 로드</span>
+      </div>
+      <div class="loading-step" id="step-camera">
+        <div class="step-dot">3</div>
+        <span>웹캠 연결</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── EXPLORE / MISSION SCREEN ── -->
+  <section id="screen-explore" class="screen">
+    <!-- Camera -->
+    <div class="camera-area">
+      <video id="webcam" autoplay playsinline muted></video>
+      <canvas id="detection-canvas"></canvas>
+
+      <div class="detect-indicator">
+        <div class="detect-dot" id="detect-dot"></div>
+        <span id="detect-label">감지 중...</span>
+      </div>
+
+      <div class="camera-overlay-bottom">
+        <div class="detection-count-badge" id="frame-count">0개 감지</div>
+      </div>
+
+      <div class="camera-error" id="camera-error">
+        <div class="error-icon">📷</div>
+        <h3>카메라 접근 불가</h3>
+        <p>브라우저에서 카메라 권한을 허용해주세요.<br>주소창 옆 자물쇠 아이콘을 클릭하여<br>카메라 권한을 허용하세요.</p>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <span class="mode-label" id="sidebar-mode-label">자유 탐색</span>
+        <button class="mode-switch-btn" onclick="switchMode()">모드 변경</button>
+      </div>
+      <div class="sidebar-content" id="sidebar-content">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RESULT SCREEN ── -->
+  <section id="screen-result" class="screen">
+    <div class="result-card">
+      <span class="result-stamp">🏅</span>
+      <div class="result-title" id="result-title">탐험 완료!</div>
+      <div class="result-subtitle" id="result-subtitle">대단해요! 많은 물건을 발견했어요.</div>
+      <div class="result-stats">
+        <div class="result-stat">
+          <span class="stat-num" id="result-found">0</span>
+          <span class="stat-label">발견한 물건</span>
+        </div>
+        <div class="result-stat">
+          <span class="stat-num" id="result-missions">0</span>
+          <span class="stat-label" id="result-missions-label">미션 클리어</span>
+        </div>
+      </div>
+      <div class="stamp-earned">
+        <span class="stamp-icon">📛</span>
+        <div class="stamp-text">
+          <strong>스탬프 획득!</strong>
+          <span>B존 · AI Vision Explorer 완료</span>
+        </div>
+      </div>
+      <div class="result-actions">
+        <button class="btn-retry" onclick="retryMode()">다시 하기</button>
+        <button class="btn-home" onclick="goHome()">대시보드로</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════════════
+
+const COCO_LABELS_EN = [
+  'person','bicycle','car','motorcycle','airplane','bus','train','truck','boat',
+  'traffic light','fire hydrant','stop sign','parking meter','bench','bird','cat',
+  'dog','horse','sheep','cow','elephant','bear','zebra','giraffe','backpack',
+  'umbrella','handbag','tie','suitcase','frisbee','skis','snowboard','sports ball',
+  'kite','baseball bat','baseball glove','skateboard','surfboard','tennis racket',
+  'bottle','wine glass','cup','fork','knife','spoon','bowl','banana','apple',
+  'sandwich','orange','broccoli','carrot','hot dog','pizza','donut','cake','chair',
+  'couch','potted plant','bed','dining table','toilet','tv','laptop','mouse',
+  'remote','keyboard','cell phone','microwave','oven','toaster','sink',
+  'refrigerator','book','clock','vase','scissors','teddy bear','hair drier',
+  'toothbrush'
+];
+
+const LABEL_KO = {
+  'person':'사람','bicycle':'자전거','car':'자동차','motorcycle':'오토바이',
+  'airplane':'비행기','bus':'버스','train':'기차','truck':'트럭','boat':'배',
+  'traffic light':'신호등','fire hydrant':'소화전','stop sign':'정지표지판',
+  'parking meter':'주차미터','bench':'벤치','bird':'새','cat':'고양이',
+  'dog':'강아지','horse':'말','sheep':'양','cow':'소','elephant':'코끼리',
+  'bear':'곰','zebra':'얼룩말','giraffe':'기린','backpack':'가방',
+  'umbrella':'우산','handbag':'핸드백','tie':'넥타이','suitcase':'여행가방',
+  'frisbee':'원반','skis':'스키','snowboard':'스노보드','sports ball':'공',
+  'kite':'연','baseball bat':'야구배트','baseball glove':'야구글러브',
+  'skateboard':'스케이트보드','surfboard':'서핑보드','tennis racket':'테니스라켓',
+  'bottle':'병','wine glass':'와인잔','cup':'컵','fork':'포크','knife':'칼',
+  'spoon':'숟가락','bowl':'그릇','banana':'바나나','apple':'사과',
+  'sandwich':'샌드위치','orange':'오렌지','broccoli':'브로콜리','carrot':'당근',
+  'hot dog':'핫도그','pizza':'피자','donut':'도넛','cake':'케이크','chair':'의자',
+  'couch':'소파','potted plant':'화분','bed':'침대','dining table':'식탁',
+  'toilet':'변기','tv':'TV','laptop':'노트북','mouse':'마우스','remote':'리모컨',
+  'keyboard':'키보드','cell phone':'핸드폰','microwave':'전자레인지',
+  'oven':'오븐','toaster':'토스터','sink':'싱크대','refrigerator':'냉장고',
+  'book':'책','clock':'시계','vase':'꽃병','scissors':'가위',
+  'teddy bear':'인형','hair drier':'드라이기','toothbrush':'칫솔'
+};
+
+const LABEL_EMOJI = {
+  'person':'🧑','bicycle':'🚲','car':'🚗','motorcycle':'🏍️','airplane':'✈️',
+  'bus':'🚌','train':'🚂','truck':'🚛','boat':'⛵','traffic light':'🚦',
+  'fire hydrant':'🚒','stop sign':'🛑','bench':'🪑','bird':'🐦','cat':'🐱',
+  'dog':'🐶','horse':'🐴','sheep':'🐑','cow':'🐄','elephant':'🐘','bear':'🐻',
+  'zebra':'🦓','giraffe':'🦒','backpack':'🎒','umbrella':'☂️','handbag':'👜',
+  'tie':'👔','suitcase':'🧳','frisbee':'🥏','sports ball':'⚽','kite':'🪁',
+  'bottle':'🍶','cup':'☕','fork':'🍴','knife':'🔪','spoon':'🥄','bowl':'🍜',
+  'banana':'🍌','apple':'🍎','sandwich':'🥪','orange':'🍊','broccoli':'🥦',
+  'carrot':'🥕','hot dog':'🌭','pizza':'🍕','donut':'🍩','cake':'🎂',
+  'chair':'🪑','couch':'🛋️','potted plant':'🪴','bed':'🛏️','dining table':'🍽️',
+  'toilet':'🚽','tv':'📺','laptop':'💻','mouse':'🖱️','remote':'📺',
+  'keyboard':'⌨️','cell phone':'📱','microwave':'📦','oven':'🍳',
+  'sink':'🚿','refrigerator':'🧊','book':'📚','clock':'⏰','vase':'🌸',
+  'scissors':'✂️','teddy bear':'🧸','hair drier':'💨','toothbrush':'🪥'
+};
+
+const MISSIONS = [
+  { id: 0, text: '가방을 찾아라!',   target: 'backpack',   emoji: '🎒', ko: '가방' },
+  { id: 1, text: '컵을 찾아라!',     target: 'cup',        emoji: '☕', ko: '컵' },
+  { id: 2, text: '책을 찾아라!',     target: 'book',       emoji: '📚', ko: '책' },
+  { id: 3, text: '핸드폰을 찾아라!', target: 'cell phone', emoji: '📱', ko: '핸드폰' },
+  { id: 4, text: '의자를 찾아라!',   target: 'chair',      emoji: '🪑', ko: '의자' },
+];
+
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+
+let model = null;
+let videoEl = null;
+let canvasEl = null;
+let ctx = null;
+let rafId = null;
+let isDetecting = false;
+let currentMode = 'explore'; // 'explore' | 'mission'
+
+// Explore state
+const discovered = {}; // label -> { conf, time }
+
+// Mission state
+let missionCleared = new Set();
+let currentMissionIdx = 0;
+let missionConfidence = 0;
+
+// ════════════════════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ════════════════════════════════════════════════════════
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if (el) el.classList.add('active');
+}
+
+// ════════════════════════════════════════════════════════
+// LOADING
+// ════════════════════════════════════════════════════════
+
+async function startMode(mode) {
+  currentMode = mode;
+  showScreen('loading');
+  await loadModel();
+}
+
+async function loadModel() {
+  const bar = document.getElementById('load-bar');
+  const pct = document.getElementById('load-pct');
+  const stepText = document.getElementById('load-step-text');
+
+  function setProgress(p, label) {
+    bar.style.width = p + '%';
+    pct.textContent = p + '%';
+    stepText.textContent = label;
+  }
+
+  function markStep(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove('active');
+      el.classList.add('done');
+      el.querySelector('.step-dot').textContent = '✓';
+    }
+  }
+
+  function activeStep(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+  }
+
+  try {
+    // Step 1: TF
+    setProgress(10, 'TensorFlow.js 초기화 중...');
+    await new Promise(r => setTimeout(r, 300));
+    await tf.ready();
+    markStep('step-tf');
+    setProgress(30, 'COCO-SSD 모델 다운로드 중...');
+    activeStep('step-model');
+
+    // Step 2: Model
+    model = await cocoSsd.load();
+    markStep('step-model');
+    setProgress(70, '웹캠 연결 중...');
+    activeStep('step-camera');
+
+    // Step 3: Camera
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+
+    videoEl = document.getElementById('webcam');
+    canvasEl = document.getElementById('detection-canvas');
+    ctx = canvasEl.getContext('2d');
+
+    videoEl.srcObject = stream;
+    await new Promise(r => { videoEl.onloadedmetadata = r; });
+    await videoEl.play();
+
+    markStep('step-camera');
+    setProgress(100, '준비 완료!');
+    await new Promise(r => setTimeout(r, 400));
+
+    startExplore();
+  } catch (err) {
+    console.error(err);
+    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+      markStep('step-model');
+      setProgress(70, '웹캠 권한 필요');
+      await new Promise(r => setTimeout(r, 600));
+      startExplore(true);
+    } else {
+      stepText.textContent = '오류: ' + err.message;
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// START DETECTION
+// ════════════════════════════════════════════════════════
+
+function startExplore(cameraError = false) {
+  resetState();
+  renderSidebar();
+  showScreen('explore');
+
+  if (cameraError) {
+    document.getElementById('camera-error').classList.add('visible');
+    document.getElementById('detect-dot').classList.remove('active');
+    document.getElementById('detect-label').textContent = '카메라 없음';
+    return;
+  }
+
+  isDetecting = true;
+  document.getElementById('detect-dot').classList.add('active');
+  document.getElementById('detect-label').textContent = '감지 중...';
+  detect();
+}
+
+function resetState() {
+  if (currentMode === 'explore') {
+    // Keep discovered across retries? No, reset.
+    for (const k in discovered) delete discovered[k];
+  } else {
+    missionCleared = new Set();
+    currentMissionIdx = 0;
+    missionConfidence = 0;
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// DETECTION LOOP
+// ════════════════════════════════════════════════════════
+
+async function detect() {
+  if (!isDetecting || !model || !videoEl) return;
+
+  // Sync canvas size
+  if (videoEl.videoWidth) {
+    canvasEl.width = videoEl.videoWidth;
+    canvasEl.height = videoEl.videoHeight;
+  }
+
+  let predictions = [];
+  try {
+    predictions = await model.detect(videoEl);
+  } catch (e) {}
+
+  drawBoxes(predictions);
+  updateDetectUI(predictions);
+
+  if (currentMode === 'explore') {
+    handleExploreDetection(predictions);
+  } else {
+    handleMissionDetection(predictions);
+  }
+
+  rafId = requestAnimationFrame(detect);
+}
+
+function drawBoxes(predictions) {
+  if (!ctx) return;
+  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+  predictions.forEach(pred => {
+    if (pred.score < 0.4) return;
+    const [x, y, w, h] = pred.bbox;
+    const label = LABEL_KO[pred.class] || pred.class;
+    const conf = Math.round(pred.score * 100);
+
+    // Box
+    ctx.strokeStyle = '#D4943A';
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(x, y, w, h);
+
+    // Label background
+    const txt = `${label} ${conf}%`;
+    ctx.font = 'bold 14px Space Grotesk, Noto Sans KR, sans-serif';
+    const tw = ctx.measureText(txt).width;
+    const lh = 24;
+    ctx.fillStyle = '#D4943A';
+    const lx = x;
+    const ly = y > lh + 4 ? y - lh - 4 : y + 4;
+    ctx.beginPath();
+    ctx.roundRect(lx, ly, tw + 16, lh, 6);
+    ctx.fill();
+
+    // Label text
+    ctx.fillStyle = '#fff';
+    ctx.fillText(txt, lx + 8, ly + 16);
+  });
+}
+
+function updateDetectUI(predictions) {
+  const valid = predictions.filter(p => p.score >= 0.4);
+  document.getElementById('frame-count').textContent = `${valid.length}개 감지`;
+  document.getElementById('detect-label').textContent = valid.length > 0
+    ? `${valid.length}개 인식됨`
+    : '감지 중...';
+}
+
+// ════════════════════════════════════════════════════════
+// EXPLORE MODE
+// ════════════════════════════════════════════════════════
+
+function handleExploreDetection(predictions) {
+  predictions.forEach(pred => {
+    if (pred.score < 0.45) return;
+    const label = pred.class;
+    if (!discovered[label] || pred.score > discovered[label].conf) {
+      const isNew = !discovered[label];
+      discovered[label] = {
+        conf: pred.score,
+        time: isNew ? new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : discovered[label].time
+      };
+      if (isNew) updatePokedex(label);
+    }
+  });
+}
+
+let lastPokedexUpdate = 0;
+function updatePokedex(newLabel) {
+  const now = Date.now();
+  if (now - lastPokedexUpdate < 200) return;
+  lastPokedexUpdate = now;
+  renderSidebar();
+
+  // Flash the card
+  setTimeout(() => {
+    const card = document.querySelector(`[data-label="${newLabel}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, 50);
+}
+
+// ════════════════════════════════════════════════════════
+// MISSION MODE
+// ════════════════════════════════════════════════════════
+
+let missionClearCooldown = false;
+
+function handleMissionDetection(predictions) {
+  if (currentMissionIdx >= MISSIONS.length) return;
+
+  const mission = MISSIONS[currentMissionIdx];
+  const match = predictions.find(p => p.class === mission.target && p.score >= 0.4);
+
+  // Update confidence bar
+  const conf = match ? match.score : 0;
+  const bar = document.querySelector('.mission-conf-bar');
+  if (bar) bar.style.width = (conf * 100) + '%';
+
+  if (match && match.score >= 0.5 && !missionClearCooldown) {
+    clearMission(currentMissionIdx);
+  }
+}
+
+function clearMission(idx) {
+  missionClearCooldown = true;
+  missionCleared.add(idx);
+
+  // Visual effect
+  const flash = document.createElement('div');
+  flash.className = 'mission-clear-flash';
+  document.body.appendChild(flash);
+
+  const badge = document.createElement('div');
+  badge.className = 'mission-clear-badge';
+  badge.innerHTML = `✅ 미션 클리어!<br><span style="font-size:18px;">${MISSIONS[idx].emoji} ${MISSIONS[idx].ko} 발견!</span>`;
+  document.body.appendChild(badge);
+
+  setTimeout(() => {
+    flash.remove();
+    badge.remove();
+    missionClearCooldown = false;
+  }, 1300);
+
+  currentMissionIdx = idx + 1;
+  renderSidebar();
+
+  // Auto complete if all done
+  if (currentMissionIdx >= MISSIONS.length) {
+    setTimeout(() => showResult(), 1500);
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// SIDEBAR RENDERING
+// ════════════════════════════════════════════════════════
+
+function renderSidebar() {
+  document.getElementById('sidebar-mode-label').textContent =
+    currentMode === 'explore' ? '자유 탐색' : '미션 모드';
+
+  if (currentMode === 'explore') {
+    renderPokedex();
+  } else {
+    renderMissions();
+  }
+}
+
+function renderPokedex() {
+  const container = document.getElementById('sidebar-content');
+  const count = Object.keys(discovered).length;
+  const total = COCO_LABELS_EN.length;
+  const pct = Math.round(count / total * 100);
+
+  let html = `
+    <div class="pokedex-header">
+      <span class="pokedex-title">📖 발견 도감</span>
+      <span class="completion-badge">${count}/${total}</span>
+    </div>
+    <div class="completion-bar-wrap">
+      <div class="completion-bar">
+        <div class="completion-bar-fill" style="width:${pct}%"></div>
+      </div>
+    </div>
+    <div class="pokedex-grid">
+  `;
+
+  COCO_LABELS_EN.forEach(label => {
+    const info = discovered[label];
+    const ko = LABEL_KO[label] || label;
+    const emoji = LABEL_EMOJI[label] || '📦';
+    if (info) {
+      html += `
+        <div class="pokedex-card discovered" data-label="${label}">
+          <div class="new-discovery-toast">NEW!</div>
+          <span class="card-emoji">${emoji}</span>
+          <div class="card-name">${ko}</div>
+          <div class="card-conf">${Math.round(info.conf * 100)}%</div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="pokedex-card undiscovered">
+          <span class="card-emoji">${emoji}</span>
+          <div class="card-name">?</div>
+        </div>
+      `;
+    }
+  });
+
+  html += `</div>`;
+  html += `
+    <button class="complete-btn" onclick="showResult()" style="margin-top:16px">
+      탐험 완료하기 (${count}개 발견)
+    </button>
+  `;
+
+  container.innerHTML = html;
+
+  // Remove NEW badge after a moment for old discovered
+  setTimeout(() => {
+    container.querySelectorAll('.new-discovery-toast').forEach((el, i) => {
+      if (i < count - 1) el.remove();
+    });
+  }, 2000);
+}
+
+function renderMissions() {
+  const container = document.getElementById('sidebar-content');
+  const cleared = missionCleared.size;
+
+  let html = `
+    <div class="mission-header">
+      <div class="mission-title">🎯 미션 목록</div>
+      <div class="mission-progress-text">${cleared} / ${MISSIONS.length} 완료</div>
+    </div>
+    <div class="mission-list">
+  `;
+
+  MISSIONS.forEach((m, i) => {
+    const isCleared = missionCleared.has(i);
+    const isCurrent = i === currentMissionIdx && !isCleared;
+    let cls = 'mission-item';
+    if (isCleared) cls += ' cleared';
+    else if (isCurrent) cls += ' current';
+
+    html += `
+      <div class="${cls}">
+        <div class="mission-check">${isCleared ? '✓' : (isCurrent ? '👀' : '')}</div>
+        <div style="flex:1">
+          <div class="mission-text">${m.text}</div>
+          <div class="mission-target">${m.emoji} ${m.ko}</div>
+        </div>
+        <div class="mission-conf-bar"></div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+
+  if (cleared > 0) {
+    html += `
+      <button class="complete-btn" onclick="showResult()">
+        결과 보기 (${cleared}/${MISSIONS.length} 클리어)
+      </button>
+    `;
+  }
+
+  container.innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════
+// MODE SWITCH
+// ════════════════════════════════════════════════════════
+
+function switchMode() {
+  currentMode = currentMode === 'explore' ? 'mission' : 'explore';
+  resetState();
+  renderSidebar();
+}
+
+// ════════════════════════════════════════════════════════
+// RESULT
+// ════════════════════════════════════════════════════════
+
+function showResult() {
+  stopDetection();
+
+  const discoveredCount = Object.keys(discovered).length;
+  const clearedCount = missionCleared.size;
+
+  document.getElementById('result-found').textContent = discoveredCount;
+  document.getElementById('result-missions').textContent =
+    currentMode === 'mission' ? `${clearedCount}/5` : '-';
+  document.getElementById('result-missions-label').textContent =
+    currentMode === 'mission' ? '미션 클리어' : '미션';
+
+  if (currentMode === 'mission') {
+    document.getElementById('result-title').textContent =
+      clearedCount >= 5 ? '모든 미션 완료!' : `${clearedCount}개 미션 클리어!`;
+    document.getElementById('result-subtitle').textContent =
+      clearedCount >= 5
+        ? '대단해요! 모든 미션을 클리어했어요!'
+        : `${5 - clearedCount}개의 미션이 남았지만 정말 잘했어요!`;
+  } else {
+    document.getElementById('result-title').textContent = '탐험 완료!';
+    document.getElementById('result-subtitle').textContent =
+      discoveredCount >= 10
+        ? `무려 ${discoveredCount}가지 물건을 발견했어요!`
+        : `${discoveredCount}가지 물건을 발견했어요. 더 찾아볼까요?`;
+  }
+
+  // localStorage stamp
+  try {
+    const stamps = JSON.parse(localStorage.getItem('dreamfest_stamps') || '[]');
+    if (!stamps.includes(4)) stamps.push(4);
+    localStorage.setItem('dreamfest_stamps', JSON.stringify(stamps));
+
+    const results = JSON.parse(localStorage.getItem('dreamfest_results') || '{}');
+    results['4'] = {
+      found: discoveredCount,
+      missions: clearedCount,
+      completedAt: new Date().toISOString()
+    };
+    localStorage.setItem('dreamfest_results', JSON.stringify(results));
+  } catch (e) {}
+
+  showScreen('result');
+}
+
+function stopDetection() {
+  isDetecting = false;
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = null;
+}
+
+function retryMode() {
+  stopDetection();
+  resetState();
+  if (model && videoEl) {
+    startExplore(false);
+  } else {
+    showScreen('intro');
+  }
+}
+
+function goHome() {
+  stopDetection();
+  try {
+    if (videoEl && videoEl.srcObject) {
+      videoEl.srcObject.getTracks().forEach(t => t.stop());
+    }
+  } catch (e) {}
+  window.location.href = '../index.html';
+}
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+showScreen('intro');
+</script>
+<script src="../sync-client.js"></script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
+</body>
+</html>
