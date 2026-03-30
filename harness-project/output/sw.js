@@ -1,5 +1,5 @@
 // Service Worker for 꿈-드림 페스티벌 미래기술존
-const CACHE_NAME = 'dreamfest-v2';
+const CACHE_NAME = 'dreamfest-v3';
 
 // Core app files to pre-cache
 const CORE_ASSETS = [
@@ -25,7 +25,10 @@ const CORE_ASSETS = [
   './programs/12-self-driving-sim.html',
   './programs/13-ai-career-matcher.html',
   './programs/14-visual-coding-lab.html',
-  './programs/15-tech-mentor-talk.html'
+  './programs/15-tech-mentor-talk.html',
+  './icons/icon.svg',
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png'
 ];
 
 // CDN resources to cache on first use
