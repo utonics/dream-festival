@@ -248,18 +248,36 @@ button:focus-visible{outline:3px solid var(--green-base);outline-offset:2px}
 .modal-close:hover{background:var(--border)}
 
 /* Notification Toast */
-.toast-container{position:fixed;top:70px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px}
+.toast-container{position:fixed;top:70px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px;max-width:360px}
 .toast{
   background:#fff;border:1px solid var(--border);
-  border-radius:var(--radius);padding:12px 18px;
+  border-radius:var(--radius-lg);padding:14px 18px;
   box-shadow:var(--shadow-lg);font-size:.82rem;
-  animation:toastIn .3s ease;min-width:260px;
-  display:flex;align-items:center;gap:10px;
+  animation:toastIn .35s cubic-bezier(.4,0,.2,1);min-width:280px;
+  display:flex;align-items:flex-start;gap:10px;
+  position:relative;overflow:hidden;
 }
-@keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
-.toast .toast-icon{font-size:1.1rem}
-.toast .toast-msg{flex:1}
-.toast .toast-close{opacity:.4;cursor:pointer}
+.toast.toast-exit{animation:toastOut .3s ease forwards}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(40px) scale(.9)}}
+.toast .toast-icon{font-size:1.2rem;flex-shrink:0;margin-top:1px}
+.toast .toast-body{flex:1;min-width:0}
+.toast .toast-msg{line-height:1.4}
+.toast .toast-sub{font-size:.72rem;color:var(--text-light);margin-top:3px}
+.toast .toast-close{opacity:.35;cursor:pointer;font-size:1rem;flex-shrink:0;padding:0 2px;transition:opacity .15s}
+.toast .toast-close:hover{opacity:.8}
+.toast .toast-progress{position:absolute;bottom:0;left:0;height:3px;background:var(--green-base);border-radius:0 0 var(--radius-lg) var(--radius-lg);animation:toastProgress linear forwards}
+@keyframes toastProgress{from{width:100%}to{width:0%}}
+.toast-success{border-left:4px solid #4caf50}
+.toast-error{border-left:4px solid #ef5350}
+.toast-warning{border-left:4px solid #ff9800}
+.toast-info{border-left:4px solid #2196f3}
+.toast-urgent{border-left:4px solid #ef5350;background:#fef5f5}
+@keyframes notifBadgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+.notif-badge-pulse{animation:notifBadgePulse .4s ease 2}
+.notif-item.notif-urgent{background:#fef5f5;border-left:3px solid #ef5350}
+.notif-item.notif-new{animation:notifSlideIn .4s ease}
+@keyframes notifSlideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 
 /* ═══════════════════════════════════════ */
 /* VIEW 1: FLOORMAP DASHBOARD (ADMIN)     */
@@ -1092,7 +1110,10 @@ body.participant-mode .profile-avatar-large{
 
     <!-- V12: NOTIFICATIONS (User) -->
     <div class="view" id="view-notif-user">
-      <h2 class="section-title"><span data-i18n="title.notifUser">알림</span> <span class="badge" id="notifCount">0</span></h2>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <h2 class="section-title" style="margin-bottom:0"><span data-i18n="title.notifUser">알림</span> <span class="badge" id="notifCount">0</span></h2>
+        <button onclick="markAllNotifRead()" style="padding:6px 14px;font-size:.78rem;font-weight:600;background:var(--green-light);color:var(--green-dark);border:none;border-radius:var(--radius);cursor:pointer" data-i18n="notif.markAllRead">모두 읽음</button>
+      </div>
       <div class="notif-list" id="notifUserList"></div>
     </div>
   </main>
@@ -1396,13 +1417,35 @@ function congestionLevel(prog){
 function congestionColor(level){return ['#4CAF50','#FFC107','#F44336'][level]}
 function congestionText(level){return ['여유','보통','혼잡'][level]}
 
-function showToast(msg,icon='📢'){
-  const c = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className='toast';
-  t.innerHTML=`<span class="toast-icon">${icon}</span><span class="toast-msg">${msg}</span><span class="toast-close" onclick="this.parentElement.remove()">&times;</span>`;
+function showToast(msg,icon,opts){
+  if(typeof icon==='undefined') icon='📢';
+  if(!opts) opts={};
+  var type=opts.type||'info';
+  var duration=opts.duration||(type==='error'?6000:type==='urgent'?8000:4000);
+  var sub=opts.sub||'';
+  var c=document.getElementById('toastContainer');
+  var t=document.createElement('div');
+  t.className='toast toast-'+type;
+  t.setAttribute('role','alert');
+  t.setAttribute('aria-live',type==='urgent'||type==='error'?'assertive':'polite');
+  var bodyHtml='<span class="toast-msg">'+msg+'</span>';
+  if(sub) bodyHtml+='<div class="toast-sub">'+sub+'</div>';
+  t.innerHTML='<span class="toast-icon">'+icon+'</span><div class="toast-body">'+bodyHtml+'</div><span class="toast-close" onclick="dismissToast(this.parentElement)">&times;</span><div class="toast-progress" style="animation-duration:'+duration+'ms"></div>';
   c.appendChild(t);
-  setTimeout(()=>t.remove(),4000);
+  // Limit max toasts
+  while(c.children.length>5) c.removeChild(c.firstChild);
+  // Vibrate on urgent/error (mobile)
+  if((type==='urgent'||type==='error')&&navigator.vibrate) navigator.vibrate([100,50,100]);
+  // Auto dismiss
+  t._timer=setTimeout(function(){dismissToast(t)},duration);
+  // Pause on hover
+  t.addEventListener('mouseenter',function(){clearTimeout(t._timer);var bar=t.querySelector('.toast-progress');if(bar)bar.style.animationPlayState='paused'});
+  t.addEventListener('mouseleave',function(){var bar=t.querySelector('.toast-progress');if(bar)bar.style.animationPlayState='running';t._timer=setTimeout(function(){dismissToast(t)},2000)});
+}
+function dismissToast(el){
+  if(!el||!el.parentElement) return;
+  el.classList.add('toast-exit');
+  setTimeout(function(){if(el.parentElement) el.remove()},300);
 }
 
 var _prevFocus=null;
@@ -2538,69 +2581,117 @@ function generateRoute(){
 function renderNotifAdmin(){
   document.getElementById('notifCompose').innerHTML = `
     <div class="panel">
-      <h4 style="font-size:.85rem;font-weight:700;margin-bottom:12px">새 공지 작성</h4>
-      <textarea id="notifText" placeholder="공지 내용을 입력하세요..."></textarea>
+      <h4 style="font-size:.85rem;font-weight:700;margin-bottom:12px" data-i18n="notif.compose">새 공지 작성</h4>
+      <textarea id="notifText" placeholder="공지 내용을 입력하세요..." aria-label="공지 내용"></textarea>
       <div class="compose-row">
-        <select id="notifTarget">
+        <select id="notifType" aria-label="공지 유형" style="min-width:100px">
+          <option value="info">📢 일반</option>
+          <option value="urgent">🚨 긴급</option>
+          <option value="reward">🎉 이벤트</option>
+        </select>
+        <select id="notifTarget" aria-label="대상 선택">
           <option value="전체">전체 참가자</option>
           ${ZONES.map(z=>`<option value="${z.id}존">${z.name} 참가자</option>`).join('')}
         </select>
-        <input type="time" id="notifSchedule" placeholder="예약 시간">
-        <button class="btn btn-primary" onclick="sendNotification()">발송</button>
+        <input type="time" id="notifSchedule" placeholder="예약 시간" aria-label="예약 시간">
+        <button class="btn btn-primary" onclick="sendNotification()" data-i18n="notif.send">발송</button>
       </div>
     </div>
   `;
 
-  document.getElementById('notifAdminList').innerHTML = NOTIFICATIONS.map(n=>`
-    <div class="notif-item">
-      <div class="notif-icon">${n.type==='urgent'?'🚨':n.type==='reward'?'🎉':'📢'}</div>
-      <div class="notif-body">
-        <div class="n-text">${n.text}</div>
-        <div class="n-time">${n.time}</div>
-        <div class="n-target">대상: ${n.target}</div>
-      </div>
-    </div>
-  `).join('');
+  document.getElementById('notifAdminList').innerHTML = NOTIFICATIONS.map(function(n){
+    var urgentClass=n.type==='urgent'?' notif-urgent':'';
+    return '<div class="notif-item'+urgentClass+'">'
+      +'<div class="notif-icon">'+(n.type==='urgent'?'🚨':n.type==='reward'?'🎉':'📢')+'</div>'
+      +'<div class="notif-body">'
+      +'<div class="n-text">'+n.text+'</div>'
+      +'<div class="n-time">'+n.time+(n.scheduled?' · ⏰ 예약':'')+'</div>'
+      +'<div class="n-target">대상: '+n.target+'</div>'
+      +'</div></div>';
+  }).join('');
 }
 
 function sendNotification(){
-  const text = document.getElementById('notifText').value;
-  if(!text){showToast('공지 내용을 입력하세요','⚠️');return;}
-  const target = document.getElementById('notifTarget').value;
-  const now = new Date();
-  const time = now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
+  var text=document.getElementById('notifText').value;
+  if(!text){showToast('공지 내용을 입력하세요','⚠️',{type:'warning'});return;}
+  var target=document.getElementById('notifTarget').value;
+  var type=document.getElementById('notifType').value;
+  var scheduleTime=document.getElementById('notifSchedule').value;
+  var now=new Date();
+  var time=now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
 
-  NOTIFICATIONS.unshift({
+  var notif={
     id:NOTIFICATIONS.length+1,
-    text,target,time,type:'info',read:false
-  });
+    text:text,target:target,time:time,type:type,read:false,
+    scheduled:scheduleTime||null
+  };
+  NOTIFICATIONS.unshift(notif);
 
-  document.getElementById('notifText').value = '';
+  document.getElementById('notifText').value='';
   renderNotifAdmin();
   renderNotifUser();
-  showToast('공지가 발송되었습니다','✅');
+
+  // Show toast based on type
+  var toastType=type==='urgent'?'urgent':type==='reward'?'success':'info';
+  var toastIcon=type==='urgent'?'🚨':type==='reward'?'🎉':'✅';
+  showToast('공지가 발송되었습니다',toastIcon,{type:toastType,sub:'대상: '+target});
+
+  // Push to WebSocket if available
+  if(window.DreamSync && DreamSync.ws && DreamSync.ws.readyState===1){
+    DreamSync.ws.send(JSON.stringify({type:'notification:new',data:notif}));
+  }
+
+  // Trigger live notification for participant mode
+  showLiveNotification(notif);
+}
+
+function showLiveNotification(notif){
+  // Animate badge
+  var badge=document.getElementById('notifCount');
+  if(badge){
+    badge.classList.remove('notif-badge-pulse');
+    void badge.offsetWidth;
+    badge.classList.add('notif-badge-pulse');
+  }
+  // Show push-style toast in participant mode
+  if(document.body.classList.contains('participant-mode')){
+    var icon=notif.type==='urgent'?'🚨':notif.type==='reward'?'🎉':'📢';
+    var toastType=notif.type==='urgent'?'urgent':'info';
+    showToast(notif.text,icon,{type:toastType,sub:notif.time+' · '+notif.target,duration:notif.type==='urgent'?8000:5000});
+  }
 }
 
 function renderNotifUser(){
-  const unread = NOTIFICATIONS.filter(n=>!n.read).length;
-  document.getElementById('notifCount').textContent = unread;
+  var unread=NOTIFICATIONS.filter(function(n){return !n.read}).length;
+  var badge=document.getElementById('notifCount');
+  badge.textContent=unread;
+  badge.style.display=unread>0?'':'none';
 
-  document.getElementById('notifUserList').innerHTML = NOTIFICATIONS.map(n=>`
-    <div class="notif-item" onclick="markNotifRead(${n.id})" style="cursor:pointer">
-      <div class="notif-icon">${n.type==='urgent'?'🚨':n.type==='reward'?'🎉':'📢'}</div>
-      <div class="notif-body">
-        <div class="n-text">${n.text}</div>
-        <div class="n-time">${n.time} · ${n.target}</div>
-      </div>
-      ${!n.read?'<div class="notif-unread"></div>':''}
-    </div>
-  `).join('');
+  document.getElementById('notifUserList').innerHTML = NOTIFICATIONS.map(function(n){
+    var urgentClass=n.type==='urgent'?' notif-urgent':'';
+    var unreadDot=!n.read?'<div class="notif-unread"></div>':'';
+    return '<div class="notif-item'+urgentClass+'" onclick="markNotifRead('+n.id+')" style="cursor:pointer" role="button" tabindex="0" aria-label="'+(n.read?'읽음':'읽지 않음')+': '+n.text+'">'
+      +'<div class="notif-icon">'+(n.type==='urgent'?'🚨':n.type==='reward'?'🎉':'📢')+'</div>'
+      +'<div class="notif-body">'
+      +'<div class="n-text">'+n.text+'</div>'
+      +'<div class="n-time">'+n.time+' · '+n.target+'</div>'
+      +'</div>'+unreadDot+'</div>';
+  }).join('');
 }
 
 function markNotifRead(id){
-  const n = NOTIFICATIONS.find(n=>n.id===id);
-  if(n) n.read = true;
+  var n=NOTIFICATIONS.find(function(n){return n.id===id});
+  if(n){
+    n.read=true;
+    showToast('"'+n.text.substring(0,20)+'..." 읽음 처리','✓',{type:'success',duration:2000});
+  }
   renderNotifUser();
+}
+
+function markAllNotifRead(){
+  NOTIFICATIONS.forEach(function(n){n.read=true});
+  renderNotifUser();
+  showToast('모든 알림을 읽음 처리했습니다','✓',{type:'success'});
 }
 
 // ═══════════════════════════════════════
@@ -3210,7 +3301,10 @@ var I18N={
     'insight.1':'📈 14시대 C존 혼잡 예상 — 프롬프트 랩 체험 수요 급증 예측',
     'insight.2':'⚠️ B존 AI 안전 감시관 부스 대기열 증가 — 추가 세션 권장',
     'insight.3':'🎯 D존 자율주행 시뮬레이터 만석 — 대기 안내 강화 필요',
-    'insight.4':'💡 A존 + E존 연계 코스 참가율 높음 — 동선 안내 강화 추천'
+    'insight.4':'💡 A존 + E존 연계 코스 참가율 높음 — 동선 안내 강화 추천',
+    'notif.compose':'새 공지 작성',
+    'notif.send':'발송',
+    'notif.markAllRead':'모두 읽음'
   },
   en:{
     'app.title':'Dream Festival · Future Tech Zone',
@@ -3283,7 +3377,10 @@ var I18N={
     'insight.1':'📈 Zone C congestion expected at 14:00 — Prompt Lab demand surge predicted',
     'insight.2':'⚠️ Zone B AI Safety booth queue growing — additional session recommended',
     'insight.3':'🎯 Zone D Self-driving Simulator full — waiting guidance needed',
-    'insight.4':'💡 Zone A + E combined course popular — route guidance enhancement recommended'
+    'insight.4':'💡 Zone A + E combined course popular — route guidance enhancement recommended',
+    'notif.compose':'Compose Notice',
+    'notif.send':'Send',
+    'notif.markAllRead':'Mark All Read'
   }
 };
 var _currentLang=localStorage.getItem('dreamfest_lang')||'ko';
