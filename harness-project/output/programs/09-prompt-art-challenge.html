@@ -95,7 +95,7 @@ body {
   background: var(--white);
   border: 1.5px solid var(--border);
   border-bottom: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--muted);
   cursor: pointer;
@@ -121,6 +121,165 @@ body {
 /* ─── SCREENS ─── */
 .screen { display: none; }
 .screen.active { display: block; }
+
+/* ─── TIMER BANNER ─── */
+#timer-banner {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #1a1a3e, #0d2b45);
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  border: 1.5px solid #2BA5B3;
+}
+#timer-banner.visible { display: flex; }
+.timer-display {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px rgba(43,165,179,.8);
+}
+.timer-display.urgent {
+  color: #ff4466;
+  text-shadow: 0 0 20px rgba(255,68,102,.8);
+  animation: timerPulse .5s ease-in-out infinite alternate;
+}
+@keyframes timerPulse {
+  from { opacity: 1; }
+  to { opacity: 0.6; }
+}
+.timer-label {
+  font-size: 12px;
+  color: rgba(255,255,255,.6);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 2px;
+}
+.timer-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255,255,255,.7);
+  cursor: pointer;
+  user-select: none;
+}
+.timer-mode-toggle input[type=checkbox] { accent-color: var(--zone); width: 16px; height: 16px; cursor: pointer; }
+
+/* ─── CHALLENGE START BUTTON ─── */
+#btn-challenge-start {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, #1a1a3e, #0d2b45);
+  color: #fff;
+  border: 1.5px solid var(--zone);
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+  margin-bottom: 20px;
+  letter-spacing: .3px;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 0 20px rgba(43,165,179,.2);
+}
+#btn-challenge-start:hover { background: linear-gradient(135deg, #252560, #1a4060); box-shadow: 0 0 30px rgba(43,165,179,.4); }
+#btn-challenge-start.running { border-color: #ff4466; background: linear-gradient(135deg, #3a0a1e, #2a0515); box-shadow: 0 0 20px rgba(255,68,102,.2); }
+
+/* ─── TIME EXPIRED OVERLAY ─── */
+#time-expired-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.8);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+#time-expired-overlay.show { display: flex; }
+.time-expired-modal {
+  background: linear-gradient(135deg, #1a1a3e, #0d2b45);
+  border: 2px solid var(--zone);
+  border-radius: 20px;
+  padding: 40px 32px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  animation: expiredIn .4s cubic-bezier(.22,1,.36,1);
+  box-shadow: 0 0 60px rgba(43,165,179,.5);
+}
+@keyframes expiredIn {
+  from { transform: scale(.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.time-expired-icon { font-size: 64px; margin-bottom: 16px; }
+.time-expired-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 8px;
+  text-shadow: 0 0 20px rgba(255,68,102,.8);
+}
+.time-expired-sub { font-size: 14px; color: rgba(255,255,255,.65); margin-bottom: 24px; }
+.time-expired-close {
+  padding: 12px 28px;
+  background: var(--zone);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(43,165,179,.4);
+}
+
+/* ─── STYLE SELECTOR ─── */
+.style-selector-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--zone-dark);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.style-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+@media (max-width: 500px) { .style-cards { grid-template-columns: 1fr; } }
+.style-card {
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 10px 10px;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--bg);
+  text-align: center;
+}
+.style-card:hover { border-color: var(--zone); background: var(--zone-pale); }
+.style-card.selected { border-color: var(--zone); background: var(--zone-pale); box-shadow: 0 0 0 3px rgba(43,165,179,.25); }
+.style-card-icon { font-size: 28px; margin-bottom: 6px; }
+.style-card-name { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 4px; font-family: 'Space Grotesk', sans-serif; }
+.style-card-desc { font-size: 11px; color: var(--muted); line-height: 1.4; margin-bottom: 8px; }
+.style-card-preview {
+  width: 100%;
+  aspect-ratio: 2;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.style-card-preview canvas { width: 100%; height: 100%; display: block; }
 
 /* ─── CREATE SCREEN ─── */
 #screen-create {
@@ -220,6 +379,7 @@ body {
   inset: 0;
   background: linear-gradient(135deg, rgba(255,255,255,.15) 0%, transparent 60%);
 }
+#btn-generate:disabled { background: var(--muted); cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* ─── GENERATING SCREEN ─── */
 #screen-generating {
@@ -316,6 +476,18 @@ body {
   border: 2px solid rgba(255,255,255,.8);
   box-shadow: 0 1px 4px rgba(0,0,0,.15);
 }
+.result-style-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--zone-pale);
+  color: var(--zone-dark);
+  border: 1.5px solid var(--zone-light);
+}
 .result-actions { display: flex; flex-direction: column; gap: 10px; }
 .btn-secondary {
   padding: 11px;
@@ -401,6 +573,7 @@ body {
   background: var(--white);
   box-shadow: var(--shadow);
   transition: transform .2s, box-shadow .2s;
+  position: relative;
 }
 .gallery-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 .gallery-card-img {
@@ -416,13 +589,24 @@ body {
   font-size: 13px;
   color: var(--text);
   font-weight: 500;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.gallery-card-style {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+.gallery-card-style.watercolor { background: #e8f4fd; color: #1a6fa0; }
+.gallery-card-style.geometric { background: #f0f0f0; color: #444; }
+.gallery-card-style.neon { background: #0a0a2a; color: #00ffff; }
 .gallery-card-footer {
   display: flex;
   align-items: center;
@@ -463,6 +647,24 @@ body {
   50% { transform: scale(1.5); }
   100% { transform: scale(1); }
 }
+
+/* Award badge on gallery card */
+.award-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-family: 'Space Grotesk', sans-serif;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+.award-badge.grand { background: linear-gradient(135deg, #FFD700, #FF8C00); color: #fff; }
+.award-badge.gold-award { background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff; }
+.award-badge.silver-award { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #fff; }
+.award-badge.bronze-award { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #fff; }
 
 /* ─── LEADERBOARD ─── */
 .leaderboard-section {
@@ -521,6 +723,236 @@ body {
   align-items: center;
   gap: 4px;
 }
+.lb-award-tag {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* ─── JUDGE SCREEN ─── */
+#screen-judge {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 24px;
+}
+.judge-auth-wrap {
+  text-align: center;
+  padding: 48px 20px;
+}
+.judge-auth-icon { font-size: 56px; margin-bottom: 16px; }
+.judge-auth-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+.judge-auth-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+.judge-auth-input-wrap { display: flex; gap: 8px; max-width: 320px; margin: 0 auto; }
+#judge-pw-input {
+  flex: 1;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 15px;
+  font-family: 'Noto Sans KR', sans-serif;
+  outline: none;
+  transition: border-color .2s;
+}
+#judge-pw-input:focus { border-color: var(--zone); }
+#btn-judge-auth {
+  padding: 11px 20px;
+  background: var(--zone);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  cursor: pointer;
+}
+.judge-auth-error {
+  color: #FF4466;
+  font-size: 13px;
+  margin-top: 10px;
+  font-weight: 600;
+  display: none;
+}
+.judge-auth-error.visible { display: block; }
+
+.judge-panel {
+  display: none;
+}
+.judge-panel.visible { display: block; }
+.judge-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.judge-panel-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--dark);
+}
+.judge-logout-btn {
+  padding: 6px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--bg);
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: all .15s;
+}
+.judge-logout-btn:hover { border-color: var(--zone); color: var(--zone-dark); }
+.judge-card {
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+.judge-card-top {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 0;
+}
+@media (max-width: 540px) { .judge-card-top { grid-template-columns: 1fr; } }
+.judge-card-img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+.judge-card-info {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.judge-card-prompt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.5;
+}
+.judge-card-meta {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.judge-card-style-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  display: inline-block;
+}
+.judge-card-style-badge.watercolor { background: #e8f4fd; color: #1a6fa0; }
+.judge-card-style-badge.geometric { background: #f0f0f0; color: #444; }
+.judge-card-style-badge.neon { background: #0a0a2a; color: #00ffff; }
+
+.judge-criteria {
+  padding: 14px 16px;
+  border-top: 1.5px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.criteria-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.criteria-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 100px;
+}
+.criteria-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+.criteria-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--zone);
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.criteria-score {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--zone-dark);
+  min-width: 24px;
+  text-align: center;
+}
+
+.judge-card-bottom {
+  padding: 12px 16px;
+  border-top: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.judge-avg-score {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--zone-dark);
+}
+.judge-avg-label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.judge-award-select {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.award-btn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.award-btn:hover { background: var(--zone-pale); border-color: var(--zone); }
+.award-btn.active-grand { background: linear-gradient(135deg, #FFD700, #FF8C00); color: #fff; border-color: transparent; }
+.award-btn.active-gold { background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff; border-color: transparent; }
+.award-btn.active-silver { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #fff; border-color: transparent; }
+.award-btn.active-bronze { background: linear-gradient(135deg, #CD7F32, #8B4513); color: #fff; border-color: transparent; }
 
 /* ─── STAMP OVERLAY ─── */
 #stamp-overlay {
@@ -586,6 +1018,7 @@ body {
   <div id="nav-tabs">
     <button class="nav-tab active" onclick="switchTab('create')">✏️ 아트 만들기</button>
     <button class="nav-tab" onclick="switchTab('gallery')">🖼 갤러리 &amp; 투표</button>
+    <button class="nav-tab" onclick="switchTab('judge')">🏆 심사 평가</button>
   </div>
 
   <!-- ── CREATE TAB ── -->
@@ -595,6 +1028,47 @@ body {
     <div id="screen-create" class="screen active">
       <div class="create-heading">영천의 미래를 그려보세요</div>
       <div class="create-sub">텍스트 프롬프트를 입력하면 AI가 추상 아트로 표현합니다</div>
+
+      <!-- Challenge Timer Banner -->
+      <div id="timer-banner">
+        <div>
+          <div class="timer-label">남은 시간</div>
+          <div class="timer-display" id="timer-display">3:00</div>
+        </div>
+        <label class="timer-mode-toggle">
+          <input type="checkbox" id="free-mode-toggle" onchange="toggleFreeMode()">
+          자유 모드
+        </label>
+      </div>
+
+      <!-- Challenge Start Button -->
+      <button id="btn-challenge-start" onclick="handleChallengeButton()">
+        <span id="challenge-btn-icon">⏱</span>
+        <span id="challenge-btn-text">챌린지 시작 (3분)</span>
+      </button>
+
+      <!-- Style Selector -->
+      <div class="style-selector-label">아트 스타일 선택</div>
+      <div class="style-cards" id="style-cards">
+        <div class="style-card selected" data-style="watercolor" onclick="selectStyle('watercolor')">
+          <div class="style-card-icon">🎨</div>
+          <div class="style-card-name">수채화</div>
+          <div class="style-card-desc">부드럽고 투명한 색감의 수채화 느낌</div>
+          <div class="style-card-preview"><canvas id="preview-watercolor" width="120" height="60"></canvas></div>
+        </div>
+        <div class="style-card" data-style="geometric" onclick="selectStyle('geometric')">
+          <div class="style-card-icon">📐</div>
+          <div class="style-card-name">기하학</div>
+          <div class="style-card-desc">선명한 도형과 패턴의 기하학적 구성</div>
+          <div class="style-card-preview"><canvas id="preview-geometric" width="120" height="60"></canvas></div>
+        </div>
+        <div class="style-card" data-style="neon" onclick="selectStyle('neon')">
+          <div class="style-card-icon">💫</div>
+          <div class="style-card-name">네온</div>
+          <div class="style-card-desc">어두운 배경에 빛나는 네온 선과 글로우</div>
+          <div class="style-card-preview"><canvas id="preview-neon" width="120" height="60"></canvas></div>
+        </div>
+      </div>
 
       <div class="prompt-label">프롬프트 입력</div>
       <textarea id="prompt-input" placeholder="예: 보현산 위로 떠오르는 별들과 로봇이 포도밭을 가꾸는 미래의 영천..." maxlength="200"></textarea>
@@ -644,6 +1118,10 @@ body {
             <div class="result-prompt-text" id="result-prompt-text"></div>
           </div>
           <div>
+            <div class="result-prompt-label">스타일</div>
+            <div id="result-style-badge" class="result-style-badge">🎨 수채화</div>
+          </div>
+          <div>
             <div class="result-prompt-label">색상 팔레트</div>
             <div class="result-palette" id="result-palette"></div>
           </div>
@@ -679,7 +1157,49 @@ body {
     </div>
   </div><!-- /tab-gallery -->
 
+  <!-- ── JUDGE TAB ── -->
+  <div id="tab-judge" style="display:none;">
+    <div id="screen-judge" class="screen active">
+
+      <!-- Auth Wall -->
+      <div id="judge-auth-wrap" class="judge-auth-wrap">
+        <div class="judge-auth-icon">🔐</div>
+        <div class="judge-auth-title">심사위원 전용</div>
+        <div class="judge-auth-sub">심사위원 비밀번호를 입력하세요</div>
+        <div class="judge-auth-input-wrap">
+          <input type="password" id="judge-pw-input" placeholder="비밀번호" onkeydown="if(event.key==='Enter')judgeAuth()">
+          <button id="btn-judge-auth" onclick="judgeAuth()">입장</button>
+        </div>
+        <div class="judge-auth-error" id="judge-auth-error">비밀번호가 틀렸습니다.</div>
+      </div>
+
+      <!-- Judge Panel (hidden until authed) -->
+      <div id="judge-panel" class="judge-panel">
+        <div class="judge-panel-header">
+          <div class="judge-panel-title">🏆 심사 평가</div>
+          <button class="judge-logout-btn" onclick="judgeLogout()">로그아웃</button>
+        </div>
+        <div id="judge-submissions"></div>
+        <div id="judge-empty" style="text-align:center;padding:40px 20px;color:var(--muted);font-size:15px;">
+          <div style="font-size:40px;margin-bottom:12px;">📭</div>
+          갤러리에 등록된 작품이 없습니다.
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /tab-judge -->
+
 </div><!-- /main -->
+
+<!-- TIME EXPIRED OVERLAY -->
+<div id="time-expired-overlay">
+  <div class="time-expired-modal">
+    <div class="time-expired-icon">⏰</div>
+    <div class="time-expired-title">시간 종료!</div>
+    <div class="time-expired-sub" id="time-expired-sub">챌린지 시간이 끝났습니다.<br>마지막 작품이 자동으로 저장됩니다.</div>
+    <button class="time-expired-close" onclick="closeTimeExpired()">확인</button>
+  </div>
+</div>
 
 <!-- STAMP OVERLAY -->
 <div id="stamp-overlay">
@@ -737,17 +1257,14 @@ const KW_SHAPE = {
   '우주': 'dots', '하늘': 'dots', '별빛': 'dots',
 };
 const DEFAULT_COLORS = ['#2BA5B3','#1E8A97','#7ADDE8','#D6F2F5','#0D3D42'];
+const NEON_COLORS = ['#ff00ff','#00ffff','#ff6600','#39ff14','#ff00aa','#00ff88','#ffee00','#ff3300'];
 
 /* ─────────────────────────────────────────────
    PROMPT ANALYSIS
 ───────────────────────────────────────────── */
 function analyzePrompt(text) {
-  const colors = [];
   const shapes = [];
   const palette = [...DEFAULT_COLORS];
-
-  const words = text.split(/[\s,!?]+/);
-
   for (const kw of Object.keys(KW_COLOR)) {
     if (text.includes(kw)) {
       KW_COLOR[kw].forEach(c => { if (!palette.includes(c)) palette.push(c); });
@@ -759,7 +1276,6 @@ function analyzePrompt(text) {
     }
   }
   if (shapes.length === 0) shapes.push('circle', 'wave', 'dots');
-
   return { palette: palette.slice(0, 8), shapes };
 }
 
@@ -781,7 +1297,7 @@ function strSeed(s) {
 }
 
 /* ─────────────────────────────────────────────
-   ART GENERATION
+   ART GENERATION — STYLE-AWARE
 ───────────────────────────────────────────── */
 function hexToRgb(hex) {
   const r = parseInt(hex.slice(1,3),16);
@@ -789,79 +1305,249 @@ function hexToRgb(hex) {
   const b = parseInt(hex.slice(5,7),16);
   return [r,g,b];
 }
-function lerp(a,b,t){ return a + (b-a)*t; }
 
-function drawArt(ctx, prompt, extraSeed = 0) {
+function drawArt(ctx, prompt, extraSeed, style) {
+  style = style || 'watercolor';
   const W = ctx.canvas.width, H = ctx.canvas.height;
   const { palette, shapes } = analyzePrompt(prompt);
-  const seed = strSeed(prompt) + extraSeed * 9999999;
+  const seed = strSeed(prompt) + (extraSeed || 0) * 9999999;
   const rng = mulberry32(seed);
 
   ctx.clearRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'source-over';
 
-  // ── Background gradient ──
-  const bgC1 = palette[0];
-  const bgC2 = palette[Math.floor(rng() * Math.min(palette.length, 3) + 1)] || palette[0];
-  const gtype = rng() < 0.5 ? 'radial' : 'linear';
-  let bg;
-  if (gtype === 'radial') {
-    bg = ctx.createRadialGradient(W*rng(), H*rng(), W*0.05, W/2, H/2, W*0.9);
-  } else {
-    const angle = rng() * Math.PI * 2;
-    const cx = Math.cos(angle), cy = Math.sin(angle);
-    bg = ctx.createLinearGradient(W/2 - cx*W, H/2 - cy*H, W/2 + cx*W, H/2 + cy*H);
+  if (style === 'watercolor') {
+    drawWatercolor(ctx, W, H, palette, shapes, rng);
+  } else if (style === 'geometric') {
+    drawGeometric(ctx, W, H, palette, shapes, rng);
+  } else if (style === 'neon') {
+    drawNeon(ctx, W, H, palette, shapes, rng);
   }
+
+  return palette;
+}
+
+/* ── WATERCOLOR ── */
+function drawWatercolor(ctx, W, H, palette, shapes, rng) {
+  // Soft gradient background
+  const bgC1 = palette[0];
+  const bgC2 = palette[Math.min(1, palette.length - 1)];
+  const bg = ctx.createLinearGradient(0, 0, W * (0.5 + rng() * 0.5), H);
+  bg.addColorStop(0, lightenHex(bgC1, 0.6));
+  bg.addColorStop(1, lightenHex(bgC2, 0.5));
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.globalCompositeOperation = 'multiply';
+
+  // Watercolor blobs — multiple layered transparent circles
+  const blobCount = 35 + Math.floor(rng() * 20);
+  for (let i = 0; i < blobCount; i++) {
+    const x = rng() * W;
+    const y = rng() * H;
+    const r = 30 + rng() * 110;
+    const col = palette[Math.floor(rng() * palette.length)];
+    const [rv, gv, bv] = hexToRgb(col);
+    const alpha = 0.07 + rng() * 0.22;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(1 + rng() * 0.6, 0.7 + rng() * 0.6);
+
+    const grd = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+    grd.addColorStop(0, `rgba(${rv},${gv},${bv},${alpha})`);
+    grd.addColorStop(0.6, `rgba(${rv},${gv},${bv},${alpha * 0.7})`);
+    grd.addColorStop(1, `rgba(${rv},${gv},${bv},0)`);
+
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Small wet circles for texture
+  for (let i = 0; i < 18; i++) {
+    const x = rng() * W, y = rng() * H;
+    const r = 8 + rng() * 28;
+    const col = palette[Math.floor(rng() * palette.length)];
+    const [rv, gv, bv] = hexToRgb(col);
+    ctx.save();
+    ctx.globalAlpha = 0.08 + rng() * 0.18;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgb(${rv},${gv},${bv})`;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  ctx.globalCompositeOperation = 'source-over';
+
+  // Gentle vignette
+  const vig = ctx.createRadialGradient(W/2, H/2, W * 0.25, W/2, H/2, W * 0.72);
+  vig.addColorStop(0, 'rgba(255,255,255,0)');
+  vig.addColorStop(1, 'rgba(200,200,220,0.3)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function lightenHex(hex, amount) {
+  const [r, g, b] = hexToRgb(hex);
+  const l = v => Math.min(255, Math.round(v + (255 - v) * amount));
+  return `rgb(${l(r)},${l(g)},${l(b)})`;
+}
+
+/* ── GEOMETRIC ── */
+function drawGeometric(ctx, W, H, palette, shapes, rng) {
+  ctx.globalCompositeOperation = 'source-over';
+
+  // Background
+  const bgC1 = palette[0];
+  const bgC2 = palette[Math.min(2, palette.length - 1)];
+  const bg = ctx.createLinearGradient(0, 0, W, H);
   bg.addColorStop(0, bgC1);
-  bg.addColorStop(0.5, palette[Math.floor(rng() * palette.length)]);
   bg.addColorStop(1, bgC2);
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
 
-  // ── Dark overlay for depth ──
-  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  ctx.fillStyle = 'rgba(0,0,0,0.08)';
   ctx.fillRect(0, 0, W, H);
 
-  const count = 28 + Math.floor(rng() * 22);
+  // Grid-based geometric shapes
+  const geoShapes = ['triangle', 'hexagon', 'rect', 'diamond', 'cross'];
+  const cols = 5 + Math.floor(rng() * 3);
+  const rows = 5 + Math.floor(rng() * 3);
+  const cellW = W / cols;
+  const cellH = H / rows;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col2 = 0; col2 < cols; col2++) {
+      if (rng() < 0.45) continue;
+      const x = col2 * cellW + cellW / 2 + (rng() - 0.5) * cellW * 0.3;
+      const y = row * cellH + cellH / 2 + (rng() - 0.5) * cellH * 0.3;
+      const size = (Math.min(cellW, cellH) * 0.38) * (0.6 + rng() * 0.7);
+      const col = palette[Math.floor(rng() * palette.length)];
+      const alpha = 0.55 + rng() * 0.4;
+      const shapeType = geoShapes[Math.floor(rng() * geoShapes.length)];
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rng() < 0.5 ? 0 : (Math.PI / (2 + Math.floor(rng() * 4))));
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = col;
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 1.5;
+
+      switch (shapeType) {
+        case 'triangle':
+          ctx.beginPath();
+          ctx.moveTo(0, -size);
+          ctx.lineTo(size * 0.866, size * 0.5);
+          ctx.lineTo(-size * 0.866, size * 0.5);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          break;
+        case 'hexagon': {
+          ctx.beginPath();
+          for (let s = 0; s < 6; s++) {
+            const a = (Math.PI / 3) * s - Math.PI / 6;
+            const px = Math.cos(a) * size;
+            const py = Math.sin(a) * size;
+            s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          break;
+        }
+        case 'rect':
+          ctx.fillRect(-size * 0.6, -size * 0.6, size * 1.2, size * 1.2);
+          ctx.strokeRect(-size * 0.6, -size * 0.6, size * 1.2, size * 1.2);
+          break;
+        case 'diamond':
+          ctx.beginPath();
+          ctx.moveTo(0, -size);
+          ctx.lineTo(size * 0.6, 0);
+          ctx.lineTo(0, size);
+          ctx.lineTo(-size * 0.6, 0);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          break;
+        case 'cross':
+          ctx.fillRect(-size * 0.12, -size * 0.5, size * 0.24, size);
+          ctx.fillRect(-size * 0.5, -size * 0.12, size, size * 0.24);
+          break;
+      }
+      ctx.restore();
+    }
+  }
+
+  // Subtle noise
+  ctx.globalAlpha = 1;
+  const imageData = ctx.getImageData(0, 0, W, H);
+  const d = imageData.data;
+  for (let p = 0; p < d.length; p += 4) {
+    const noise = (rng() - 0.5) * 12;
+    d[p]   = Math.min(255, Math.max(0, d[p]   + noise));
+    d[p+1] = Math.min(255, Math.max(0, d[p+1] + noise));
+    d[p+2] = Math.min(255, Math.max(0, d[p+2] + noise));
+  }
+  ctx.putImageData(imageData, 0, 0);
+}
+
+/* ── NEON ── */
+function drawNeon(ctx, W, H, palette, shapes, rng) {
+  ctx.globalCompositeOperation = 'source-over';
+
+  // Dark background
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#0a0a1a');
+  bg.addColorStop(0.5, '#120820');
+  bg.addColorStop(1, '#1a0a2e');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const neonPalette = NEON_COLORS;
+  const neonShapes = ['circle', 'triangle', 'star', 'hexagon', 'wave', 'rect'];
+
+  const count = 22 + Math.floor(rng() * 18);
   for (let i = 0; i < count; i++) {
     const x = rng() * W;
     const y = rng() * H;
-    const size = 14 + rng() * 80;
-    const col = palette[Math.floor(rng() * palette.length)];
-    const [r,g,b] = hexToRgb(col);
-    const alpha = 0.18 + rng() * 0.52;
-    const shapeType = shapes[Math.floor(rng() * shapes.length)];
+    const size = 18 + rng() * 70;
+    const col = neonPalette[Math.floor(rng() * neonPalette.length)];
+    const shapeType = neonShapes[Math.floor(rng() * neonShapes.length)];
+    const glowBlur = 12 + rng() * 22;
+    const lineW = 1.5 + rng() * 2;
 
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(rng() * Math.PI * 2);
-    ctx.globalAlpha = alpha;
+    ctx.globalAlpha = 0.6 + rng() * 0.4;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = lineW;
+    ctx.shadowColor = col;
+    ctx.shadowBlur = glowBlur;
+    ctx.fillStyle = 'transparent';
 
-    switch(shapeType) {
+    switch (shapeType) {
+      case 'circle':
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.5, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
       case 'triangle':
         ctx.beginPath();
         ctx.moveTo(0, -size);
-        ctx.lineTo(size * 0.87, size * 0.5);
-        ctx.lineTo(-size * 0.87, size * 0.5);
+        ctx.lineTo(size * 0.866, size * 0.5);
+        ctx.lineTo(-size * 0.866, size * 0.5);
         ctx.closePath();
-        ctx.fillStyle = col;
-        if (rng() < 0.4) { ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5; ctx.stroke(); }
-        ctx.fill();
-        break;
-      case 'wave': {
-        ctx.beginPath();
-        const ww = size * 2;
-        ctx.moveTo(-ww, 0);
-        for (let wx = -ww; wx <= ww; wx += 4) {
-          ctx.lineTo(wx, Math.sin(wx / (size * 0.3)) * size * 0.4);
-        }
-        ctx.strokeStyle = col;
-        ctx.lineWidth = 2 + rng() * 3;
-        ctx.lineCap = 'round';
         ctx.stroke();
         break;
-      }
       case 'star': {
-        const spikes = 5 + Math.floor(rng() * 3);
+        const spikes = 5 + Math.floor(rng() * 2);
         const outerR = size * 0.5;
         const innerR = outerR * 0.42;
         ctx.beginPath();
@@ -871,98 +1557,222 @@ function drawArt(ctx, prompt, extraSeed = 0) {
           ctx.lineTo(Math.cos(ang - Math.PI/2) * rad, Math.sin(ang - Math.PI/2) * rad);
         }
         ctx.closePath();
-        ctx.fillStyle = col;
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,200,0.5)';
-        ctx.lineWidth = 1;
+        ctx.stroke();
+        break;
+      }
+      case 'hexagon': {
+        ctx.beginPath();
+        for (let s = 0; s < 6; s++) {
+          const a = (Math.PI / 3) * s - Math.PI / 6;
+          const px = Math.cos(a) * size * 0.55;
+          const py = Math.sin(a) * size * 0.55;
+          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        break;
+      }
+      case 'wave': {
+        const ww = size * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(-ww, 0);
+        for (let wx = -ww; wx <= ww; wx += 3) {
+          ctx.lineTo(wx, Math.sin(wx / (size * 0.28)) * size * 0.38);
+        }
         ctx.stroke();
         break;
       }
       case 'rect':
-        ctx.fillStyle = col;
-        ctx.fillRect(-size*0.3, -size*0.5, size*0.6, size);
-        if (rng() < 0.5) {
-          ctx.fillStyle = 'rgba(255,255,255,0.15)';
-          for (let row = 0; row < 3; row++) {
-            for (let col2 = 0; col2 < 2; col2++) {
-              ctx.fillRect(-size*0.25 + col2*size*0.28, -size*0.45 + row*size*0.28, size*0.22, size*0.2);
-            }
-          }
-        }
-        break;
-      case 'tree': {
-        ctx.fillStyle = col;
-        ctx.beginPath();
-        ctx.moveTo(0, -size);
-        ctx.lineTo(size*0.5, 0);
-        ctx.lineTo(-size*0.5, 0);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = `rgba(${r},${g},${b},0.7)`;
-        ctx.beginPath();
-        ctx.moveTo(0, -size*0.7);
-        ctx.lineTo(size*0.4, size*0.1);
-        ctx.lineTo(-size*0.4, size*0.1);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = '#5D4037';
-        ctx.fillRect(-size*0.07, 0, size*0.14, size*0.35);
-        break;
-      }
-      case 'cross':
-        ctx.fillStyle = col;
-        ctx.fillRect(-size*0.12, -size*0.45, size*0.24, size*0.9);
-        ctx.fillRect(-size*0.45, -size*0.12, size*0.9, size*0.24);
-        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(-size*0.12, -size*0.45, size*0.24, size*0.9);
-        break;
-      case 'dots':
-      default:
-        ctx.beginPath();
-        ctx.arc(0, 0, size * 0.4, 0, Math.PI * 2);
-        ctx.fillStyle = col;
-        ctx.fill();
+        ctx.strokeRect(-size * 0.5, -size * 0.4, size, size * 0.8);
         break;
     }
     ctx.restore();
   }
 
-  // ── Glow circles ──
-  const glowCount = 3 + Math.floor(rng() * 4);
-  for (let i = 0; i < glowCount; i++) {
+  // Second pass — bright inner glow on select shapes
+  for (let i = 0; i < 6; i++) {
     const x = rng() * W, y = rng() * H;
-    const r2 = 60 + rng() * 140;
-    const col = palette[Math.floor(rng() * palette.length)];
-    const [r,g,b] = hexToRgb(col);
-    const grd = ctx.createRadialGradient(x, y, 0, x, y, r2);
-    grd.addColorStop(0, `rgba(${r},${g},${b},0.35)`);
-    grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    const r = 15 + rng() * 45;
+    const col = neonPalette[Math.floor(rng() * neonPalette.length)];
+    ctx.save();
+    ctx.globalAlpha = 0.15 + rng() * 0.2;
+    ctx.shadowColor = col;
+    ctx.shadowBlur = 30;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(x, y, r2, 0, Math.PI * 2);
-    ctx.fillStyle = grd;
-    ctx.fill();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
   }
 
-  // ── Noise overlay ──
-  const imageData = ctx.getImageData(0, 0, W, H);
-  const d = imageData.data;
-  for (let p = 0; p < d.length; p += 4) {
-    const noise = (rng() - 0.5) * 22;
-    d[p]   = Math.min(255, Math.max(0, d[p]   + noise));
-    d[p+1] = Math.min(255, Math.max(0, d[p+1] + noise));
-    d[p+2] = Math.min(255, Math.max(0, d[p+2] + noise));
+  // Scanlines
+  ctx.globalAlpha = 0.06;
+  ctx.fillStyle = '#000';
+  for (let sy = 0; sy < H; sy += 3) {
+    ctx.fillRect(0, sy, W, 1);
   }
-  ctx.putImageData(imageData, 0, 0);
+  ctx.globalAlpha = 1;
+}
 
-  // ── Vignette ──
-  const vig = ctx.createRadialGradient(W/2, H/2, W*0.2, W/2, H/2, W*0.75);
-  vig.addColorStop(0, 'rgba(0,0,0,0)');
-  vig.addColorStop(1, 'rgba(0,0,0,0.45)');
-  ctx.fillStyle = vig;
-  ctx.fillRect(0, 0, W, H);
+/* ─────────────────────────────────────────────
+   STYLE STATE
+───────────────────────────────────────────── */
+let selectedStyle = 'watercolor';
 
-  return palette;
+function selectStyle(s) {
+  selectedStyle = s;
+  document.querySelectorAll('.style-card').forEach(c => {
+    c.classList.toggle('selected', c.dataset.style === s);
+  });
+}
+
+function getStyleLabel(s) {
+  return { watercolor: '🎨 수채화', geometric: '📐 기하학', neon: '💫 네온' }[s] || s;
+}
+
+function drawStylePreview(canvasId, style) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const { palette, shapes } = analyzePrompt('하늘 별 미래 빛');
+  const rng = mulberry32(strSeed(style) + 12345);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.globalCompositeOperation = 'source-over';
+
+  if (style === 'watercolor') {
+    drawWatercolor(ctx, canvas.width, canvas.height, palette, shapes, rng);
+  } else if (style === 'geometric') {
+    drawGeometric(ctx, canvas.width, canvas.height, palette, shapes, rng);
+  } else {
+    drawNeon(ctx, canvas.width, canvas.height, palette, shapes, rng);
+  }
+}
+
+/* ─────────────────────────────────────────────
+   TIMER
+───────────────────────────────────────────── */
+const CHALLENGE_DURATION = 180; // seconds
+let timerSecondsLeft = CHALLENGE_DURATION;
+let timerInterval = null;
+let timerRunning = false;
+let freeMode = false;
+let lastGeneratedAndNotSaved = false;
+
+function toggleFreeMode() {
+  freeMode = document.getElementById('free-mode-toggle').checked;
+  if (freeMode && timerRunning) {
+    stopTimer();
+    document.getElementById('timer-banner').classList.remove('visible');
+    document.getElementById('btn-challenge-start').classList.remove('running');
+    document.getElementById('challenge-btn-icon').textContent = '⏱';
+    document.getElementById('challenge-btn-text').textContent = '챌린지 시작 (3분)';
+    timerRunning = false;
+  }
+}
+
+function handleChallengeButton() {
+  if (freeMode) return;
+  if (!timerRunning) {
+    startTimer();
+  } else {
+    stopTimer();
+    timerRunning = false;
+    timerSecondsLeft = CHALLENGE_DURATION;
+    document.getElementById('timer-banner').classList.remove('visible');
+    document.getElementById('timer-display').classList.remove('urgent');
+    document.getElementById('btn-challenge-start').classList.remove('running');
+    document.getElementById('challenge-btn-icon').textContent = '⏱';
+    document.getElementById('challenge-btn-text').textContent = '챌린지 시작 (3분)';
+    document.getElementById('btn-generate').disabled = false;
+  }
+}
+
+function startTimer() {
+  timerRunning = true;
+  timerSecondsLeft = CHALLENGE_DURATION;
+  document.getElementById('timer-banner').classList.add('visible');
+  document.getElementById('btn-challenge-start').classList.add('running');
+  document.getElementById('challenge-btn-icon').textContent = '⏹';
+  document.getElementById('challenge-btn-text').textContent = '챌린지 중단';
+  updateTimerDisplay();
+  timerInterval = setInterval(tickTimer, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+function tickTimer() {
+  timerSecondsLeft--;
+  updateTimerDisplay();
+  if (timerSecondsLeft <= 0) {
+    stopTimer();
+    onTimerExpired();
+  }
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timerSecondsLeft / 60);
+  const s = timerSecondsLeft % 60;
+  const el = document.getElementById('timer-display');
+  el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  el.classList.toggle('urgent', timerSecondsLeft <= 30);
+}
+
+function onTimerExpired() {
+  timerRunning = false;
+  document.getElementById('btn-generate').disabled = true;
+  document.getElementById('btn-challenge-start').classList.remove('running');
+  document.getElementById('challenge-btn-icon').textContent = '⏱';
+  document.getElementById('challenge-btn-text').textContent = '시간 종료';
+
+  // Auto-save if we have a generated art not yet saved
+  const resultCanvas = document.getElementById('result-canvas');
+  const currentScreen = document.querySelector('#tab-create .screen.active');
+  let subText = '챌린지 시간이 끝났습니다.';
+
+  if (currentScreen && currentScreen.id === 'screen-result') {
+    autoSaveToGallery();
+    subText = '챌린지 시간이 끝났습니다.<br>마지막 작품이 자동으로 저장되었습니다.';
+  }
+
+  document.getElementById('time-expired-sub').innerHTML = subText;
+  document.getElementById('time-expired-overlay').classList.add('show');
+}
+
+function autoSaveToGallery() {
+  const canvas = document.getElementById('result-canvas');
+  if (!canvas || !currentPrompt) return;
+  const dataUrl = canvas.toDataURL('image/png');
+  const gallery = loadGallery();
+  const item = {
+    id: Date.now(),
+    prompt: currentPrompt,
+    imageDataUrl: dataUrl,
+    style: selectedStyle,
+    votes: 0,
+    votedBy: [],
+    createdAt: new Date().toISOString(),
+    autoSaved: true,
+  };
+  gallery.unshift(item);
+  saveGallery(gallery);
+  if (!stampGiven) {
+    stampGiven = true;
+    grantStamp();
+  }
+}
+
+function closeTimeExpired() {
+  document.getElementById('time-expired-overlay').classList.remove('show');
+  timerSecondsLeft = CHALLENGE_DURATION;
+  updateTimerDisplay();
+  document.getElementById('timer-display').classList.remove('urgent');
+  document.getElementById('timer-banner').classList.remove('visible');
+  document.getElementById('challenge-btn-icon').textContent = '⏱';
+  document.getElementById('challenge-btn-text').textContent = '챌린지 시작 (3분)';
 }
 
 /* ─────────────────────────────────────────────
@@ -977,8 +1787,8 @@ const STATUS_MSGS = [
   '색상 팔레트 분석 중...',
   '배경 레이어 생성 중...',
   '도형 패턴 배치 중...',
-  '글로우 효과 적용 중...',
-  '노이즈 텍스처 합성 중...',
+  '효과 적용 중...',
+  '텍스처 합성 중...',
   '마무리 처리 중...',
 ];
 
@@ -988,6 +1798,9 @@ function startGenerate() {
     document.getElementById('prompt-input').focus();
     document.getElementById('prompt-input').style.borderColor = '#FF4466';
     setTimeout(() => { document.getElementById('prompt-input').style.borderColor = ''; }, 1500);
+    return;
+  }
+  if (timerRunning === false && !freeMode && document.getElementById('btn-generate').disabled) {
     return;
   }
   currentPrompt = promptVal;
@@ -1003,31 +1816,35 @@ function startGenerate() {
   let step = 0;
   const totalSteps = STATUS_MSGS.length;
 
-  // Draw incrementally
   function drawStep(stepIdx) {
     const { palette, shapes } = analyzePrompt(currentPrompt);
     const seed = strSeed(currentPrompt) + currentSeed * 9999999;
     const rng = mulberry32(seed + stepIdx * 777);
-
     const W = canvas.width, H = canvas.height;
 
     if (stepIdx === 0) {
-      // Background only
-      const bgC1 = palette[0];
-      const bgC2 = palette[1] || palette[0];
-      const bg = ctx.createLinearGradient(0, 0, W, H);
-      bg.addColorStop(0, bgC1);
-      bg.addColorStop(1, bgC2);
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, W, H);
+      ctx.clearRect(0, 0, W, H);
+      if (selectedStyle === 'neon') {
+        ctx.fillStyle = '#0a0a1a';
+        ctx.fillRect(0, 0, W, H);
+      } else {
+        const bgC1 = palette[0];
+        const bgC2 = palette[1] || palette[0];
+        const bg = ctx.createLinearGradient(0, 0, W, H);
+        bg.addColorStop(0, bgC1);
+        bg.addColorStop(1, bgC2);
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+      }
     } else if (stepIdx < totalSteps - 1) {
-      // Add some shapes per step
-      const shapesPerStep = Math.floor(12 + rng() * 8);
+      const shapesPerStep = 10 + Math.floor(rng() * 8);
       for (let i = 0; i < shapesPerStep; i++) {
         const x = rng() * W, y = rng() * H;
         const sz = 16 + rng() * 60;
-        const col = palette[Math.floor(rng() * palette.length)];
-        const alpha = 0.15 + rng() * 0.45;
+        const col = selectedStyle === 'neon'
+          ? NEON_COLORS[Math.floor(rng() * NEON_COLORS.length)]
+          : palette[Math.floor(rng() * palette.length)];
+        const alpha = selectedStyle === 'watercolor' ? (0.06 + rng() * 0.18) : (0.5 + rng() * 0.4);
         const shp = shapes[Math.floor(rng() * shapes.length)];
 
         ctx.save();
@@ -1035,46 +1852,51 @@ function startGenerate() {
         ctx.rotate(rng() * Math.PI * 2);
         ctx.globalAlpha = alpha;
 
-        switch(shp) {
-          case 'triangle':
-            ctx.beginPath(); ctx.moveTo(0,-sz); ctx.lineTo(sz*0.87,sz*0.5); ctx.lineTo(-sz*0.87,sz*0.5); ctx.closePath();
-            ctx.fillStyle = col; ctx.fill(); break;
-          case 'star': {
-            ctx.beginPath();
-            for (let s = 0; s < 10; s++) {
-              const ang = (s*Math.PI)/5;
-              const r = s%2===0 ? sz*0.5 : sz*0.2;
-              ctx.lineTo(Math.cos(ang-Math.PI/2)*r, Math.sin(ang-Math.PI/2)*r);
+        if (selectedStyle === 'neon') {
+          ctx.strokeStyle = col;
+          ctx.lineWidth = 1.5 + rng() * 1.5;
+          ctx.shadowColor = col;
+          ctx.shadowBlur = 14;
+          ctx.beginPath();
+          ctx.arc(0, 0, sz * 0.5, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (selectedStyle === 'watercolor') {
+          ctx.globalCompositeOperation = 'multiply';
+          const [rv, gv, bv] = hexToRgb(col);
+          const grd = ctx.createRadialGradient(0, 0, 0, 0, 0, sz);
+          grd.addColorStop(0, `rgba(${rv},${gv},${bv},${alpha})`);
+          grd.addColorStop(1, `rgba(${rv},${gv},${bv},0)`);
+          ctx.beginPath();
+          ctx.arc(0, 0, sz, 0, Math.PI * 2);
+          ctx.fillStyle = grd;
+          ctx.fill();
+          ctx.globalCompositeOperation = 'source-over';
+        } else {
+          ctx.fillStyle = col;
+          switch(shp) {
+            case 'triangle':
+              ctx.beginPath(); ctx.moveTo(0,-sz); ctx.lineTo(sz*0.87,sz*0.5); ctx.lineTo(-sz*0.87,sz*0.5); ctx.closePath();
+              ctx.fill(); break;
+            case 'star': {
+              ctx.beginPath();
+              for (let s = 0; s < 10; s++) {
+                const ang = (s*Math.PI)/5;
+                const r = s%2===0 ? sz*0.5 : sz*0.2;
+                ctx.lineTo(Math.cos(ang-Math.PI/2)*r, Math.sin(ang-Math.PI/2)*r);
+              }
+              ctx.closePath(); ctx.fill(); break;
             }
-            ctx.closePath(); ctx.fillStyle = col; ctx.fill(); break;
+            default:
+              ctx.beginPath(); ctx.arc(0,0,sz*0.4,0,Math.PI*2); ctx.fill();
           }
-          case 'wave':
-            ctx.beginPath(); ctx.moveTo(-sz,-0);
-            for (let wx=-sz;wx<=sz;wx+=3) ctx.lineTo(wx, Math.sin(wx/(sz*0.25))*sz*0.35);
-            ctx.strokeStyle = col; ctx.lineWidth = 2+rng()*2; ctx.stroke(); break;
-          default:
-            ctx.beginPath(); ctx.arc(0,0,sz*0.4,0,Math.PI*2);
-            ctx.fillStyle = col; ctx.fill();
         }
         ctx.restore();
       }
     } else {
-      // Final: add glow + vignette
-      for (let i = 0; i < 3; i++) {
-        const x = rng()*W, y = rng()*H, r = 80+rng()*120;
-        const col = palette[Math.floor(rng()*palette.length)];
-        const [rv,gv,bv] = hexToRgb(col);
-        const grd = ctx.createRadialGradient(x,y,0,x,y,r);
-        grd.addColorStop(0,`rgba(${rv},${gv},${bv},0.3)`);
-        grd.addColorStop(1,`rgba(${rv},${gv},${bv},0)`);
-        ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
-        ctx.fillStyle = grd; ctx.fill();
-      }
-      const vig = ctx.createRadialGradient(W/2,H/2,W*0.2,W/2,H/2,W*0.75);
-      vig.addColorStop(0,'rgba(0,0,0,0)');
-      vig.addColorStop(1,'rgba(0,0,0,0.4)');
-      ctx.fillStyle = vig;
-      ctx.fillRect(0,0,W,H);
+      // Final step — complete render
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'source-over';
+      drawArt(ctx, currentPrompt, currentSeed, selectedStyle);
     }
   }
 
@@ -1094,9 +1916,10 @@ function startGenerate() {
 function finishGenerate(genCanvas) {
   const resultCanvas = document.getElementById('result-canvas');
   const ctx = resultCanvas.getContext('2d');
-  currentPalette = drawArt(ctx, currentPrompt, currentSeed);
+  currentPalette = drawArt(ctx, currentPrompt, currentSeed, selectedStyle);
   showResultPalette(currentPalette);
   document.getElementById('result-prompt-text').textContent = currentPrompt;
+  document.getElementById('result-style-badge').textContent = getStyleLabel(selectedStyle);
   document.getElementById('stamp-notice').classList.remove('visible');
   showScreen('result');
 }
@@ -1137,6 +1960,7 @@ function registerToGallery() {
     id: Date.now(),
     prompt: currentPrompt,
     imageDataUrl: dataUrl,
+    style: selectedStyle,
     votes: 0,
     votedBy: [],
     createdAt: new Date().toISOString(),
@@ -1144,7 +1968,6 @@ function registerToGallery() {
   gallery.unshift(item);
   saveGallery(gallery);
 
-  // Stamp
   if (!stampGiven) {
     stampGiven = true;
     grantStamp();
@@ -1200,9 +2023,24 @@ function vote(id) {
   renderGallery();
 }
 
+function loadAwards() {
+  return JSON.parse(localStorage.getItem('dreamfest_art_awards') || '{}');
+}
+function saveAwards(obj) {
+  localStorage.setItem('dreamfest_art_awards', JSON.stringify(obj));
+}
+
+const AWARD_LABELS = {
+  grand: '🏆 대상',
+  gold: '🥇 금상',
+  silver: '🥈 은상',
+  bronze: '🥉 동상',
+};
+
 function renderGallery() {
   const gallery = loadGallery();
   const voted = getVotedItems();
+  const awards = loadAwards();
   const gridEl = document.getElementById('gallery-grid');
   const emptyEl = document.getElementById('gallery-empty');
   const countEl = document.getElementById('gallery-count');
@@ -1228,17 +2066,28 @@ function renderGallery() {
   gallery.forEach((item) => {
     const rank = rankMap[item.id];
     const isVoted = voted.includes(item.id);
+    const awardKey = awards[item.id];
     const rankLabel = rank === 1 ? '<span class="gallery-rank gold">🥇 1위</span>'
       : rank === 2 ? '<span class="gallery-rank silver">🥈 2위</span>'
       : rank === 3 ? '<span class="gallery-rank bronze">🥉 3위</span>'
       : `<span class="gallery-rank">#${rank}</span>`;
 
+    const styleKey = item.style || 'watercolor';
+    const styleLabels = { watercolor: '🎨 수채화', geometric: '📐 기하학', neon: '💫 네온' };
+    const styleBadge = `<span class="gallery-card-style ${styleKey}">${styleLabels[styleKey] || styleKey}</span>`;
+
+    const awardBadgeHtml = awardKey
+      ? `<div class="award-badge ${awardKey}-award">${AWARD_LABELS[awardKey] || awardKey}</div>`
+      : '';
+
     const card = document.createElement('div');
     card.className = 'gallery-card';
     card.innerHTML = `
-      <img class="gallery-card-img" src="${item.imageDataUrl}" alt="${item.prompt}" loading="lazy">
+      ${awardBadgeHtml}
+      <img class="gallery-card-img" src="${item.imageDataUrl}" alt="${escHtml(item.prompt)}" loading="lazy">
       <div class="gallery-card-body">
         <div class="gallery-card-prompt">${escHtml(item.prompt)}</div>
+        ${styleBadge}
         <div class="gallery-card-footer">
           ${rankLabel}
           <button class="vote-btn${isVoted ? ' voted' : ''}" onclick="vote(${item.id})" aria-label="투표">
@@ -1256,6 +2105,8 @@ function renderGallery() {
   lbList.innerHTML = '';
   sorted.slice(0, 5).forEach((item, i) => {
     const emoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+    const awardKey = awards[item.id];
+    const awardTag = awardKey ? `<span class="lb-award-tag">${AWARD_LABELS[awardKey]}</span>` : '';
     const row = document.createElement('div');
     row.className = 'lb-row';
     row.innerHTML = `
@@ -1263,7 +2114,7 @@ function renderGallery() {
       <img class="lb-thumb" src="${item.imageDataUrl}" alt="">
       <div class="lb-info">
         <div class="lb-prompt">${escHtml(item.prompt)}</div>
-        <div class="lb-votes">❤️ ${item.votes || 0} 표</div>
+        <div class="lb-votes">❤️ ${item.votes || 0} 표 ${awardTag}</div>
       </div>
     `;
     lbList.appendChild(row);
@@ -1286,6 +2137,152 @@ function escHtml(s) {
 }
 
 /* ─────────────────────────────────────────────
+   JUDGE MODE
+───────────────────────────────────────────── */
+const JUDGE_PASSWORD = 'judge2026';
+let judgeAuthed = false;
+
+function judgeAuth() {
+  const pw = document.getElementById('judge-pw-input').value;
+  const errEl = document.getElementById('judge-auth-error');
+  if (pw === JUDGE_PASSWORD) {
+    judgeAuthed = true;
+    document.getElementById('judge-auth-wrap').style.display = 'none';
+    document.getElementById('judge-panel').classList.add('visible');
+    errEl.classList.remove('visible');
+    renderJudgePanel();
+  } else {
+    errEl.classList.add('visible');
+    document.getElementById('judge-pw-input').value = '';
+    document.getElementById('judge-pw-input').focus();
+  }
+}
+
+function judgeLogout() {
+  judgeAuthed = false;
+  document.getElementById('judge-auth-wrap').style.display = 'block';
+  document.getElementById('judge-panel').classList.remove('visible');
+  document.getElementById('judge-pw-input').value = '';
+}
+
+function loadJudgeScores() {
+  return JSON.parse(localStorage.getItem('dreamfest_judge_scores') || '{}');
+}
+function saveJudgeScores(obj) {
+  localStorage.setItem('dreamfest_judge_scores', JSON.stringify(obj));
+}
+
+function renderJudgePanel() {
+  const gallery = loadGallery();
+  const awards = loadAwards();
+  const judgeScores = loadJudgeScores();
+  const container = document.getElementById('judge-submissions');
+  const emptyEl = document.getElementById('judge-empty');
+
+  container.innerHTML = '';
+  if (gallery.length === 0) {
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  gallery.forEach((item) => {
+    const itemId = item.id;
+    const scores = judgeScores[itemId] || { creativity: 5, aesthetics: 5, relevance: 5 };
+    const avg = ((scores.creativity + scores.aesthetics + scores.relevance) / 3).toFixed(1);
+    const awardKey = awards[itemId];
+    const styleKey = item.style || 'watercolor';
+    const styleLabels = { watercolor: '🎨 수채화', geometric: '📐 기하학', neon: '💫 네온' };
+    const createdDate = item.createdAt ? new Date(item.createdAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+    const awardBtns = Object.entries(AWARD_LABELS).map(([key, label]) =>
+      `<button class="award-btn${awardKey === key ? ` active-${key}` : ''}" onclick="setAward(${itemId},'${key}',this)">${label}</button>`
+    ).join('');
+
+    const card = document.createElement('div');
+    card.className = 'judge-card';
+    card.dataset.itemId = itemId;
+    card.innerHTML = `
+      <div class="judge-card-top">
+        <img class="judge-card-img" src="${item.imageDataUrl}" alt="${escHtml(item.prompt)}">
+        <div class="judge-card-info">
+          <div class="judge-card-prompt">${escHtml(item.prompt)}</div>
+          <div class="judge-card-meta">
+            <span class="judge-card-style-badge ${styleKey}">${styleLabels[styleKey] || styleKey}</span>
+            <span>❤️ ${item.votes || 0} 표</span>
+            <span>🕐 ${createdDate}</span>
+          </div>
+        </div>
+      </div>
+      <div class="judge-criteria">
+        <div class="criteria-row">
+          <span class="criteria-label">창의성</span>
+          <input type="range" class="criteria-slider" min="1" max="10" value="${scores.creativity}"
+            oninput="updateScore(${itemId},'creativity',this.value,this)">
+          <span class="criteria-score" id="score-creativity-${itemId}">${scores.creativity}</span>
+        </div>
+        <div class="criteria-row">
+          <span class="criteria-label">심미성</span>
+          <input type="range" class="criteria-slider" min="1" max="10" value="${scores.aesthetics}"
+            oninput="updateScore(${itemId},'aesthetics',this.value,this)">
+          <span class="criteria-score" id="score-aesthetics-${itemId}">${scores.aesthetics}</span>
+        </div>
+        <div class="criteria-row">
+          <span class="criteria-label">주제 적합성</span>
+          <input type="range" class="criteria-slider" min="1" max="10" value="${scores.relevance}"
+            oninput="updateScore(${itemId},'relevance',this.value,this)">
+          <span class="criteria-score" id="score-relevance-${itemId}">${scores.relevance}</span>
+        </div>
+      </div>
+      <div class="judge-card-bottom">
+        <div>
+          <div class="judge-avg-label">평균 점수</div>
+          <div class="judge-avg-score" id="avg-score-${itemId}">${avg} / 10</div>
+        </div>
+        <div class="judge-award-select">${awardBtns}</div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function updateScore(itemId, criterion, value, inputEl) {
+  const scoreEl = document.getElementById(`score-${criterion}-${itemId}`);
+  if (scoreEl) scoreEl.textContent = value;
+
+  const judgeScores = loadJudgeScores();
+  if (!judgeScores[itemId]) judgeScores[itemId] = { creativity: 5, aesthetics: 5, relevance: 5 };
+  judgeScores[itemId][criterion] = parseInt(value);
+  saveJudgeScores(judgeScores);
+
+  // Update average
+  const s = judgeScores[itemId];
+  const avg = ((s.creativity + s.aesthetics + s.relevance) / 3).toFixed(1);
+  const avgEl = document.getElementById(`avg-score-${itemId}`);
+  if (avgEl) avgEl.textContent = `${avg} / 10`;
+}
+
+function setAward(itemId, awardKey, btnEl) {
+  const awards = loadAwards();
+  if (awards[itemId] === awardKey) {
+    // Toggle off
+    delete awards[itemId];
+  } else {
+    // Remove same award from others
+    Object.keys(awards).forEach(k => { if (awards[k] === awardKey) delete awards[k]; });
+    awards[itemId] = awardKey;
+  }
+  saveAwards(awards);
+
+  // Re-render the award buttons in this card
+  const card = btnEl.closest('.judge-card');
+  const awardBtnsEl = card.querySelector('.judge-award-select');
+  awardBtnsEl.innerHTML = Object.entries(AWARD_LABELS).map(([key, label]) =>
+    `<button class="award-btn${awards[itemId] === key ? ` active-${key}` : ''}" onclick="setAward(${itemId},'${key}',this)">${label}</button>`
+  ).join('');
+}
+
+/* ─────────────────────────────────────────────
    SCREEN & TAB SWITCHING
 ───────────────────────────────────────────── */
 function showScreen(name) {
@@ -1298,10 +2295,19 @@ function showScreen(name) {
 }
 
 function switchTab(tab) {
-  document.querySelectorAll('.nav-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='create') || (i===1 && tab==='gallery')));
+  const tabs = document.querySelectorAll('.nav-tab');
+  tabs.forEach((t, i) => {
+    t.classList.toggle('active',
+      (i === 0 && tab === 'create') ||
+      (i === 1 && tab === 'gallery') ||
+      (i === 2 && tab === 'judge')
+    );
+  });
   document.getElementById('tab-create').style.display = tab === 'create' ? 'block' : 'none';
   document.getElementById('tab-gallery').style.display = tab === 'gallery' ? 'block' : 'none';
+  document.getElementById('tab-judge').style.display = tab === 'judge' ? 'block' : 'none';
   if (tab === 'gallery') renderGallery();
+  if (tab === 'judge' && judgeAuthed) renderJudgePanel();
 }
 
 function goBack() {
@@ -1332,6 +2338,13 @@ function updateCharCount() {
    INIT
 ───────────────────────────────────────────── */
 showScreen('create');
+
+// Draw style previews after DOM is ready
+setTimeout(() => {
+  drawStylePreview('preview-watercolor', 'watercolor');
+  drawStylePreview('preview-geometric', 'geometric');
+  drawStylePreview('preview-neon', 'neon');
+}, 100);
 </script>
 <script src="../sync-client.js"></script>
 <script>if("serviceWorker" in navigator){navigator.serviceWorker.register("../sw.js").catch(function(){})}</script>
