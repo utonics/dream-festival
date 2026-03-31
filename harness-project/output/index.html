@@ -793,6 +793,46 @@ button:focus-visible{outline:3px solid var(--green-base);outline-offset:2px}
 .tl-zone-chip{font-size:.72rem;padding:4px 10px;border-radius:12px;font-weight:600;display:flex;align-items:center;gap:4px}
 
 /* ═══════════════════════════════════════ */
+/* VIEW 14: SATISFACTION SURVEY            */
+/* ═══════════════════════════════════════ */
+.sv-intro{text-align:center;padding:16px 0 20px;font-size:.88rem;color:var(--text-sub)}
+.sv-overall{display:flex;align-items:center;gap:12px;padding:16px 20px;background:var(--green-light);border-radius:var(--radius);margin-bottom:20px}
+.sv-overall .sv-big{font-size:1.8rem;font-weight:800;color:var(--green-dark);font-family:var(--font-display)}
+.sv-overall .sv-sub{font-size:.82rem;color:var(--text-sub)}
+.sv-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:16px;margin-bottom:12px;transition:var(--trans)}
+.sv-card.submitted{opacity:.7}
+.sv-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sv-card-head .sv-icon{font-size:1.5rem}
+.sv-card-head .sv-name{font-weight:700;font-size:.92rem}
+.sv-card-head .sv-zone{font-size:.7rem;padding:2px 8px;border-radius:8px;font-weight:600}
+.sv-card-head .sv-done{margin-left:auto;font-size:.72rem;color:var(--green-base);font-weight:600}
+.sv-stars{display:flex;gap:4px;margin-bottom:8px}
+.sv-stars button{background:none;border:none;font-size:1.5rem;cursor:pointer;padding:2px;transition:transform .15s;color:#ccc;line-height:1}
+.sv-stars button.lit{color:#f5a623}
+.sv-stars button:hover{transform:scale(1.25)}
+.sv-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.sv-tags button{padding:4px 12px;border-radius:14px;font-size:.75rem;font-weight:600;border:1px solid var(--card-border);background:var(--card-bg);color:var(--text-sub);cursor:pointer;transition:var(--trans)}
+.sv-tags button.selected{background:var(--green-base);color:#fff;border-color:var(--green-base)}
+.sv-comment{width:100%;padding:8px 12px;border-radius:var(--radius);border:1px solid var(--card-border);font-size:.82rem;font-family:var(--font-kr);resize:vertical;min-height:40px;background:var(--bg)}
+.sv-submit{margin-top:8px;padding:6px 18px;border-radius:var(--radius);background:var(--green-base);color:#fff;font-size:.8rem;font-weight:700;border:none;cursor:pointer;transition:var(--trans)}
+.sv-submit:hover{filter:brightness(1.1)}
+.sv-submit:disabled{opacity:.4;cursor:not-allowed}
+.sv-general{max-width:560px;margin:0 auto}
+.sv-general-q{margin-bottom:16px}
+.sv-general-q label{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px}
+.sv-general-q textarea{width:100%;min-height:60px;padding:10px;border-radius:var(--radius);border:1px solid var(--card-border);font-size:.82rem;font-family:var(--font-kr);resize:vertical;background:var(--bg)}
+.sv-result-bar{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.sv-result-bar .sv-bar-label{min-width:130px;font-size:.78rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sv-result-bar .sv-bar-track{flex:1;height:12px;background:var(--card-border);border-radius:6px;overflow:hidden}
+.sv-result-bar .sv-bar-fill{height:100%;border-radius:6px;transition:width .5s}
+.sv-result-bar .sv-bar-val{min-width:46px;text-align:right;font-size:.78rem;font-weight:700;color:var(--text-sub)}
+.sv-admin-summary{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:16px}
+.sv-admin-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:14px;text-align:center}
+.sv-admin-card .sv-a-score{font-size:1.6rem;font-weight:800;color:var(--green-dark);font-family:var(--font-display)}
+.sv-admin-card .sv-a-name{font-size:.78rem;font-weight:600;margin-top:4px}
+.sv-admin-card .sv-a-count{font-size:.7rem;color:var(--text-sub)}
+
+/* ═══════════════════════════════════════ */
 /* VIEW 11: AI ROUTE RECOMMENDATION       */
 /* ═══════════════════════════════════════ */
 .route-wrap{max-width:560px;margin:0 auto}
@@ -1024,6 +1064,7 @@ body.participant-mode .profile-avatar-large{
     <button data-view="profile" data-i18n="nav.profile">마이페이지</button>
     <button data-view="route" data-i18n="nav.route">AI 동선 추천</button>
     <button data-view="notif-user" data-i18n="nav.notifUser">알림</button>
+    <button data-view="survey" data-i18n="nav.survey">만족도 조사</button>
   </nav>
 
   <!-- MAIN CONTENT -->
@@ -1221,6 +1262,12 @@ body.participant-mode .profile-avatar-large{
         <button onclick="markAllNotifRead()" style="padding:6px 14px;font-size:.78rem;font-weight:600;background:var(--green-light);color:var(--green-dark);border:none;border-radius:var(--radius);cursor:pointer" data-i18n="notif.markAllRead">모두 읽음</button>
       </div>
       <div class="notif-list" id="notifUserList"></div>
+    </div>
+
+    <!-- V14: SURVEY -->
+    <div class="view" id="view-survey">
+      <h2 class="section-title" data-i18n="title.survey">만족도 조사</h2>
+      <div id="surveyArea"></div>
     </div>
   </main>
 </div>
@@ -1488,6 +1535,7 @@ function switchView(view){
   else if(typeof stopMonitor==='function') stopMonitor();
   if(view==='congestion' && typeof startCongRefresh==='function') startCongRefresh();
   else if(typeof stopCongRefresh==='function') stopCongRefresh();
+  if(view==='survey' && typeof renderSurvey==='function') renderSurvey();
 }
 
 document.getElementById('modeToggle').addEventListener('click',e=>{
@@ -2057,6 +2105,10 @@ function renderStats(){
     <div class="chart-panel">
       <h4 data-i18n="chart.stampDist">스탬프 투어 진행률 분포</h4>
       <div style="position:relative;height:240px"><canvas id="chartStamp"></canvas></div>
+    </div>
+    <div class="chart-panel" style="grid-column:1/-1">
+      <h4>⭐ 만족도 조사 결과</h4>
+      <div id="surveyAdminArea">${typeof renderSurveyAdmin==='function'?renderSurveyAdmin():''}</div>
     </div>
   `;
 
@@ -2809,6 +2861,206 @@ function editNickname(){
     renderProfile();
     showToast('닉네임이 변경되었습니다','✅');
   }
+}
+
+// ═══════════════════════════════════════
+// V14: SATISFACTION SURVEY
+// ═══════════════════════════════════════
+var SURVEY_TAGS = ['재미있었어요','어려웠어요','쉬웠어요','신기했어요','다시 하고 싶어요','설명이 좋았어요','시간이 부족해요','친구에게 추천해요'];
+
+function getSurveyData(){
+  try{return JSON.parse(localStorage.getItem('dreamfest_survey'))||{};}catch(e){return {};}
+}
+function saveSurveyData(data){
+  localStorage.setItem('dreamfest_survey',JSON.stringify(data));
+}
+
+function renderSurvey(){
+  var data=getSurveyData();
+  var completedIds=participantProfile.stamps;
+  var completedProgs=PROGRAMS.filter(function(p){return completedIds.indexOf(p.id)!==-1;});
+  var pendingProgs=completedProgs.filter(function(p){return !data[p.id];});
+  var submittedProgs=completedProgs.filter(function(p){return !!data[p.id];});
+
+  // Overall stats
+  var totalRatings=0,ratingSum=0;
+  Object.keys(data).forEach(function(k){
+    if(data[k].rating){totalRatings++;ratingSum+=data[k].rating;}
+  });
+  var avgRating=totalRatings>0?(ratingSum/totalRatings).toFixed(1):'—';
+
+  var html='';
+
+  if(completedProgs.length===0){
+    html='<div class="sv-intro">아직 체험을 완료한 부스가 없습니다.<br>부스 체험 후 만족도를 평가해 주세요!</div>';
+    document.getElementById('surveyArea').innerHTML=html;
+    return;
+  }
+
+  html+='<div class="sv-overall"><div><div class="sv-big">⭐ '+avgRating+'</div><div class="sv-sub">평균 만족도 ('+totalRatings+'개 평가)</div></div></div>';
+
+  if(pendingProgs.length>0){
+    html+='<h4 style="font-size:.85rem;font-weight:700;margin-bottom:12px">📝 평가 대기 ('+pendingProgs.length+'개)</h4>';
+    pendingProgs.forEach(function(p){
+      var zone=getZone(p.zone);
+      html+=buildSurveyCard(p,zone,null);
+    });
+  }
+
+  if(submittedProgs.length>0){
+    html+='<h4 style="font-size:.85rem;font-weight:700;margin:20px 0 12px">✅ 평가 완료 ('+submittedProgs.length+'개)</h4>';
+    submittedProgs.forEach(function(p){
+      var zone=getZone(p.zone);
+      html+=buildSurveyCard(p,zone,data[p.id]);
+    });
+  }
+
+  // General feedback
+  var generalComment=data._general||'';
+  html+='<div class="sv-general" style="margin-top:24px"><div class="panel"><h4 style="font-size:.85rem;font-weight:700;margin-bottom:10px">💬 전체 의견</h4>'+
+    '<div class="sv-general-q"><label>페스티벌에 대한 전체적인 소감을 남겨주세요</label>'+
+    '<textarea id="svGeneralComment" placeholder="자유롭게 의견을 남겨주세요...">'+escHtml(generalComment)+'</textarea></div>'+
+    '<button class="sv-submit" onclick="saveGeneralFeedback()">저장</button></div></div>';
+
+  document.getElementById('surveyArea').innerHTML=html;
+}
+
+function buildSurveyCard(prog,zone,existing){
+  var submitted=!!existing;
+  var rating=existing?existing.rating:0;
+  var tags=existing?existing.tags:[];
+  var comment=existing?existing.comment:'';
+  var cls=submitted?'sv-card submitted':'sv-card';
+
+  var starsHtml='<div class="sv-stars" data-prog="'+prog.id+'">';
+  for(var i=1;i<=5;i++){
+    var lit=i<=rating?'lit':'';
+    starsHtml+='<button class="'+lit+'" data-star="'+i+'" onclick="setSurveyStar('+prog.id+','+i+')"'+(submitted?' disabled':'')+'>★</button>';
+  }
+  starsHtml+='</div>';
+
+  var tagsHtml='<div class="sv-tags" data-prog="'+prog.id+'">';
+  SURVEY_TAGS.forEach(function(t){
+    var sel=tags.indexOf(t)!==-1?'selected':'';
+    tagsHtml+='<button class="'+sel+'" onclick="toggleSurveyTag('+prog.id+',this)"'+(submitted?' disabled':'')+'>'+t+'</button>';
+  });
+  tagsHtml+='</div>';
+
+  return '<div class="'+cls+'" id="svCard'+prog.id+'">'+
+    '<div class="sv-card-head">'+
+      '<span class="sv-icon">'+prog.icon+'</span>'+
+      '<span class="sv-name">'+prog.name+'</span>'+
+      '<span class="sv-zone" style="background:'+zone.bg+';color:'+zone.colorHex+'">'+zone.id+'존</span>'+
+      (submitted?'<span class="sv-done">평가 완료</span>':'')+
+    '</div>'+
+    starsHtml+
+    tagsHtml+
+    '<textarea class="sv-comment" id="svComment'+prog.id+'" placeholder="한줄 소감을 남겨주세요"'+(submitted?' disabled':'')+'>'+escHtml(comment)+'</textarea>'+
+    (submitted?'':'<button class="sv-submit" id="svSubmit'+prog.id+'" onclick="submitSurvey('+prog.id+')" disabled>제출</button>')+
+  '</div>';
+}
+
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function setSurveyStar(progId,star){
+  var container=document.querySelector('.sv-stars[data-prog="'+progId+'"]');
+  if(!container) return;
+  container.querySelectorAll('button').forEach(function(btn){
+    var s=parseInt(btn.getAttribute('data-star'));
+    btn.classList.toggle('lit',s<=star);
+  });
+  container.setAttribute('data-rating',star);
+  var submitBtn=document.getElementById('svSubmit'+progId);
+  if(submitBtn) submitBtn.disabled=false;
+}
+
+function toggleSurveyTag(progId,btn){
+  btn.classList.toggle('selected');
+}
+
+function submitSurvey(progId){
+  var container=document.querySelector('.sv-stars[data-prog="'+progId+'"]');
+  var rating=parseInt(container.getAttribute('data-rating'))||0;
+  if(rating===0){showToast('별점을 선택해 주세요','⚠️',{type:'warning'});return;}
+
+  var tags=[];
+  document.querySelectorAll('.sv-tags[data-prog="'+progId+'"] button.selected').forEach(function(btn){
+    tags.push(btn.textContent);
+  });
+  var comment=(document.getElementById('svComment'+progId).value||'').trim();
+
+  var data=getSurveyData();
+  data[progId]={rating:rating,tags:tags,comment:comment,submittedAt:new Date().toISOString()};
+  saveSurveyData(data);
+
+  showToast('만족도 평가가 제출되었습니다!','⭐');
+  renderSurvey();
+}
+
+function saveGeneralFeedback(){
+  var comment=(document.getElementById('svGeneralComment').value||'').trim();
+  var data=getSurveyData();
+  data._general=comment;
+  saveSurveyData(data);
+  showToast('전체 의견이 저장되었습니다','✅');
+}
+
+// Admin: survey results summary
+function renderSurveyAdmin(){
+  var data=getSurveyData();
+  var progRatings={};
+  var tagCounts={};
+  var totalCount=0;
+  Object.keys(data).forEach(function(k){
+    if(k==='_general') return;
+    var entry=data[k];
+    if(!entry.rating) return;
+    var pid=parseInt(k);
+    if(!progRatings[pid]) progRatings[pid]={sum:0,count:0};
+    progRatings[pid].sum+=entry.rating;
+    progRatings[pid].count++;
+    totalCount++;
+    (entry.tags||[]).forEach(function(t){tagCounts[t]=(tagCounts[t]||0)+1;});
+  });
+
+  var html='<h4 style="font-size:.85rem;font-weight:700;margin-bottom:12px">만족도 조사 결과 ('+totalCount+'건)</h4>';
+
+  if(totalCount===0){
+    return html+'<p style="font-size:.82rem;color:var(--text-sub)">아직 제출된 만족도 조사가 없습니다.</p>';
+  }
+
+  // Per-program bars
+  html+='<div style="margin-bottom:20px">';
+  PROGRAMS.forEach(function(p){
+    var r=progRatings[p.id];
+    if(!r) return;
+    var avg=(r.sum/r.count).toFixed(1);
+    var pct=(avg/5*100).toFixed(0);
+    var zone=getZone(p.zone);
+    html+='<div class="sv-result-bar">'+
+      '<span class="sv-bar-label">'+p.icon+' '+p.name+'</span>'+
+      '<div class="sv-bar-track"><div class="sv-bar-fill" style="width:'+pct+'%;background:'+zone.colorHex+'"></div></div>'+
+      '<span class="sv-bar-val">'+avg+'/5 ('+r.count+')</span></div>';
+  });
+  html+='</div>';
+
+  // Tag cloud
+  if(Object.keys(tagCounts).length>0){
+    html+='<h4 style="font-size:.85rem;font-weight:700;margin-bottom:8px">자주 선택된 태그</h4><div class="sv-tags" style="margin-bottom:16px">';
+    var sorted=Object.entries(tagCounts).sort(function(a,b){return b[1]-a[1];});
+    sorted.forEach(function(e){
+      html+='<button class="selected" style="cursor:default">'+e[0]+' ('+e[1]+')</button>';
+    });
+    html+='</div>';
+  }
+
+  // General feedback
+  if(data._general){
+    html+='<div class="panel" style="margin-top:12px"><h4 style="font-size:.85rem;font-weight:700;margin-bottom:6px">💬 전체 의견</h4>'+
+      '<p style="font-size:.82rem;color:var(--text-sub);white-space:pre-wrap">'+escHtml(data._general)+'</p></div>';
+  }
+
+  return html;
 }
 
 // ═══════════════════════════════════════
@@ -3889,6 +4141,7 @@ var I18N={
     'nav.profile':'마이페이지',
     'nav.route':'AI 동선 추천',
     'nav.notifUser':'알림',
+    'nav.survey':'만족도 조사',
     'title.floormap':'존 플로어맵 관제',
     'title.timetable':'프로그램 타임테이블',
     'title.staff':'스태프 배치 관리',
@@ -3902,6 +4155,7 @@ var I18N={
     'title.profile':'마이페이지',
     'title.route':'AI 스마트 동선 추천',
     'title.notifUser':'알림',
+    'title.survey':'만족도 조사',
     'stats.autoRefresh':'자동 갱신',
     'export.btn':'📥 데이터 내보내기',
     'export.participants':'👥 참가자 목록 (CSV)',
@@ -3970,6 +4224,7 @@ var I18N={
     'nav.profile':'My Page',
     'nav.route':'AI Route',
     'nav.notifUser':'Alerts',
+    'nav.survey':'Survey',
     'title.floormap':'Zone Floor Map Control',
     'title.timetable':'Program Timetable',
     'title.staff':'Staff Management',
@@ -3983,6 +4238,7 @@ var I18N={
     'title.profile':'My Page',
     'title.route':'AI Smart Route Guide',
     'title.notifUser':'Alerts',
+    'title.survey':'Satisfaction Survey',
     'stats.autoRefresh':'Auto Refresh',
     'export.btn':'📥 Export Data',
     'export.participants':'👥 Participants (CSV)',
