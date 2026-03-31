@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: dreamfest-futuretech
+    runtime: node
+    rootDir: harness-project
+    buildCommand: npm ci
+    startCommand: node server/server.js
+    envVars:
+      - key: NODE_VERSION
+        value: "18"
+      - key: ADMIN_PASSWORD
+        value: dreamfest2026
+    healthCheckPath: /api/stats

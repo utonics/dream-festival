@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["nodejs_18"]
-
-[phases.install]
-cmds = ["cd harness-project && npm ci"]
-
-[start]
-cmd = "cd harness-project && node server/server.js"
