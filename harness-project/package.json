@@ -1,15 +1,26 @@
 {
-  "name": "harness-project",
+  "name": "dreamfest-futuretech",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "꿈-드림 페스티벌 미래기술존 운영 시스템",
+  "main": "server/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server/server.js",
+    "dev": "node server/server.js --dev",
+    "test": "npx playwright test",
+    "test:e2e": "npx playwright test tests/e2e.spec.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.16.0",
+    "cors": "^2.8.5"
+  },
   "devDependencies": {
     "@playwright/test": "^1.58.2"
   }

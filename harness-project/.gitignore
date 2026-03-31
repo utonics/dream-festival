@@ -4,8 +4,10 @@ node_modules/
 # Server data (runtime generated)
 server/data/
 
-# Test screenshots
+# Screenshots
 test-*.png
+*.png
+!output/icons/*.png
 
 # Playwright MCP cache
 .playwright-mcp/
